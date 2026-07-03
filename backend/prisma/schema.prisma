@@ -1,0 +1,116 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  STUDENT
+  RECEIVER
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum FoodPlatform {
+  GRABFOOD
+  SHOPEEFOOD
+  BEFOOD
+  OTHER
+}
+
+enum RequestStatus {
+  PENDING
+  ACCEPTED
+  RECEIVED
+  READY_FOR_PICKUP
+  COMPLETED
+  CANCELLED
+}
+
+enum NotificationType {
+  SYSTEM
+  REQUEST
+  REMINDER
+  SUCCESS
+  WARNING
+}
+
+model User {
+  id           String     @id @default(uuid())
+  fullName     String
+  email        String     @unique
+  password     String
+  phoneNumber  String?
+  avatar       String?
+  mssv         String?
+  role         UserRole
+  status       UserStatus @default(ACTIVE)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  studentRequests  ReceivingRequest[] @relation("StudentRequests")
+  receiverRequests ReceivingRequest[] @relation("ReceiverRequests")
+  notifications    Notification[]
+  feedbacks        Feedback[]
+
+  @@map("users")
+}
+
+model ReceivingRequest {
+  id             String        @id @default(uuid())
+  studentId      String
+  student        User          @relation("StudentRequests", fields: [studentId], references: [id])
+  receiverId     String?
+  receiver       User?         @relation("ReceiverRequests", fields: [receiverId], references: [id])
+  foodPlatform   FoodPlatform
+  orderCode      String?
+  pickupLocation String        @default("FPT Main Gate")
+  pickupTime     DateTime
+  status         RequestStatus @default(PENDING)
+  note           String?
+  imageUrl       String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  feedback      Feedback?
+  notifications Notification[]
+
+  @@map("receiving_requests")
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id])
+  requestId String?
+  request   ReceivingRequest? @relation(fields: [requestId], references: [id])
+  title     String
+  message   String
+  type      NotificationType
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  @@map("notifications")
+}
+
+model Feedback {
+  id        String           @id @default(uuid())
+  requestId String           @unique
+  request   ReceivingRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  studentId String
+  student   User             @relation(fields: [studentId], references: [id])
+  rating    Int
+  comment   String?
+  createdAt DateTime         @default(now())
+
+  @@map("feedbacks")
+}

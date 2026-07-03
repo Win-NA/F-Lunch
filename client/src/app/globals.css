@@ -1,0 +1,179 @@
+@import "tailwindcss";
+
+:root {
+  --background: #fffbf7;
+  --foreground: #a34900;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+}
+
+@theme inline {
+  --color-background: #fffbf7;
+  --color-foreground: #a34900;
+  
+  /* Map slate colors to light warm creams and browns */
+  --color-slate-950: #fffbf7;
+  --color-slate-900: #fff5eb;
+  --color-slate-955: #faebd7;
+  --color-slate-850: #ebd6c2;
+  --color-slate-800: #ebd6c2;
+  --color-slate-700: #dcbba3;
+  --color-slate-650: #cfab91;
+  --color-slate-600: #7d4420;
+  --color-slate-555: #b58c69;
+  --color-slate-550: #6e3919;
+  --color-slate-500: #6e3919;
+  --color-slate-455: #6e3919;
+  --color-slate-450: #6e3919;
+  --color-slate-400: #6e3919;
+  --color-slate-355: #5c2c0e;
+  --color-slate-350: #5c2c0e;
+  --color-slate-300: #4a1f05;
+  --color-slate-200: #a34900;
+  --color-slate-100: #a34900;
+  
+  /* Accent orange (FPT standard) */
+  --color-orange-500: #ff5f00;
+  --color-orange-600: #e65200;
+}
+
+/* Global utility overrides for light theme */
+/* Make all text-white items FPT Orange (#ff5f00) as requested! */
+.text-white {
+  color: #ff5f00 !important;
+}
+
+.text-white * {
+  color: #ff5f00 !important;
+}
+
+/* White text ONLY for solid buttons and badges */
+.bg-orange-600,
+.bg-orange-500,
+.bg-red-500,
+.bg-purple-600,
+.bg-emerald-600,
+.bg-green-600,
+.bg-emerald-500 {
+  color: #ffffff !important;
+}
+
+/* Force text inside orange/accent background components to remain white */
+.bg-orange-600 *,
+.bg-orange-500 *,
+.bg-red-500 *,
+.bg-purple-600 *,
+.bg-emerald-600 *,
+.bg-green-600 *,
+.bg-emerald-500 * {
+  color: #ffffff !important;
+}
+
+/* Button overrides for contrast */
+button.bg-orange-600,
+button.bg-orange-500,
+button.bg-red-500,
+button.bg-purple-600,
+button.bg-green-600,
+button.bg-emerald-600 {
+  color: #ffffff !important;
+  border: none !important;
+}
+
+/* Secondary/gray/slate buttons should be warm beige with dark orange text */
+button.bg-slate-900,
+button.bg-slate-800,
+button.bg-slate-955 {
+  background-color: #ebd6c2 !important;
+  color: #a34900 !important;
+  border: 1px solid #dcbba3 !important;
+}
+
+button.bg-slate-900:hover,
+button.bg-slate-800:hover,
+button.bg-slate-955:hover {
+  background-color: #dcbba3 !important;
+  color: #823a00 !important;
+}
+
+/* Disabled buttons styling */
+button:disabled,
+button.disabled {
+  background-color: #f5f0eb !important;
+  color: #c48c60 !important;
+  border-color: #ebd6c2 !important;
+  cursor: not-allowed;
+}
+
+/* Ensure background of white elements remains pure white */
+.bg-white,
+.bg-white * {
+  background-color: #ffffff !important;
+  color: initial !important; /* Let QR elements draw normally */
+}
+
+/* Override input placeholder texts to be darker warm orange */
+::placeholder {
+  color: #c48c60 !important;
+  opacity: 0.8;
+}
+
+/* Accent texts - high contrast for light theme */
+.text-slate-100 {
+  color: #a34900 !important;
+}
+.text-slate-200 {
+  color: #a34900 !important;
+}
+.text-slate-300 {
+  color: #4a1f05 !important;
+}
+.text-slate-350 {
+  color: #5c2c0e !important;
+}
+.text-slate-355 {
+  color: #5c2c0e !important;
+}
+.text-slate-400 {
+  color: #6e3919 !important;
+}
+.text-slate-450 {
+  color: #6e3919 !important;
+}
+.text-slate-500 {
+  color: #6e3919 !important;
+}
+.text-slate-550 {
+  color: #6e3919 !important;
+}
+.text-slate-600 {
+  color: #7d4420 !important;
+}
+
+/* Make text-orange-500 slightly darker for high legibility as text */
+.text-orange-500 {
+  color: #d94f00 !important;
+}
+
+/* Badge text color high-contrast overrides */
+.text-blue-400, .text-blue-500 {
+  color: #1d4ed8 !important;
+}
+.text-amber-400, .text-amber-500, .text-yellow-500, .text-yellow-400 {
+  color: #b45309 !important;
+}
+.text-red-400, .text-red-500 {
+  color: #b91c1c !important;
+}
+.text-emerald-400, .text-emerald-500, .text-green-400, .text-green-500 {
+  color: #047857 !important;
+}
+
+/* Active menu link text inside sidebar/bottomnav should be white */
+.bg-orange-600.text-white,
+.bg-orange-600.text-white * {
+  color: #ffffff !important;
+}
