@@ -131,17 +131,18 @@ export default function ScannerPage() {
       <div className="bg-slate-900/60 backdrop-blur-xl border border-slate-800 p-5 rounded-3xl shadow-xl space-y-4">
         <h2 className="text-xs font-extrabold text-white uppercase tracking-wider flex items-center gap-2">
           <QrCode size={14} className="text-orange-500" />
-          Nhập mã thủ công
+          Nhập mã OTP thủ công
         </h2>
-        <p className="text-[10px] text-slate-500">Nếu camera của thiết bị bị lỗi, hãy nhập mã định danh yêu cầu bàn giao (Request ID) của sinh viên.</p>
+        <p className="text-[10px] text-slate-550">Nếu camera không quét được, hãy nhập mã bàn giao 6 ký tự hiển thị trên máy của sinh viên.</p>
         
         <form onSubmit={handleManualSubmit} className="space-y-4">
           <input
             type="text"
             value={manualId}
             onChange={(e) => setManualId(e.target.value)}
-            placeholder="Nhập mã số yêu cầu (UUID)"
-            className="w-full bg-slate-950 border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-orange-500"
+            placeholder="Nhập OTP 6 ký tự (ví dụ: EFA3BE)"
+            maxLength={6}
+            className="w-full bg-slate-950 border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-orange-500 uppercase tracking-[0.2em] text-center font-bold text-sm"
           />
 
           <button

@@ -15,7 +15,8 @@ import {
   ArrowRight,
   DollarSign,
   X,
-  Star
+  Star,
+  Pizza
 } from 'lucide-react';
 
 interface RequestItem {
@@ -267,31 +268,41 @@ export default function ReceiverDashboard() {
             ) : (
               <div className="divide-y divide-slate-800 max-h-[350px] overflow-y-auto pr-1">
                 {historyRequests.map((req) => (
-                  <div key={req.id} className="py-3.5 first:pt-0 last:pb-0 flex items-center justify-between">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-white">{req.foodPlatform}</span>
-                        {req.orderCode && <span className="text-[10px] text-slate-500 font-mono">Mã: {req.orderCode}</span>}
+                  <div key={req.id} className="py-3.5 first:pt-0 last:pb-0 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <div className="w-9 h-9 rounded-xl bg-slate-850 flex items-center justify-center text-slate-400 shrink-0">
+                        <Pizza size={18} />
                       </div>
-                      <div className="flex gap-3 text-[10px] text-slate-400 mt-1">
-                        <span>Sinh viên: {req.student.fullName}</span>
-                        <span>Vị trí: {req.pickupLocation}</span>
-                      </div>
-                      {/* Hiển thị đánh giá của sinh viên */}
-                      {(req as any).feedback && (
-                        <div className="flex items-center gap-1.5 mt-1.5 text-[9px] text-orange-400 bg-orange-500/5 px-2 py-0.5 rounded border border-orange-500/10 w-fit">
-                          <span className="flex gap-0.5">
-                            {Array.from({ length: (req as any).feedback.rating }).map((_, i) => (
-                              <Star key={i} size={8} className="fill-orange-500 stroke-orange-500" />
-                            ))}
-                          </span>
-                          {(req as any).feedback.comment && (
-                            <span className="text-slate-500 italic">"{(req as any).feedback.comment}"</span>
+                      <div className="min-w-0 flex-1 space-y-1">
+                        <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                          <p className="text-xs font-bold text-white truncate max-w-[120px]">{req.foodPlatform}</p>
+                          {req.orderCode && (
+                            <span className="text-[9px] text-slate-400 font-mono bg-slate-950 px-1.5 py-0.5 rounded border border-slate-800 truncate max-w-[140px]" title={req.orderCode}>
+                              Mã: {req.orderCode}
+                            </span>
                           )}
                         </div>
-                      )}
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-slate-450">
+                          <span>Sinh viên: {req.student.fullName}</span>
+                          <span>•</span>
+                          <span>Vị trí: {req.pickupLocation}</span>
+                        </div>
+                        {/* Hiển thị đánh giá của sinh viên */}
+                        {(req as any).feedback && (
+                          <div className="flex items-center gap-1.5 mt-1.5 text-[9px] text-orange-400 bg-orange-500/5 px-2 py-0.5 rounded border border-orange-500/10 w-fit">
+                            <span className="flex gap-0.5">
+                              {Array.from({ length: (req as any).feedback.rating }).map((_, i) => (
+                                <Star key={i} size={8} className="fill-orange-500 stroke-orange-500" />
+                              ))}
+                            </span>
+                            {(req as any).feedback.comment && (
+                              <span className="text-slate-500 italic">"{(req as any).feedback.comment}"</span>
+                            )}
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    <span className="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-1 rounded-md font-bold uppercase shrink-0">
+                    <span className="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-1 rounded-md font-bold uppercase shrink-0 whitespace-nowrap">
                       Hoàn thành
                     </span>
                   </div>

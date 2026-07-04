@@ -1,8 +1,17 @@
 import axios from 'axios';
 import { useAuthStore } from '@/stores/auth.store';
 
+const getBaseURL = () => {
+  if (typeof window !== 'undefined') {
+    // Client-side: use relative path so it dynamically adapts to localhost, local IP, or tunnel URL
+    return '/api/v1';
+  }
+  // Server-side (SSR): request the backend directly on localhost
+  return 'http://localhost:3001/api/v1';
+};
+
 export const api = axios.create({
-  baseURL: 'http://localhost:3001/api/v1',
+  baseURL: getBaseURL(),
   headers: {
     'Content-Type': 'application/json',
   },
@@ -32,7 +41,7 @@ api.interceptors.response.use(
         }
 
         // Call direct refresh route (bypass interceptor request changes if any)
-        const res = await axios.post('http://localhost:3001/api/v1/auth/refresh', {
+        const res = await axios.post(`${getBaseURL()}/auth/refresh`, {
           refreshToken,
         });
 

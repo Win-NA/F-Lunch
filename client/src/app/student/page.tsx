@@ -130,6 +130,8 @@ export default function StudentDashboard() {
 
   useEffect(() => {
     fetchRequests();
+    const interval = setInterval(fetchRequests, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   const handleCreateRequest = async (e: React.FormEvent) => {
@@ -195,17 +197,17 @@ export default function StudentDashboard() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'PENDING':
-        return <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-yellow-500/10 text-yellow-500 border border-yellow-500/20">Đang chờ</span>;
+        return <span className="px-2.5 py-1 text-[10px] font-bold rounded-full bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 whitespace-nowrap">Đang chờ</span>;
       case 'ACCEPTED':
-        return <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-blue-500/10 text-blue-500 border border-blue-500/20">Đã nhận hộ</span>;
+        return <span className="px-2.5 py-1 text-[10px] font-bold rounded-full bg-blue-500/10 text-blue-500 border border-blue-500/20 whitespace-nowrap">Đã nhận hộ</span>;
       case 'RECEIVED':
-        return <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-purple-500/10 text-purple-500 border border-purple-500/20">Đã lấy đơn</span>;
+        return <span className="px-2.5 py-1 text-[10px] font-bold rounded-full bg-purple-500/10 text-purple-500 border border-purple-500/20 whitespace-nowrap">Đã lấy đơn</span>;
       case 'READY_FOR_PICKUP':
-        return <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-green-500/10 text-green-500 border border-green-500/20">Chờ bạn lấy</span>;
+        return <span className="px-2.5 py-1 text-[10px] font-bold rounded-full bg-green-500/10 text-green-500 border border-green-500/20 whitespace-nowrap">Chờ bạn lấy</span>;
       case 'COMPLETED':
-        return <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">Hoàn thành</span>;
+        return <span className="px-2.5 py-1 text-[10px] font-bold rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 whitespace-nowrap">Hoàn thành</span>;
       default:
-        return <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-slate-500/10 text-slate-400 border border-slate-500/20">Đã hủy</span>;
+        return <span className="px-2.5 py-1 text-[10px] font-bold rounded-full bg-slate-500/10 text-slate-400 border border-slate-500/20 whitespace-nowrap">Đã hủy</span>;
     }
   };
 
@@ -392,24 +394,28 @@ export default function StudentDashboard() {
                   <div
                     key={req.id}
                     onClick={() => router.push(`/student/request/${req.id}`)}
-                    className="py-3.5 first:pt-0 last:pb-0 flex items-center justify-between hover:bg-slate-800/10 px-2 rounded-xl transition-colors cursor-pointer"
+                    className="py-3.5 first:pt-0 last:pb-0 flex items-center justify-between gap-3 hover:bg-slate-800/10 px-2 rounded-xl transition-colors cursor-pointer"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-lg bg-orange-500/10 flex items-center justify-center text-orange-500">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <div className="w-9 h-9 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-500 shrink-0">
                         <Pizza size={18} />
                       </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <p className="text-xs font-bold text-white">{req.foodPlatform}</p>
-                          {req.orderCode && <span className="text-[9px] text-slate-500 font-mono">Mã: {req.orderCode}</span>}
+                      <div className="min-w-0 flex-1 space-y-1">
+                        <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                          <p className="text-xs font-bold text-white truncate max-w-[120px]">{req.foodPlatform}</p>
+                          {req.orderCode && (
+                            <span className="text-[9px] text-slate-400 font-mono bg-slate-950 px-1.5 py-0.5 rounded border border-slate-800 truncate max-w-[140px]" title={req.orderCode}>
+                              Mã: {req.orderCode}
+                            </span>
+                          )}
                         </div>
-                        <div className="flex flex-wrap items-center gap-x-3 text-[10px] text-slate-450 mt-1">
-                          <span className="flex items-center gap-1"><MapPin size={10} /> {req.pickupLocation}</span>
-                          <span className="flex items-center gap-1"><Clock size={10} /> {new Date(req.pickupTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-slate-450">
+                          <span className="flex items-center gap-1"><MapPin size={10} className="shrink-0" /> {req.pickupLocation}</span>
+                          <span className="flex items-center gap-1"><Clock size={10} className="shrink-0" /> {new Date(req.pickupTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5 shrink-0">
                       {getStatusBadge(req.status)}
                       <ChevronRight className="text-slate-600" size={14} />
                     </div>
@@ -433,23 +439,27 @@ export default function StudentDashboard() {
                   <div
                     key={req.id}
                     onClick={() => router.push(`/student/request/${req.id}`)}
-                    className="py-3.5 first:pt-0 last:pb-0 flex items-center justify-between hover:bg-slate-800/10 px-2 rounded-xl transition-colors cursor-pointer"
+                    className="py-3.5 first:pt-0 last:pb-0 flex items-center justify-between gap-3 hover:bg-slate-800/10 px-2 rounded-xl transition-colors cursor-pointer"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-lg bg-slate-850 flex items-center justify-center text-slate-450">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <div className="w-9 h-9 rounded-xl bg-slate-850 flex items-center justify-center text-slate-400 shrink-0">
                         <Pizza size={18} />
                       </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <p className="text-xs font-bold text-white">{req.foodPlatform}</p>
-                          {req.orderCode && <span className="text-[9px] text-slate-500 font-mono">Mã: {req.orderCode}</span>}
+                      <div className="min-w-0 flex-1 space-y-1">
+                        <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                          <p className="text-xs font-bold text-white truncate max-w-[120px]">{req.foodPlatform}</p>
+                          {req.orderCode && (
+                            <span className="text-[9px] text-slate-400 font-mono bg-slate-950 px-1.5 py-0.5 rounded border border-slate-800 truncate max-w-[140px]" title={req.orderCode}>
+                              Mã: {req.orderCode}
+                            </span>
+                          )}
                         </div>
-                        <div className="flex items-center gap-3 text-[10px] text-slate-450 mt-1">
-                          <span className="flex items-center gap-1"><Calendar size={10} /> {new Date(req.pickupTime).toLocaleDateString('vi-VN')}</span>
+                        <div className="flex items-center gap-3 text-[10px] text-slate-450">
+                          <span className="flex items-center gap-1"><Calendar size={10} className="shrink-0" /> {new Date(req.pickupTime).toLocaleDateString('vi-VN')}</span>
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5 shrink-0">
                       {getStatusBadge(req.status)}
                       <ChevronRight className="text-slate-600" size={14} />
                     </div>

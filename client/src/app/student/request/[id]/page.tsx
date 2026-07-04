@@ -433,12 +433,14 @@ export default function RequestDetailPage() {
               <p className="text-[10px] text-slate-400">Trình mã QR này cho người nhận hộ để lấy lại đơn hàng của bạn.</p>
               
               <div className="bg-white p-3.5 rounded-2xl inline-block shadow-lg">
-                <QRCodeSVG value={request.id} size={150} />
+                <QRCodeSVG value={request.id.substring(0, 6).toUpperCase()} size={150} />
               </div>
 
               <div className="bg-slate-955 border border-slate-800 p-2.5 rounded-xl">
-                <p className="text-[9px] text-slate-500">Mã xác thực sơ cua</p>
-                <p className="text-xs font-mono font-bold text-white mt-0.5">{request.id}</p>
+                <p className="text-[9px] text-slate-500">Mã xác thực bàn giao (OTP)</p>
+                <p className="text-lg font-bold text-orange-500 tracking-[0.2em] mt-1 uppercase">
+                  {request.id.substring(0, 6).toUpperCase()}
+                </p>
               </div>
             </div>
           )}

@@ -51,7 +51,10 @@ export default function Sidebar() {
   return (
     <aside className="w-64 bg-slate-955 text-white min-h-screen p-5 flex flex-col justify-between border-r border-slate-800 shadow-xl">
       <div>
-        <div className="flex items-center gap-3 px-3 py-4 mb-8">
+        <Link
+          href={role === 'RECEIVER' ? '/receiver' : role === 'ADMIN' ? '/admin' : '/student'}
+          className="flex items-center gap-3 px-3 py-4 mb-8 hover:opacity-90 active:scale-[0.98] transition-all cursor-pointer"
+        >
           <div className="w-10 h-10 rounded-xl bg-orange-600 flex items-center justify-center font-bold text-xl text-white shadow-lg shadow-orange-600/30">
             FL
           </div>
@@ -59,7 +62,7 @@ export default function Sidebar() {
             <h1 className="font-extrabold text-lg leading-tight text-white tracking-wide">F-LUNCH</h1>
             <span className="text-[10px] uppercase font-bold text-orange-500 tracking-widest">{getRoleLabel(role)}</span>
           </div>
-        </div>
+        </Link>
 
         <nav className="space-y-1.5">
           {menuItems.map((item) => {

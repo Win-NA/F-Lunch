@@ -150,14 +150,30 @@ export class ReceiversService {
     return updated;
   }
 
-  async complete(requestId: string, receiverId: string) {
-    const request = await this.prisma.receivingRequest.findUnique({
-      where: { id: requestId },
-      include: { receiver: true },
-    });
+  async complete(verificationCode: string, receiverId: string) {
+    const cleanCode = verificationCode.trim();
+    let request;
+
+    if (cleanCode.length === 36) {
+      // Full UUID from QR scan
+      request = await this.prisma.receivingRequest.findUnique({
+        where: { id: cleanCode },
+        include: { receiver: true },
+      });
+    } else if (cleanCode.length === 6) {
+      // 6-character short code/OTP entered manually
+      request = await this.prisma.receivingRequest.findFirst({
+        where: {
+          id: {
+            startsWith: cleanCode.toLowerCase(),
+          },
+        },
+        include: { receiver: true },
+      });
+    }
 
     if (!request) {
-      throw new NotFoundException('Request not found');
+      throw new NotFoundException('Request not found or invalid code');
     }
 
     if (request.receiverId !== receiverId) {
@@ -169,7 +185,7 @@ export class ReceiversService {
     }
 
     const updated = await this.prisma.receivingRequest.update({
-      where: { id: requestId },
+      where: { id: request.id },
       data: { status: RequestStatus.COMPLETED },
     });
 
@@ -177,7 +193,7 @@ export class ReceiversService {
     await this.prisma.notification.create({
       data: {
         userId: request.studentId,
-        requestId,
+        requestId: request.id,
         title: 'Request Completed',
         message: `Your request has been successfully completed. Thank you for choosing F-Lunch! Please leave feedback.`,
         type: NotificationType.SUCCESS,
