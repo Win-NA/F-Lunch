@@ -9,7 +9,8 @@ import {
   Pizza, 
   Star,
   CheckCircle,
-  XCircle
+  XCircle,
+  DollarSign
 } from 'lucide-react';
 
 interface Stats {
@@ -110,7 +111,7 @@ export default function AdminDashboard() {
 
       {/* Metrics Grid */}
       {stats && (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
           <div className="bg-slate-900/60 backdrop-blur-xl border border-slate-800 p-4 rounded-2xl flex items-center gap-3">
             <div className="w-9 h-9 rounded-lg bg-orange-500/10 flex items-center justify-center text-orange-500 shrink-0">
               <Pizza size={18} />
@@ -118,6 +119,16 @@ export default function AdminDashboard() {
             <div>
               <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Tổng Đơn</p>
               <p className="text-md font-bold text-white mt-0.5">{stats.totalRequests}</p>
+            </div>
+          </div>
+
+          <div className="bg-slate-900/60 backdrop-blur-xl border border-slate-800 p-4 rounded-2xl flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500 shrink-0">
+              <DollarSign size={18} />
+            </div>
+            <div>
+              <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Tổng Thu Nhập</p>
+              <p className="text-md font-bold text-white mt-0.5">{((stats.statusDistribution?.['COMPLETED'] || 0) * 5000).toLocaleString()} VND</p>
             </div>
           </div>
 

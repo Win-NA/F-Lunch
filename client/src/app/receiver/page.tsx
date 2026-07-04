@@ -48,6 +48,7 @@ export default function ReceiverDashboard() {
 
   // Stats
   const [completedCount, setCompletedCount] = useState(0);
+  const [completedTodayCount, setCompletedTodayCount] = useState(0);
 
   const fetchData = async () => {
     try {
@@ -63,6 +64,16 @@ export default function ReceiverDashboard() {
       const historyRes = await api.get('/receivers/history');
       setHistoryRequests(historyRes.data);
       setCompletedCount(historyRes.data.length);
+
+      // Tính số đơn hoàn thành hôm nay
+      const today = new Date();
+      const completedToday = historyRes.data.filter((req: any) => {
+        const d = new Date(req.updatedAt);
+        return d.getDate() === today.getDate() &&
+               d.getMonth() === today.getMonth() &&
+               d.getFullYear() === today.getFullYear();
+      });
+      setCompletedTodayCount(completedToday.length);
     } catch (err: any) {
       // Bỏ qua lỗi kết nối
     } finally {
@@ -123,14 +134,14 @@ export default function ReceiverDashboard() {
       </div>
 
       {/* Receiver Statistics Panel */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-3xl">
         <div className="bg-slate-900/60 backdrop-blur-xl border border-slate-800 p-5 rounded-3xl flex items-center gap-4">
           <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-500">
             <CheckCircle size={22} />
           </div>
           <div>
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Đơn hoàn thành</p>
-            <p className="text-xl font-bold text-white mt-1">{completedCount}</p>
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Đơn hoàn thành hôm nay</p>
+            <p className="text-xl font-bold text-white mt-1">{completedTodayCount}</p>
           </div>
         </div>
 
@@ -139,8 +150,8 @@ export default function ReceiverDashboard() {
             <DollarSign size={22} />
           </div>
           <div>
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Tổng thu nhập của bạn</p>
-            <p className="text-xl font-bold text-white mt-1">{(completedCount * 5000).toLocaleString()} VND</p>
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Tiền công hôm nay</p>
+            <p className="text-xl font-bold text-white mt-1">{(completedTodayCount * 5000).toLocaleString()} VND</p>
           </div>
         </div>
       </div>
