@@ -39,4 +39,14 @@ export class UsersController {
   ) {
     return this.usersService.toggleUserStatus(id, status);
   }
+
+  @Patch(':id/role')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.ADMIN)
+  changeUserRole(
+    @Param('id') id: string,
+    @Body('role') role: UserRole,
+  ) {
+    return this.usersService.changeUserRole(id, role);
+  }
 }

@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { UserStatus } from '@prisma/client';
+import { UserStatus, UserRole } from '@prisma/client';
 
 @Injectable()
 export class UsersService {
@@ -94,6 +94,25 @@ export class UsersService {
         fullName: true,
         email: true,
         status: true,
+      },
+    });
+  }
+
+  async changeUserRole(userId: string, role: UserRole) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: { role },
+      select: {
+        id: true,
+        fullName: true,
+        email: true,
+        role: true,
       },
     });
   }

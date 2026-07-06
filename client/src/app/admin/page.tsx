@@ -89,6 +89,20 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleRoleChange = async (userId: string, newRole: string) => {
+    setBtnLoading(userId);
+    try {
+      await api.patch(`/users/${userId}/role`, { role: newRole });
+      toast.success(`Cập nhật vai trò thành công sang: ${getRoleLabel(newRole)}`);
+      fetchData();
+    } catch (err: any) {
+      const msg = err.response?.data?.message || 'Không thể cập nhật vai trò người dùng';
+      toast.error(msg);
+    } finally {
+      setBtnLoading(null);
+    }
+  };
+
   const getRoleLabel = (role: string) => {
     if (role === 'ADMIN') return 'QUẢN TRỊ';
     if (role === 'RECEIVER') return 'NHẬN HỘ';
@@ -192,13 +206,22 @@ export default function AdminDashboard() {
                       <p className="text-[10px] text-slate-500">{u.email}</p>
                     </td>
                     <td className="py-3">
-                      <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md ${
-                        u.role === 'ADMIN' ? 'bg-red-500/10 text-red-500 border border-red-500/20' :
-                        u.role === 'RECEIVER' ? 'bg-blue-500/10 text-blue-500 border border-blue-500/20' :
-                        'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20'
-                      }`}>
-                        {getRoleLabel(u.role)}
-                      </span>
+                      {u.role === 'ADMIN' ? (
+                        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-red-500/10 text-red-500 border border-red-500/20`}>
+                          {getRoleLabel(u.role)}
+                        </span>
+                      ) : (
+                        <select
+                          value={u.role}
+                          onChange={(e) => handleRoleChange(u.id, e.target.value)}
+                          disabled={btnLoading === u.id}
+                          className="bg-slate-950 border border-slate-800 rounded-lg px-2 py-0.5 text-[10px] font-medium text-slate-200 focus:outline-none focus:border-orange-500 transition-colors cursor-pointer"
+                        >
+                          <option value="STUDENT">SINH VIÊN</option>
+                          <option value="RECEIVER">NHẬN HỘ</option>
+                          <option value="ADMIN">QUẢN TRỊ</option>
+                        </select>
+                      )}
                     </td>
                     <td className="py-3">
                       <span className="flex items-center gap-1">

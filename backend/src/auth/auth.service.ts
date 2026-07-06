@@ -15,8 +15,9 @@ export class AuthService {
 
   async register(dto: RegisterDto) {
     // Validate domain
-    if (!dto.email.endsWith('@fpt.edu.vn')) {
-      throw new BadRequestException('Email must be from domain @fpt.edu.vn');
+    const emailLower = dto.email.trim().toLowerCase();
+    if (!emailLower.endsWith('@fpt.edu.vn') && !emailLower.endsWith('@gmail.com')) {
+      throw new BadRequestException('Email must be from domain @fpt.edu.vn or @gmail.com');
     }
 
     // Check if email already exists
@@ -37,7 +38,7 @@ export class AuthService {
         email: dto.email,
         password: hashedPassword,
         phoneNumber: dto.phoneNumber,
-        role: dto.role,
+        role: UserRole.STUDENT,
       },
     });
 

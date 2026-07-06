@@ -14,22 +14,27 @@ export default function RegisterPage() {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [role, setRole] = useState<'STUDENT' | 'RECEIVER'>('STUDENT');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!fullName || !email || !password) {
+    if (!fullName || !email || !password || !confirmPassword) {
       toast.error('Vui lòng nhập các trường thông tin bắt buộc');
       return;
     }
-    if (!email.endsWith('@fpt.edu.vn')) {
-      toast.error('Chỉ chấp nhận email đuôi @fpt.edu.vn');
+    const emailDomain = email.trim().toLowerCase();
+    if (!emailDomain.endsWith('@fpt.edu.vn') && !emailDomain.endsWith('@gmail.com')) {
+      toast.error('Chỉ chấp nhận email đuôi @fpt.edu.vn hoặc @gmail.com');
       return;
     }
     if (password.length < 6) {
       toast.error('Mật khẩu phải chứa ít nhất 6 ký tự');
+      return;
+    }
+    if (password !== confirmPassword) {
+      toast.error('Mật khẩu xác nhận không khớp');
       return;
     }
 
@@ -40,7 +45,6 @@ export default function RegisterPage() {
         email,
         password,
         phoneNumber: phoneNumber || undefined,
-        role,
       });
 
       const { user, accessToken, refreshToken } = res.data;
@@ -91,13 +95,13 @@ export default function RegisterPage() {
 
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">
-              Email Sinh viên FPT *
+              Email *
             </label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="Ví dụ: student1@fpt.edu.vn"
+              placeholder="Ví dụ: student1@fpt.edu.vn hoặc user@gmail.com"
               className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-650 focus:outline-none focus:border-orange-500 transition-colors"
             />
           </div>
@@ -129,33 +133,16 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
-              Bạn tham gia với vai trò nào?
+            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">
+              Nhập lại mật khẩu *
             </label>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => setRole('STUDENT')}
-                className={`py-3 rounded-xl border text-center font-medium text-xs transition-all cursor-pointer ${
-                  role === 'STUDENT'
-                    ? 'border-orange-500 bg-orange-500/10 text-orange-500'
-                    : 'border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700'
-                }`}
-              >
-                SINH VIÊN (Đặt hộ)
-              </button>
-              <button
-                type="button"
-                onClick={() => setRole('RECEIVER')}
-                className={`py-3 rounded-xl border text-center font-medium text-xs transition-all cursor-pointer ${
-                  role === 'RECEIVER'
-                    ? 'border-orange-500 bg-orange-500/10 text-orange-500'
-                    : 'border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700'
-                }`}
-              >
-                NGƯỜI NHẬN HỘ (Shipper)
-              </button>
-            </div>
+            <input
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="Nhập lại mật khẩu của bạn"
+              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-650 focus:outline-none focus:border-orange-500 transition-colors"
+            />
           </div>
 
           <button
