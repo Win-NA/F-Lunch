@@ -199,7 +199,7 @@ export default function StudentDashboard() {
       case 'PENDING':
         return <span className="px-2.5 py-1 text-[10px] font-bold rounded-full bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 whitespace-nowrap">Đang chờ</span>;
       case 'ACCEPTED':
-        return <span className="px-2.5 py-1 text-[10px] font-bold rounded-full bg-blue-500/10 text-blue-500 border border-blue-500/20 whitespace-nowrap">Đã nhận hộ</span>;
+        return <span className="px-2.5 py-1 text-[10px] font-bold rounded-full bg-blue-500/10 text-blue-500 border border-blue-500/20 whitespace-nowrap">Đã xác nhận</span>;
       case 'RECEIVED':
         return <span className="px-2.5 py-1 text-[10px] font-bold rounded-full bg-purple-500/10 text-purple-500 border border-purple-500/20 whitespace-nowrap">Đã lấy đơn</span>;
       case 'READY_FOR_PICKUP':

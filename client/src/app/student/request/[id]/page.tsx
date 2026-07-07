@@ -304,7 +304,7 @@ export default function RequestDetailPage() {
                       stepDesc = 'Đang đợi một người nhận hộ chấp nhận đơn hàng.';
                       break;
                     case 'ACCEPTED':
-                      stepLabel = 'Đã nhận hộ';
+                      stepLabel = 'Đã xác nhận';
                       stepDesc = request.receiver 
                         ? `Người nhận hộ ${request.receiver.fullName} đã nhận việc và đang đợi shipper giao.`
                         : 'Một người nhận hộ đã chấp nhận đơn hàng.';
