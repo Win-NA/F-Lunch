@@ -142,10 +142,11 @@ export class AuthService {
         ...tokens,
       };
     } catch (error) {
+      console.error('Google login internal error:', error);
       if (error instanceof UnauthorizedException || error instanceof BadRequestException) {
         throw error;
       }
-      throw new UnauthorizedException('Có lỗi xảy ra khi xác thực tài khoản Google');
+      throw new UnauthorizedException('Có lỗi xảy ra khi xác thực tài khoản Google: ' + (error.message || error));
     }
   }
 
