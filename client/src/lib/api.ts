@@ -4,7 +4,14 @@ import { useAuthStore } from '@/stores/auth.store';
 const getBaseURL = () => {
   // 1. Ưu tiên lấy từ biến môi trường (đã cài trên Vercel hoặc file .env.local)
   if (process.env.NEXT_PUBLIC_API_URL) {
-    return process.env.NEXT_PUBLIC_API_URL;
+    let url = process.env.NEXT_PUBLIC_API_URL.trim();
+    if (url.endsWith('/')) {
+      url = url.slice(0, -1);
+    }
+    if (!url.endsWith('/api/v1')) {
+      url = `${url}/api/v1`;
+    }
+    return url;
   }
 
   // 2. Dự phòng khi chạy local dưới máy
