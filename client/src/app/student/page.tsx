@@ -20,6 +20,7 @@ interface RequestItem {
   foodPlatform: string;
   orderCode?: string;
   pickupLocation: string;
+  dropoffLocation: string;
   pickupTime: string;
   status: string;
   createdAt: string;
@@ -163,6 +164,7 @@ export default function StudentDashboard() {
         foodPlatform,
         orderCode: extractedOrderCode || undefined,
         pickupLocation,
+        dropoffLocation: 'Sảnh Trống Đồng',
         pickupTime: pickupDate.toISOString(),
         note: note || undefined,
         imageUrl: imageBase64,
@@ -250,7 +252,7 @@ export default function StudentDashboard() {
 
             <div>
               <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1.5">
-                Vị trí nhận hàng *
+                Vị trí Shipper giao tới *
               </label>
               <select
                 value={pickupLocation}
@@ -260,6 +262,16 @@ export default function StudentDashboard() {
                 <option value="Cổng 1 FPT">Cổng 1 FPT</option>
                 <option value="Cổng 2 FPT">Cổng 2 FPT</option>
               </select>
+            </div>
+
+            <div>
+              <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1.5">
+                Nơi bạn xuống nhận hàng *
+              </label>
+              <div className="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-350 flex items-center gap-2 select-none">
+                <MapPin size={12} className="text-orange-500 shrink-0" />
+                <span>Sảnh Trống Đồng (Mặc định cố định)</span>
+              </div>
             </div>
 
             <div>
@@ -410,7 +422,7 @@ export default function StudentDashboard() {
                           )}
                         </div>
                         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-slate-450">
-                          <span className="flex items-center gap-1"><MapPin size={10} className="shrink-0" /> {req.pickupLocation}</span>
+                          <span className="flex items-center gap-1" title="Vị trí shipper giao → Vị trí bạn nhận"><MapPin size={10} className="shrink-0" /> {req.pickupLocation} → {req.dropoffLocation || 'Sảnh Trống Đồng'}</span>
                           <span className="flex items-center gap-1"><Clock size={10} className="shrink-0" /> {new Date(req.pickupTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                         </div>
                       </div>

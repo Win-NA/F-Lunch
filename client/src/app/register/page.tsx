@@ -1,11 +1,18 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Script from 'next/script';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth.store';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
+
+declare global {
+  interface Window {
+    google?: any;
+  }
+}
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -17,6 +24,54 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const handleGoogleInit = () => {
+    if (typeof window !== 'undefined' && window.google) {
+      window.google.accounts.id.initialize({
+        client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com",
+        callback: handleGoogleCallback,
+      });
+      window.google.accounts.id.renderButton(
+        document.getElementById("google-signin-btn"),
+        { 
+          theme: "outline", 
+          size: "large", 
+          width: 380,
+          text: "signup_with", 
+          shape: "rectangular"
+        }
+      );
+    }
+  };
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.google) {
+      handleGoogleInit();
+    }
+  }, []);
+
+  const handleGoogleCallback = async (response: any) => {
+    const idToken = response.credential;
+    setLoading(true);
+    try {
+      const res = await api.post('/auth/google', { credential: idToken });
+      const { user, accessToken, refreshToken } = res.data;
+      
+      setAuth(user, accessToken, refreshToken);
+      toast.success('Đăng nhập bằng tài khoản Google thành công!');
+
+      if (user.role === 'STUDENT') {
+        router.push('/student');
+      } else if (user.role === 'RECEIVER') {
+        router.push('/receiver');
+      }
+    } catch (err: any) {
+      const msg = err.response?.data?.message || 'Kết nối tài khoản Google thất bại';
+      toast.error(msg);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,6 +121,11 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-950 p-4 relative overflow-hidden">
+      <Script 
+        src="https://accounts.google.com/gsi/client" 
+        onLoad={handleGoogleInit}
+        strategy="afterInteractive"
+      />
       {/* Decorative gradient glowing circles */}
       <div className="absolute w-96 h-96 rounded-full bg-orange-600/10 blur-[100px] -top-20 -left-20 pointer-events-none" />
       <div className="absolute w-96 h-96 rounded-full bg-blue-600/10 blur-[100px] -bottom-20 -right-20 pointer-events-none" />
@@ -153,6 +213,18 @@ export default function RegisterPage() {
             {loading ? 'Đang tạo tài khoản...' : 'Đăng Ký'}
           </button>
         </form>
+
+        {/* Divider */}
+        <div className="flex items-center my-5">
+          <div className="flex-1 border-t border-slate-850" />
+          <span className="px-3 text-[10px] text-slate-500 font-bold uppercase tracking-widest">Hoặc tiếp tục với</span>
+          <div className="flex-1 border-t border-slate-850" />
+        </div>
+
+        {/* Google Register Button */}
+        <div className="flex justify-center w-full min-h-[44px] relative bg-slate-950/20 py-1.5 rounded-xl border border-slate-800/80">
+          <div id="google-signin-btn" className="w-full flex justify-center"></div>
+        </div>
 
         <p className="text-center text-xs text-slate-400 mt-6">
           Đã có tài khoản?{' '}

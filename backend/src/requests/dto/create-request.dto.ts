@@ -14,6 +14,10 @@ export class CreateRequestDto {
   @IsOptional()
   pickupLocation?: string;
 
+  @IsString()
+  @IsOptional()
+  dropoffLocation?: string;
+
   @IsDateString()
   @IsNotEmpty()
   pickupTime: string;

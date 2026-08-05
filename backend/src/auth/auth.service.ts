@@ -49,6 +49,7 @@ export class AuthService {
         fullName: user.fullName,
         email: user.email,
         role: user.role,
+        mssv: user.mssv,
       },
       ...tokens,
     };
@@ -78,9 +79,74 @@ export class AuthService {
         fullName: user.fullName,
         email: user.email,
         role: user.role,
+        mssv: user.mssv,
       },
       ...tokens,
     };
+  }
+
+  async googleLogin(credential: string) {
+    if (!credential) {
+      throw new BadRequestException('Google credential is required');
+    }
+
+    try {
+      const response = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${credential}`);
+      if (!response.ok) {
+        throw new UnauthorizedException('Xác thực tài khoản Google thất bại');
+      }
+
+      const payload = await response.json();
+      const email = payload.email?.trim().toLowerCase();
+      if (!email) {
+        throw new BadRequestException('Không tìm thấy Email trong tài khoản Google');
+      }
+
+      if (!email.endsWith('@fpt.edu.vn') && !email.endsWith('@gmail.com')) {
+        throw new BadRequestException('Chỉ chấp nhận email thuộc tên miền @fpt.edu.vn hoặc @gmail.com');
+      }
+
+      const name = payload.name || email.split('@')[0];
+      const picture = payload.picture || null;
+
+      let user = await this.prisma.user.findUnique({
+        where: { email },
+      });
+
+      if (!user) {
+        const randomPassword = Math.random().toString(36).slice(-10);
+        const hashedPassword = await bcrypt.hash(randomPassword, 10);
+
+        user = await this.prisma.user.create({
+          data: {
+            fullName: name,
+            email,
+            password: hashedPassword,
+            avatar: picture,
+            role: UserRole.STUDENT,
+          },
+        });
+      } else if (user.status === 'INACTIVE') {
+        throw new UnauthorizedException('Tài khoản đã bị tạm khóa');
+      }
+
+      const tokens = await this.generateTokens(user.id, user.email, user.role);
+      return {
+        user: {
+          id: user.id,
+          fullName: user.fullName,
+          email: user.email,
+          role: user.role,
+          mssv: user.mssv,
+        },
+        ...tokens,
+      };
+    } catch (error) {
+      if (error instanceof UnauthorizedException || error instanceof BadRequestException) {
+        throw error;
+      }
+      throw new UnauthorizedException('Có lỗi xảy ra khi xác thực tài khoản Google');
+    }
   }
 
   async refreshTokens(refreshToken: string) {

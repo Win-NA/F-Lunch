@@ -25,6 +25,12 @@ export class AuthController {
     return this.authService.refreshTokens(refreshToken);
   }
 
+  @Post('google')
+  @HttpCode(HttpStatus.OK)
+  googleLogin(@Body('credential') credential: string) {
+    return this.authService.googleLogin(credential);
+  }
+
   @Post('logout')
   @HttpCode(HttpStatus.OK)
   logout() {

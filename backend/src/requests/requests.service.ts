@@ -37,6 +37,7 @@ export class RequestsService {
         foodPlatform: dto.foodPlatform,
         orderCode: dto.orderCode,
         pickupLocation: dto.pickupLocation || 'FPT Main Gate',
+        dropoffLocation: dto.dropoffLocation || 'Sảnh Trống Đồng',
         pickupTime: pickupDate,
         status: RequestStatus.PENDING,
         note: dto.note,
@@ -177,6 +178,7 @@ export class RequestsService {
     if (dto.foodPlatform) updateData.foodPlatform = dto.foodPlatform;
     if (dto.orderCode !== undefined) updateData.orderCode = dto.orderCode;
     if (dto.pickupLocation) updateData.pickupLocation = dto.pickupLocation;
+    if (dto.dropoffLocation) updateData.dropoffLocation = dto.dropoffLocation;
     if (dto.pickupTime) {
       const pickupDate = new Date(dto.pickupTime);
       if (pickupDate <= new Date()) {

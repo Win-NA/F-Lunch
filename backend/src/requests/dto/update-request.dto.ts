@@ -14,6 +14,10 @@ export class UpdateRequestDto {
   @IsOptional()
   pickupLocation?: string;
 
+  @IsString()
+  @IsOptional()
+  dropoffLocation?: string;
+
   @IsDateString()
   @IsOptional()
   pickupTime?: string;

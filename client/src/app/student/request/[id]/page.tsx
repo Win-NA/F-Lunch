@@ -23,6 +23,7 @@ interface RequestDetail {
   foodPlatform: string;
   orderCode: string;
   pickupLocation: string;
+  dropoffLocation: string;
   pickupTime: string;
   status: string;
   note?: string;
@@ -164,6 +165,7 @@ export default function RequestDetailPage() {
         foodPlatform: editFoodPlatform,
         orderCode: editExtractedOrderCode || null,
         pickupLocation: editPickupLocation,
+        dropoffLocation: 'Sảnh Trống Đồng',
         pickupTime: pickupDate.toISOString(),
         note: editNote || '',
         imageUrl: editImageBase64,
@@ -365,8 +367,16 @@ export default function RequestDetailPage() {
             <div className="flex items-start gap-2.5 pt-2">
               <MapPin className="text-orange-500 shrink-0 mt-0.5" size={14} />
               <div>
-                <p className="text-[10px] font-semibold text-slate-500">Vị trí nhận</p>
+                <p className="text-[10px] font-semibold text-slate-500">Vị trí shipper giao tới</p>
                 <p className="text-xs font-bold text-white mt-0.5">{request.pickupLocation}</p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-2.5 pt-2 border-t border-slate-800/40">
+              <MapPin className="text-orange-500 shrink-0 mt-0.5" size={14} />
+              <div>
+                <p className="text-[10px] font-semibold text-slate-500">Nơi bạn xuống nhận hàng</p>
+                <p className="text-xs font-bold text-white mt-0.5">{request.dropoffLocation || 'Sảnh Trống Đồng'}</p>
               </div>
             </div>
 
@@ -588,7 +598,7 @@ export default function RequestDetailPage() {
 
               <div>
                 <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1.5">
-                  Vị trí nhận hàng *
+                  Vị trí Shipper giao tới *
                 </label>
                 <select
                   value={editPickupLocation}
@@ -598,6 +608,16 @@ export default function RequestDetailPage() {
                   <option value="Cổng 1 FPT">Cổng 1 FPT</option>
                   <option value="Cổng 2 FPT">Cổng 2 FPT</option>
                 </select>
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1.5">
+                  Nơi bạn xuống nhận hàng *
+                </label>
+                <div className="w-full bg-slate-955/50 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-350 flex items-center gap-2 select-none">
+                  <MapPin size={12} className="text-orange-500 shrink-0" />
+                  <span>Sảnh Trống Đồng (Mặc định cố định)</span>
+                </div>
               </div>
 
               <div>

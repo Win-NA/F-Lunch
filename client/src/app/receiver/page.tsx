@@ -24,6 +24,7 @@ interface RequestItem {
   foodPlatform: string;
   orderCode: string;
   pickupLocation: string;
+  dropoffLocation: string;
   pickupTime: string;
   status: string;
   note?: string;
@@ -192,13 +193,21 @@ export default function ReceiverDashboard() {
                   </div>
                 </div>
 
-                {/* Details */}
                 <div className="space-y-3 text-xs">
-                  <div className="flex items-start gap-2">
-                    <MapPin size={14} className="text-orange-500 shrink-0 mt-0.5" />
-                    <div>
-                      <p className="text-[10px] font-semibold text-slate-550">Vị trí nhận</p>
-                      <p className="text-xs font-bold text-white">{activeTask.pickupLocation}</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="flex items-start gap-2">
+                      <MapPin size={14} className="text-orange-500 shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-[10px] font-semibold text-slate-550">Lấy hàng tại (Shipper)</p>
+                        <p className="text-xs font-bold text-white">{activeTask.pickupLocation}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <MapPin size={14} className="text-orange-500 shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-[10px] font-semibold text-slate-550">Giao cho khách tại</p>
+                        <p className="text-xs font-bold text-white">{activeTask.dropoffLocation || 'Sảnh Trống Đồng'}</p>
+                      </div>
                     </div>
                   </div>
 
@@ -296,7 +305,7 @@ export default function ReceiverDashboard() {
                         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-slate-450">
                           <span>Sinh viên: {req.student.fullName}</span>
                           <span>•</span>
-                          <span>Vị trí: {req.pickupLocation}</span>
+                          <span>Lấy: {req.pickupLocation} → Giao: {req.dropoffLocation || 'Sảnh Trống Đồng'}</span>
                         </div>
                         {/* Hiển thị đánh giá của sinh viên */}
                         {(req as any).feedback && (
@@ -355,7 +364,7 @@ export default function ReceiverDashboard() {
                     </div>
 
                     <div className="space-y-1 text-[10px] text-slate-400">
-                      <p className="flex items-center gap-1.5"><MapPin size={10} /> {job.pickupLocation}</p>
+                      <p className="flex items-center gap-1.5" title="Vị trí shipper giao → Vị trí khách nhận"><MapPin size={10} /> {job.pickupLocation} → {job.dropoffLocation || 'Sảnh Trống Đồng'}</p>
                       <p className="flex items-center gap-1.5"><Clock size={10} /> {new Date(job.pickupTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
                       <p className="flex items-center gap-1.5"><User size={10} /> {job.student.fullName}</p>
                     </div>

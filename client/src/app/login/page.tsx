@@ -1,12 +1,18 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Script from 'next/script';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth.store';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
-import { User, ClipboardList, Shield } from 'lucide-react';
+
+declare global {
+  interface Window {
+    google?: any;
+  }
+}
 
 export default function LoginPage() {
   const router = useRouter();
@@ -16,14 +22,65 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const handleGoogleInit = () => {
+    if (typeof window !== 'undefined' && window.google) {
+      window.google.accounts.id.initialize({
+        client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com",
+        callback: handleGoogleCallback,
+      });
+      window.google.accounts.id.renderButton(
+        document.getElementById("google-signin-btn"),
+        { 
+          theme: "outline", 
+          size: "large", 
+          width: 380,
+          text: "signin_with", 
+          shape: "rectangular"
+        }
+      );
+    }
+  };
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.google) {
+      handleGoogleInit();
+    }
+  }, []);
+
+  const handleGoogleCallback = async (response: any) => {
+    const idToken = response.credential;
+    setLoading(true);
+    try {
+      const res = await api.post('/auth/google', { credential: idToken });
+      const { user, accessToken, refreshToken } = res.data;
+      
+      setAuth(user, accessToken, refreshToken);
+      toast.success(`Chào mừng quay trở lại, ${user.fullName}!`);
+
+      if (user.role === 'STUDENT') {
+        router.push('/student');
+      } else if (user.role === 'RECEIVER') {
+        router.push('/receiver');
+      } else if (user.role === 'ADMIN') {
+        router.push('/admin');
+      }
+    } catch (err: any) {
+      const msg = err.response?.data?.message || 'Đăng nhập Google thất bại';
+      toast.error(msg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
       toast.error('Vui lòng điền đầy đủ thông tin');
       return;
     }
-    if (!email.endsWith('@fpt.edu.vn')) {
-      toast.error('Chỉ chấp nhận email đuôi @fpt.edu.vn');
+    const emailLower = email.trim().toLowerCase();
+    if (!emailLower.endsWith('@fpt.edu.vn') && !emailLower.endsWith('@gmail.com')) {
+      toast.error('Chỉ chấp nhận email đuôi @fpt.edu.vn hoặc @gmail.com');
       return;
     }
 
@@ -51,32 +108,13 @@ export default function LoginPage() {
     }
   };
 
-  const handleQuickLogin = async (quickEmail: string) => {
-    setLoading(true);
-    try {
-      const res = await api.post('/auth/login', { email: quickEmail, password: '123456' });
-      const { user, accessToken, refreshToken } = res.data;
-      
-      setAuth(user, accessToken, refreshToken);
-      toast.success(`Đăng nhập nhanh thành công! Chào ${user.fullName}.`);
-
-      if (user.role === 'STUDENT') {
-        router.push('/student');
-      } else if (user.role === 'RECEIVER') {
-        router.push('/receiver');
-      } else if (user.role === 'ADMIN') {
-        router.push('/admin');
-      }
-    } catch (err: any) {
-      const msg = err.response?.data?.message || 'Đăng nhập nhanh thất bại';
-      toast.error(msg);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-950 p-3 sm:p-4 relative overflow-hidden">
+      <Script 
+        src="https://accounts.google.com/gsi/client" 
+        onLoad={handleGoogleInit}
+        strategy="afterInteractive"
+      />
       {/* Decorative gradient glowing circles */}
       <div className="absolute w-96 h-96 rounded-full bg-orange-600/10 blur-[100px] -top-20 -left-20 pointer-events-none" />
       <div className="absolute w-96 h-96 rounded-full bg-blue-600/10 blur-[100px] -bottom-20 -right-20 pointer-events-none" />
@@ -93,13 +131,13 @@ export default function LoginPage() {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-450 mb-1.5">
-              Email Sinh viên FPT *
+              Email Sinh viên FPT hoặc Gmail *
             </label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="Ví dụ: student1@fpt.edu.vn"
+              placeholder="student1@fpt.edu.vn hoặc user@gmail.com"
               className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-650 focus:outline-none focus:border-orange-500 transition-colors"
             />
           </div>
@@ -129,39 +167,13 @@ export default function LoginPage() {
         {/* Divider */}
         <div className="flex items-center my-5">
           <div className="flex-1 border-t border-slate-850" />
-          <span className="px-3 text-[10px] text-slate-500 font-bold uppercase tracking-widest">Hoặc đăng nhập nhanh</span>
+          <span className="px-3 text-[10px] text-slate-500 font-bold uppercase tracking-widest">Hoặc tiếp tục với</span>
           <div className="flex-1 border-t border-slate-850" />
         </div>
 
-        {/* Quick Login Buttons */}
-        <div className="grid grid-cols-3 gap-2">
-          <button
-            type="button"
-            onClick={() => handleQuickLogin('student1@fpt.edu.vn')}
-            disabled={loading}
-            className="bg-slate-950 hover:bg-slate-900/60 border border-slate-850 hover:border-orange-550/40 text-slate-300 py-3 rounded-xl transition-all active:scale-95 flex flex-col items-center justify-center gap-1.5 cursor-pointer"
-          >
-            <User size={16} className="text-orange-500" />
-            <span className="text-[10px] font-bold">Sinh viên</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => handleQuickLogin('receiver1@fpt.edu.vn')}
-            disabled={loading}
-            className="bg-slate-950 hover:bg-slate-900/60 border border-slate-850 hover:border-orange-550/40 text-slate-300 py-3 rounded-xl transition-all active:scale-95 flex flex-col items-center justify-center gap-1.5 cursor-pointer"
-          >
-            <ClipboardList size={16} className="text-orange-500" />
-            <span className="text-[10px] font-bold">Người nhận</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => handleQuickLogin('admin@fpt.edu.vn')}
-            disabled={loading}
-            className="bg-slate-950 hover:bg-slate-900/60 border border-slate-850 hover:border-orange-550/40 text-slate-300 py-3 rounded-xl transition-all active:scale-95 flex flex-col items-center justify-center gap-1.5 cursor-pointer"
-          >
-            <Shield size={16} className="text-orange-500" />
-            <span className="text-[10px] font-bold">Quản trị</span>
-          </button>
+        {/* Google Login Button */}
+        <div className="flex justify-center w-full min-h-[44px] relative bg-slate-950/20 py-1.5 rounded-xl border border-slate-800/80">
+          <div id="google-signin-btn" className="w-full flex justify-center"></div>
         </div>
 
         <p className="text-center text-xs text-slate-500 mt-6">

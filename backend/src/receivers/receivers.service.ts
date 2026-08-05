@@ -134,7 +134,7 @@ export class ReceiversService {
       message = `Your food has been received from the driver by receiver ${request.receiver?.fullName || 'Receiver'}.`;
     } else if (status === RequestStatus.READY_FOR_PICKUP) {
       title = 'Ready for Pickup';
-      message = `Your food is ready for pickup at ${request.pickupLocation}. Show your QR code to complete.`;
+      message = `Your food is ready for pickup at ${request.dropoffLocation}. Show your QR code to complete.`;
     }
 
     await this.prisma.notification.create({

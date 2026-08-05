@@ -74,6 +74,7 @@ model ReceivingRequest {
   foodPlatform   FoodPlatform
   orderCode      String?
   pickupLocation String        @default("FPT Main Gate")
+  dropoffLocation String       @default("Sảnh Trống Đồng")
   pickupTime     DateTime
   status         RequestStatus @default(PENDING)
   note           String?
