@@ -2,11 +2,16 @@ import axios from 'axios';
 import { useAuthStore } from '@/stores/auth.store';
 
 const getBaseURL = () => {
+  // 1. Ưu tiên lấy từ biến môi trường (đã cài trên Vercel hoặc file .env.local)
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return process.env.NEXT_PUBLIC_API_URL;
+  }
+
+  // 2. Dự phòng khi chạy local dưới máy
   if (typeof window !== 'undefined') {
-    // Client-side: use relative path so it dynamically adapts to localhost, local IP, or tunnel URL
     return '/api/v1';
   }
-  // Server-side (SSR): request the backend directly on localhost
+
   return 'http://localhost:3001/api/v1';
 };
 
@@ -40,7 +45,6 @@ api.interceptors.response.use(
           throw new Error('No refresh token');
         }
 
-        // Call direct refresh route (bypass interceptor request changes if any)
         const res = await axios.post(`${getBaseURL()}/auth/refresh`, {
           refreshToken,
         });
@@ -50,11 +54,11 @@ api.interceptors.response.use(
 
         originalRequest.headers.Authorization = `Bearer ${accessToken}`;
         return api(originalRequest);
-      } catch (err) {
+      } catch (refreshError) {
         useAuthStore.getState().logout();
-        return Promise.reject(error);
+        return Promise.reject(refreshError);
       }
     }
     return Promise.reject(error);
-  },
+  }
 );
