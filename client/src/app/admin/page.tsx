@@ -1145,18 +1145,18 @@ function AdminDashboardContent() {
             </div>
           </div>
 
-          {/* Requests Table */}
-          <div className="overflow-x-auto border border-slate-800 rounded-2xl">
-            <table className="w-full min-w-[700px] text-left text-xs text-slate-350">
-              <thead className="text-[10px] text-slate-500 uppercase border-b border-slate-800">
+          {/* Requests Desktop Table */}
+          <div className="hidden md:block overflow-hidden border border-slate-800 rounded-2xl bg-slate-955/50">
+            <table className="w-full text-left text-xs text-slate-350">
+              <thead className="text-[10px] text-slate-400 uppercase border-b border-slate-800 bg-slate-900/80">
                 <tr>
-                  <th className="pb-3 font-semibold">Mã đơn / Ứng dụng</th>
-                  <th className="pb-3 font-semibold">Sinh viên gửi</th>
-                  <th className="pb-3 font-semibold">Người nhận hộ</th>
-                  <th className="pb-3 font-semibold">Địa điểm</th>
-                  <th className="pb-3 font-semibold">Giờ giao dự kiến</th>
-                  <th className="pb-3 font-semibold">Trạng thái</th>
-                  <th className="pb-3 font-semibold text-right">Chi tiết</th>
+                  <th className="px-4 py-3.5 font-bold">Mã đơn / Ứng dụng</th>
+                  <th className="px-4 py-3.5 font-bold">Sinh viên gửi</th>
+                  <th className="px-4 py-3.5 font-bold">Người nhận hộ</th>
+                  <th className="px-4 py-3.5 font-bold">Địa điểm</th>
+                  <th className="px-4 py-3.5 font-bold">Giờ giao dự kiến</th>
+                  <th className="px-4 py-3.5 font-bold">Trạng thái</th>
+                  <th className="px-4 py-3.5 font-bold text-right">Chi tiết</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-850">
@@ -1169,17 +1169,17 @@ function AdminDashboardContent() {
                 ) : (
                   filteredRequests.map((req) => (
                     <tr key={req.id} className="hover:bg-slate-800/20 transition-colors">
-                      <td className="py-3">
+                      <td className="px-4 py-3.5">
                         <p className="font-bold text-white">{req.foodPlatform}</p>
                         <p className="text-[10px] font-mono text-slate-400">
                           {req.orderCode ? `Mã: ${req.orderCode}` : 'Có ảnh đính kèm'}
                         </p>
                       </td>
-                      <td className="py-3">
+                      <td className="px-4 py-3.5">
                         <p className="font-bold text-white">{req.student?.fullName}</p>
                         <p className="text-[10px] text-slate-500">{req.student?.email}</p>
                       </td>
-                      <td className="py-3">
+                      <td className="px-4 py-3.5">
                         {req.receiver ? (
                           <>
                             <p className="font-bold text-slate-200">{req.receiver.fullName}</p>
@@ -1189,20 +1189,20 @@ function AdminDashboardContent() {
                           <span className="text-[10px] text-slate-500 italic">Chưa phân công</span>
                         )}
                       </td>
-                      <td className="py-3 text-[10px] text-slate-400">
+                      <td className="px-4 py-3.5 text-[10px] text-slate-400">
                         <p className="font-medium text-slate-300">{req.pickupLocation}</p>
                         <p className="text-slate-500">→ {req.dropoffLocation || 'Sảnh Trống Đồng'}</p>
                       </td>
-                      <td className="py-3 text-[10px] text-slate-400">
+                      <td className="px-4 py-3.5 text-[10px] text-slate-400">
                         {new Date(req.pickupTime).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
                       </td>
-                      <td className="py-3">
+                      <td className="px-4 py-3.5">
                         {getStatusBadge(req.status)}
                       </td>
-                      <td className="py-3 text-right">
+                      <td className="px-4 py-3.5 text-right">
                         <button
                           onClick={() => setSelectedRequestDetail(req)}
-                          className="px-2.5 py-1 rounded-lg bg-orange-500/10 text-orange-400 hover:bg-orange-500/20 border border-orange-500/20 text-[10px] font-bold transition-all cursor-pointer inline-flex items-center gap-1"
+                          className="px-3 py-1.5 rounded-xl bg-orange-500/10 text-orange-400 hover:bg-orange-500/20 border border-orange-500/20 text-[11px] font-bold transition-all cursor-pointer inline-flex items-center gap-1 shadow-sm"
                         >
                           <Eye size={12} /> Xem chi tiết
                         </button>
@@ -1212,6 +1212,50 @@ function AdminDashboardContent() {
                 )}
               </tbody>
             </table>
+          </div>
+
+          {/* Requests Mobile Native Cards */}
+          <div className="md:hidden space-y-3">
+            {filteredRequests.length === 0 ? (
+              <p className="text-center py-6 text-slate-500 text-xs">Không tìm thấy đơn hàng nào phù hợp.</p>
+            ) : (
+              filteredRequests.map((req) => (
+                <div key={req.id} className="p-4 bg-slate-955 border border-slate-800 rounded-2xl space-y-3 shadow-sm">
+                  <div className="flex items-center justify-between border-b border-slate-850 pb-2.5">
+                    <div>
+                      <span className="font-extrabold text-xs text-orange-500 uppercase tracking-wider">{req.foodPlatform}</span>
+                      <p className="text-[10px] font-mono text-slate-400 mt-0.5">#{req.orderCode || req.id.slice(0, 8)}</p>
+                    </div>
+                    {getStatusBadge(req.status)}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 text-[11px]">
+                    <div>
+                      <span className="text-[9px] text-slate-500 uppercase font-bold block">Sinh viên gửi</span>
+                      <p className="font-bold text-white truncate">{req.student?.fullName}</p>
+                      <p className="text-[9px] text-slate-400 truncate">{req.student?.email}</p>
+                    </div>
+                    <div>
+                      <span className="text-[9px] text-slate-500 uppercase font-bold block">Người nhận hộ</span>
+                      <p className="font-bold text-slate-200 truncate">{req.receiver ? req.receiver.fullName : 'Chưa phân công'}</p>
+                      <p className="text-[9px] text-slate-400 truncate">{req.receiver?.email || ''}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-1 border-t border-slate-850">
+                    <div className="text-[10px] text-slate-400">
+                      <span>{req.pickupLocation} → {req.dropoffLocation || 'Sảnh Trống Đồng'}</span>
+                    </div>
+                    <button
+                      onClick={() => setSelectedRequestDetail(req)}
+                      className="px-3 py-1 rounded-lg bg-orange-600 text-white font-bold text-[10px] shadow-sm flex items-center gap-1 cursor-pointer"
+                    >
+                      <Eye size={12} /> Xem đơn
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       )}
@@ -1265,19 +1309,19 @@ function AdminDashboardContent() {
             </div>
           </div>
 
-          {/* TABLE OF MEMBERS & BOTH STUDENT & RECEIVER METRICS FOR CEO DASHBOARD */}
-          <div className="overflow-x-auto border border-slate-800 rounded-2xl">
-            <table className="w-full min-w-[760px] text-left text-xs text-slate-350">
-              <thead className="text-[10px] text-slate-500 uppercase border-b border-slate-800">
+          {/* Users Desktop Table */}
+          <div className="hidden md:block overflow-hidden border border-slate-800 rounded-2xl bg-slate-955/50">
+            <table className="w-full text-left text-xs text-slate-350">
+              <thead className="text-[10px] text-slate-400 uppercase border-b border-slate-800 bg-slate-900/80">
                 <tr>
-                  <th className="pb-3 font-semibold">Tên / Email / MSSV</th>
-                  <th className="pb-3 font-semibold">Vai trò</th>
-                  <th className="pb-3 font-semibold text-center">Số đơn đặt / Nhận</th>
-                  <th className="pb-3 font-semibold text-center">Hoàn thành / Đang làm</th>
-                  <th className="pb-3 font-semibold text-center">Chi trả / Thu nhập</th>
-                  <th className="pb-3 font-semibold text-center">Đánh giá</th>
-                  <th className="pb-3 font-semibold">Trạng thái</th>
-                  <th className="pb-3 font-semibold text-right">Thao tác</th>
+                  <th className="px-4 py-3.5 font-bold">Tên / Email / MSSV</th>
+                  <th className="px-4 py-3.5 font-bold">Vai trò</th>
+                  <th className="px-4 py-3.5 font-bold text-center">Số đơn đặt / Nhận</th>
+                  <th className="px-4 py-3.5 font-bold text-center">Hoàn thành / Đang làm</th>
+                  <th className="px-4 py-3.5 font-bold text-center">Chi trả / Thu nhập</th>
+                  <th className="px-4 py-3.5 font-bold text-center">Đánh giá</th>
+                  <th className="px-4 py-3.5 font-bold">Trạng thái</th>
+                  <th className="px-4 py-3.5 font-bold text-right">Thao tác</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-850">
@@ -1302,7 +1346,7 @@ function AdminDashboardContent() {
                             : 'hover:bg-slate-800/10'
                         }`}
                       >
-                        <td className="py-3 pl-2">
+                        <td className="px-4 py-3.5">
                           <div className="flex items-center gap-2">
                             <p className="font-bold text-white">{u.fullName}</p>
                             {isSelf && (
@@ -1314,7 +1358,7 @@ function AdminDashboardContent() {
                           <p className="text-[10px] text-slate-400 mt-0.5">{u.email} {u.mssv ? `• MSSV: ${u.mssv}` : ''}</p>
                         </td>
 
-                        <td className="py-3">
+                        <td className="px-4 py-3.5">
                           {isSelf ? (
                             <span className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-red-500/20 text-red-400 border border-red-500/30">
                               QUẢN TRỊ (Bạn)
@@ -1334,7 +1378,7 @@ function AdminDashboardContent() {
                         </td>
 
                         {/* SỐ ĐƠN ĐÃ ĐẶT (SINH VIÊN) NẾU LA SINH VIÊN / SỐ ĐƠN NHẬN (NHẬN HỘ) NẾU LÀ NHẬN HỘ */}
-                        <td className="py-3 text-center">
+                        <td className="px-4 py-3.5 text-center">
                           {u.role === 'STUDENT' ? (
                             studentStat && studentStat.totalOrdered > 0 ? (
                               <span className="px-2 py-0.5 text-[10px] font-extrabold rounded-md bg-orange-500/10 text-orange-400 border border-orange-500/20">
@@ -1357,7 +1401,7 @@ function AdminDashboardContent() {
                         </td>
 
                         {/* HOÀN THÀNH / ĐANG LÀM */}
-                        <td className="py-3 text-center">
+                        <td className="px-4 py-3.5 text-center">
                           {u.role === 'STUDENT' ? (
                             studentStat && studentStat.totalOrdered > 0 ? (
                               <div className="space-y-0.5">
@@ -1386,7 +1430,7 @@ function AdminDashboardContent() {
                         </td>
 
                         {/* CHI TRẢ (SINH VIÊN) HOẶC THU NHẬP (NHẬN HỘ) */}
-                        <td className="py-3 text-center">
+                        <td className="px-4 py-3.5 text-center">
                           {u.role === 'STUDENT' ? (
                             studentStat && studentStat.completedCount > 0 ? (
                               <span className="font-bold text-slate-200 text-xs">
@@ -1405,7 +1449,7 @@ function AdminDashboardContent() {
                         </td>
 
                         {/* ĐÁNH GIÁ */}
-                        <td className="py-3 text-center">
+                        <td className="px-4 py-3.5 text-center">
                           {u.role === 'RECEIVER' && receiverKPI && receiverKPI.avgRating !== 'Chưa có' ? (
                             <span className="inline-flex items-center gap-1 text-[10px] font-bold text-yellow-400 bg-yellow-500/10 px-2 py-0.5 rounded-full border border-yellow-500/20">
                               <Star size={10} className="fill-yellow-400" /> {receiverKPI.avgRating}
@@ -1415,7 +1459,7 @@ function AdminDashboardContent() {
                           )}
                         </td>
 
-                        <td className="py-3">
+                        <td className="px-4 py-3.5">
                           <span className="flex items-center gap-1.5">
                             {u.status === 'ACTIVE' ? (
                               <>
@@ -1430,7 +1474,7 @@ function AdminDashboardContent() {
                             )}
                           </span>
                         </td>
-                        <td className="py-3 text-right pr-2">
+                        <td className="px-4 py-3.5 text-right">
                           {isSelf ? (
                             <span className="text-[10px] text-slate-500 font-semibold italic">
                               Đang sử dụng
@@ -1455,6 +1499,103 @@ function AdminDashboardContent() {
                 )}
               </tbody>
             </table>
+          </div>
+
+          {/* Users Mobile Native Cards */}
+          <div className="md:hidden space-y-3">
+            {filteredUsers.length === 0 ? (
+              <p className="text-center py-6 text-slate-500 text-xs">Không tìm thấy thành viên nào trong mục này.</p>
+            ) : (
+              filteredUsers.map((u) => {
+                const isSelf = currentUser?.id === u.id || currentUser?.email?.toLowerCase() === u.email?.toLowerCase();
+                const receiverKPI = receiverKPIMap.get(u.id);
+                const studentStat = studentStatsMap.get(u.id);
+
+                return (
+                  <div key={u.id} className="p-4 bg-slate-955 border border-slate-800 rounded-2xl space-y-3 shadow-sm">
+                    <div className="flex items-center justify-between border-b border-slate-850 pb-2.5">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-full bg-orange-600/10 border border-orange-500/20 flex items-center justify-center font-bold text-xs text-orange-500 shrink-0">
+                          {u.fullName ? u.fullName[0] : 'U'}
+                        </div>
+                        <div>
+                          <p className="font-extrabold text-xs text-white flex items-center gap-1.5">
+                            {u.fullName}
+                            {isSelf && (
+                              <span className="px-1.5 py-0.2 text-[8px] bg-orange-600 text-white font-extrabold rounded-full">
+                                Bạn
+                              </span>
+                            )}
+                          </p>
+                          <p className="text-[10px] text-slate-400">{u.email} {u.mssv ? `• MSSV: ${u.mssv}` : ''}</p>
+                        </div>
+                      </div>
+
+                      <div>
+                        {isSelf ? (
+                          <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-red-500/10 text-red-400 border border-red-500/20">
+                            QUẢN TRỊ
+                          </span>
+                        ) : (
+                          <select
+                            value={u.role}
+                            onChange={(e) => handleRoleChange(u.id, e.target.value)}
+                            disabled={btnLoading === u.id}
+                            className="bg-slate-955 border border-slate-800 rounded-lg px-2 py-1 text-[10px] font-bold text-slate-200 cursor-pointer"
+                          >
+                            <option value="STUDENT">SINH VIÊN</option>
+                            <option value="RECEIVER">NHẬN HỘ</option>
+                            <option value="ADMIN">QUẢN TRỊ</option>
+                          </select>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 text-center text-[10px]">
+                      <div className="p-2 bg-slate-900 rounded-xl border border-slate-850">
+                        <span className="text-slate-500 font-semibold block text-[9px] uppercase">Số đơn</span>
+                        <span className="font-extrabold text-orange-400">
+                          {u.role === 'STUDENT' ? `${studentStat?.totalOrdered || 0} đã đặt` : `${receiverKPI?.totalAssigned || 0} đã nhận`}
+                        </span>
+                      </div>
+                      <div className="p-2 bg-slate-900 rounded-xl border border-slate-850">
+                        <span className="text-slate-500 font-semibold block text-[9px] uppercase">Chi trả / Thu nhập</span>
+                        <span className="font-extrabold text-emerald-400">
+                          {u.role === 'STUDENT' ? `${(studentStat?.totalSpent || 0).toLocaleString()} VNĐ` : `${(receiverKPI?.totalEarnings || 0).toLocaleString()} VNĐ`}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-1 border-t border-slate-850 text-xs">
+                      <span className="flex items-center gap-1">
+                        {u.status === 'ACTIVE' ? (
+                          <span className="text-emerald-400 font-bold text-[10px] flex items-center gap-1">
+                            <CheckCircle size={12} /> Hoạt động
+                          </span>
+                        ) : (
+                          <span className="text-red-400 font-bold text-[10px] flex items-center gap-1">
+                            <XCircle size={12} /> Bị khóa
+                          </span>
+                        )}
+                      </span>
+                      {!isSelf && (
+                        <button
+                          onClick={() => handleToggleStatus(u.id, u.status)}
+                          disabled={btnLoading === u.id}
+                          className={`px-3 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
+                            u.status === 'ACTIVE'
+                              ? 'bg-red-500/10 text-red-400 border border-red-500/20'
+                              : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                          }`}
+                        >
+                          {btnLoading === u.id ? '...' : u.status === 'ACTIVE' ? 'Khóa' : 'Mở khóa'}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
         </div>
       )}
