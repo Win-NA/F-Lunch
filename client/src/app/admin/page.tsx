@@ -119,7 +119,7 @@ function AdminDashboardContent() {
   useEffect(() => {
     if (viewParam === 'ceo') {
       setActiveCard('CEO');
-    } else if (!viewParam && activeCard === 'CEO') {
+    } else if (!viewParam) {
       setActiveCard('ALL');
     }
   }, [viewParam]);
