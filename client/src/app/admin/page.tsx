@@ -762,124 +762,137 @@ function AdminDashboardContent() {
 
         {/* REQUEST DETAIL MODAL */}
         {selectedRequestDetail && (
-          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
-            <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl shadow-2xl max-w-xl w-full space-y-5 relative my-8">
+          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+            <div className="bg-slate-900 border border-slate-800 p-5 sm:p-6 rounded-3xl shadow-2xl max-w-xl w-full space-y-4 relative my-auto max-h-[85vh] flex flex-col overflow-hidden">
               <button
                 onClick={() => setSelectedRequestDetail(null)}
-                className="absolute top-4 right-4 text-slate-400 hover:text-white p-1 rounded-full bg-slate-800/50 cursor-pointer"
+                className="absolute top-4 right-4 text-slate-400 hover:text-white p-1.5 rounded-full bg-slate-800/80 cursor-pointer z-10"
               >
                 <X size={18} />
               </button>
 
               {/* Modal Header */}
-              <div className="border-b border-slate-800 pb-4">
-                <div className="flex items-center gap-2">
+              <div className="border-b border-slate-800 pb-3 pr-8 shrink-0">
+                <div className="flex flex-wrap items-center gap-2">
                   <span className="text-xs font-bold text-white px-2.5 py-1 rounded-lg bg-orange-600/20 text-orange-400 border border-orange-500/30">
                     {selectedRequestDetail.foodPlatform}
                   </span>
                   {getStatusBadge(selectedRequestDetail.status)}
                 </div>
-                <h3 className="text-lg font-bold text-white mt-2">
+                <h3 className="text-base sm:text-lg font-bold text-white mt-2">
                   Mã đơn: {selectedRequestDetail.orderCode || 'Đã đính kèm ảnh đơn hàng'}
                 </h3>
                 <p className="text-[10px] text-slate-400 mt-0.5">ID: {selectedRequestDetail.id}</p>
               </div>
 
-              {/* Student & Receiver Info Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Student info */}
-                <div className="bg-slate-955 p-3.5 rounded-2xl border border-slate-800 space-y-1.5">
-                  <p className="text-[9px] font-bold uppercase tracking-wider text-orange-400">Người gửi (Sinh viên)</p>
-                  <p className="text-xs font-bold text-white">{selectedRequestDetail.student.fullName}</p>
-                  <p className="text-[10px] text-slate-400">{selectedRequestDetail.student.email}</p>
-                  {selectedRequestDetail.student.phoneNumber && (
-                    <p className="text-[10px] text-slate-400">SĐT: {selectedRequestDetail.student.phoneNumber}</p>
-                  )}
-                  {selectedRequestDetail.student.mssv && (
-                    <p className="text-[10px] text-slate-400">MSSV: {selectedRequestDetail.student.mssv}</p>
-                  )}
-                </div>
+              {/* Scrollable Modal Content */}
+              <div className="flex-1 overflow-y-auto space-y-3.5 pr-1">
+                {/* Student & Receiver Info Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {/* Student info */}
+                  <div className="bg-slate-955 p-3.5 rounded-2xl border border-slate-800 space-y-1.5">
+                    <p className="text-[9px] font-bold uppercase tracking-wider text-orange-400">Người gửi (Sinh viên)</p>
+                    <p className="text-xs font-bold text-white">{selectedRequestDetail.student.fullName}</p>
+                    <p className="text-[10px] text-slate-400 break-all">{selectedRequestDetail.student.email}</p>
+                    {selectedRequestDetail.student.phoneNumber && (
+                      <p className="text-[10px] text-slate-400">SĐT: {selectedRequestDetail.student.phoneNumber}</p>
+                    )}
+                    {selectedRequestDetail.student.mssv && (
+                      <p className="text-[10px] text-slate-400">MSSV: {selectedRequestDetail.student.mssv}</p>
+                    )}
+                  </div>
 
-                {/* Receiver info */}
-                <div className="bg-slate-955 p-3.5 rounded-2xl border border-slate-800 space-y-1.5">
-                  <p className="text-[9px] font-bold uppercase tracking-wider text-blue-400">Người nhận hộ được giao</p>
-                  {selectedRequestDetail.receiver ? (
-                    <>
-                      <p className="text-xs font-bold text-white">{selectedRequestDetail.receiver.fullName}</p>
-                      <p className="text-[10px] text-slate-400">{selectedRequestDetail.receiver.email}</p>
-                      {selectedRequestDetail.receiver.phoneNumber && (
-                        <p className="text-[10px] text-slate-400">SĐT: {selectedRequestDetail.receiver.phoneNumber}</p>
-                      )}
-                    </>
-                  ) : (
-                    <p className="text-xs text-slate-500 italic mt-1">Chưa có ai nhận đơn này</p>
-                  )}
-                </div>
-              </div>
-
-              {/* Location & Time info */}
-              <div className="space-y-2 text-xs bg-slate-955 p-3.5 rounded-2xl border border-slate-800">
-                <div className="flex items-center gap-2">
-                  <MapPin size={14} className="text-orange-500 shrink-0" />
-                  <div>
-                    <span className="text-[10px] text-slate-500">Giao tới: </span>
-                    <span className="font-bold text-white">{selectedRequestDetail.pickupLocation}</span>
-                    <span className="text-[10px] text-slate-500"> → Trả khách tại: </span>
-                    <span className="font-bold text-white">{selectedRequestDetail.dropoffLocation || 'Sảnh Trống Đồng'}</span>
+                  {/* Receiver info */}
+                  <div className="bg-slate-955 p-3.5 rounded-2xl border border-slate-800 space-y-1.5">
+                    <p className="text-[9px] font-bold uppercase tracking-wider text-blue-400">Người nhận hộ được giao</p>
+                    {selectedRequestDetail.receiver ? (
+                      <>
+                        <p className="text-xs font-bold text-white">{selectedRequestDetail.receiver.fullName}</p>
+                        <p className="text-[10px] text-slate-400 break-all">{selectedRequestDetail.receiver.email}</p>
+                        {selectedRequestDetail.receiver.phoneNumber && (
+                          <p className="text-[10px] text-slate-400">SĐT: {selectedRequestDetail.receiver.phoneNumber}</p>
+                        )}
+                      </>
+                    ) : (
+                      <p className="text-xs text-slate-500 italic mt-1">Chưa có ai nhận đơn này</p>
+                    )}
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 pt-1 border-t border-slate-855">
-                  <Clock size={14} className="text-orange-500 shrink-0" />
-                  <div>
-                    <span className="text-[10px] text-slate-500">Giờ hẹn giao: </span>
-                    <span className="font-bold text-white">{new Date(selectedRequestDetail.pickupTime).toLocaleString()}</span>
+                {/* Location & Time info */}
+                <div className="space-y-2 text-xs bg-slate-955 p-3.5 rounded-2xl border border-slate-800">
+                  <div className="flex items-start gap-2">
+                    <MapPin size={14} className="text-orange-500 shrink-0 mt-0.5" />
+                    <div>
+                      <span className="text-[10px] text-slate-500">Giao tới: </span>
+                      <span className="font-bold text-white">{selectedRequestDetail.pickupLocation}</span>
+                      <span className="text-[10px] text-slate-500"> → Trả khách tại: </span>
+                      <span className="font-bold text-white">{selectedRequestDetail.dropoffLocation || 'Sảnh Trống Đồng'}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 pt-1.5 border-t border-slate-855">
+                    <Clock size={14} className="text-orange-500 shrink-0" />
+                    <div>
+                      <span className="text-[10px] text-slate-500">Giờ hẹn giao: </span>
+                      <span className="font-bold text-white">{new Date(selectedRequestDetail.pickupTime).toLocaleString('vi-VN')}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Note if present */}
-              {selectedRequestDetail.note && (
-                <div className="bg-slate-955 p-3.5 rounded-2xl border border-slate-800">
-                  <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400 mb-1">Ghi chú của sinh viên</p>
-                  <p className="text-xs text-slate-300">{selectedRequestDetail.note}</p>
-                </div>
-              )}
-
-              {/* Image Preview if present */}
-              {selectedRequestDetail.imageUrl && (
-                <div className="bg-slate-955 p-3.5 rounded-2xl border border-slate-800">
-                  <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400 mb-2">Ảnh màn hình đơn hàng</p>
-                  <div className="relative max-w-full h-40 rounded-xl overflow-hidden border border-slate-800 bg-slate-900 flex items-center justify-center">
-                    <img
-                      src={selectedRequestDetail.imageUrl}
-                      alt="Ảnh đơn hàng"
-                      className="max-h-full max-w-full object-contain cursor-zoom-in rounded-lg"
-                      onClick={() => setFullscreenImage(selectedRequestDetail.imageUrl || null)}
-                    />
+                {/* Note if present */}
+                {selectedRequestDetail.note && (
+                  <div className="bg-slate-955 p-3.5 rounded-2xl border border-slate-800">
+                    <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400 mb-1">Ghi chú của sinh viên</p>
+                    <p className="text-xs text-slate-300">{selectedRequestDetail.note}</p>
                   </div>
-                  <p className="text-[9px] text-slate-500 mt-1.5 text-center">Chạm vào ảnh để phóng to</p>
-                </div>
-              )}
+                )}
 
-              {/* Feedback if completed */}
-              {selectedRequestDetail.feedback && (
-                <div className="bg-slate-955 p-3.5 rounded-2xl border border-slate-800 space-y-1.5">
-                  <p className="text-[9px] font-bold uppercase tracking-wider text-yellow-400">Đánh giá của sinh viên</p>
-                  <div className="flex items-center gap-1">
-                    {[1, 2, 3, 4, 5].map((s) => (
-                      <Star 
-                        key={s} 
-                        size={12} 
-                        className={s <= selectedRequestDetail.feedback!.rating ? 'text-yellow-500 fill-yellow-500' : 'text-slate-800'} 
+                {/* Image Preview if present */}
+                {selectedRequestDetail.imageUrl && (
+                  <div className="bg-slate-955 p-3.5 rounded-2xl border border-slate-800">
+                    <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400 mb-2">Ảnh màn hình đơn hàng</p>
+                    <div className="relative max-w-full h-40 rounded-xl overflow-hidden border border-slate-800 bg-slate-900 flex items-center justify-center">
+                      <img
+                        src={selectedRequestDetail.imageUrl}
+                        alt="Ảnh đơn hàng"
+                        className="max-h-full max-w-full object-contain cursor-zoom-in rounded-lg"
+                        onClick={() => setFullscreenImage(selectedRequestDetail.imageUrl || null)}
                       />
-                    ))}
+                    </div>
+                    <p className="text-[9px] text-slate-500 mt-1.5 text-center">Chạm vào ảnh để phóng to</p>
                   </div>
-                  {selectedRequestDetail.feedback.comment && (
-                    <p className="text-xs italic text-slate-300">&ldquo;{selectedRequestDetail.feedback.comment}&rdquo;</p>
-                  )}
-                </div>
-              )}
+                )}
+
+                {/* Feedback if completed */}
+                {selectedRequestDetail.feedback && (
+                  <div className="bg-slate-955 p-3.5 rounded-2xl border border-slate-800 space-y-1.5">
+                    <p className="text-[9px] font-bold uppercase tracking-wider text-yellow-400">Đánh giá của sinh viên</p>
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((s) => (
+                        <Star 
+                          key={s} 
+                          size={12} 
+                          className={s <= selectedRequestDetail.feedback!.rating ? 'text-yellow-500 fill-yellow-500' : 'text-slate-800'} 
+                        />
+                      ))}
+                    </div>
+                    {selectedRequestDetail.feedback.comment && (
+                      <p className="text-xs italic text-slate-300">&ldquo;{selectedRequestDetail.feedback.comment}&rdquo;</p>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Modal Footer with Close Button */}
+              <div className="pt-3 border-t border-slate-800 flex justify-end shrink-0">
+                <button
+                  onClick={() => setSelectedRequestDetail(null)}
+                  className="bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs px-4 py-2 rounded-xl transition-all cursor-pointer"
+                >
+                  Đóng chi tiết
+                </button>
+              </div>
             </div>
           </div>
         )}
