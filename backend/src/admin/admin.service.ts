@@ -40,16 +40,23 @@ export class AdminService {
       include: {
         student: {
           select: {
+            id: true,
             fullName: true,
             email: true,
+            phoneNumber: true,
+            mssv: true,
           },
         },
         receiver: {
           select: {
+            id: true,
             fullName: true,
             email: true,
+            phoneNumber: true,
+            mssv: true,
           },
         },
+        feedback: true,
       },
       orderBy: { createdAt: 'desc' },
     });

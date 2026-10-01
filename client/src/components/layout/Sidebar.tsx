@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth.store';
 import { 
   Home, 
@@ -10,11 +10,13 @@ import {
   QrCode, 
   Shield, 
   LogOut, 
-  ClipboardList
+  ClipboardList,
+  Crown
 } from 'lucide-react';
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { user, logout } = useAuthStore();
 
   if (!user) return null;
@@ -44,9 +46,12 @@ export default function Sidebar() {
   } else if (role === 'ADMIN') {
     menuItems.push(
       { name: 'Quản trị viên', path: '/admin', icon: Shield },
+      { name: 'Báo cáo CEO', path: '/admin?view=ceo', icon: Crown },
       { name: 'Hồ sơ', path: '/profile', icon: User }
     );
   }
+
+  const currentView = searchParams.get('view');
 
   return (
     <aside className="w-64 bg-slate-955 text-white min-h-screen p-5 flex flex-col justify-between border-r border-slate-800 shadow-xl">
@@ -67,7 +72,18 @@ export default function Sidebar() {
         <nav className="space-y-1.5">
           {menuItems.map((item) => {
             const Icon = item.icon;
-            const isActive = pathname === item.path;
+            const isCeoItem = item.path === '/admin?view=ceo';
+            const isAdminMainItem = item.path === '/admin';
+            
+            let isActive = false;
+            if (isCeoItem) {
+              isActive = pathname === '/admin' && currentView === 'ceo';
+            } else if (isAdminMainItem) {
+              isActive = pathname === '/admin' && currentView !== 'ceo';
+            } else {
+              isActive = pathname === item.path;
+            }
+
             return (
               <Link
                 key={item.path}
@@ -78,7 +94,7 @@ export default function Sidebar() {
                     : 'text-slate-400 hover:bg-slate-900 hover:text-white'
                 }`}
               >
-                <Icon size={18} />
+                <Icon size={18} className={isCeoItem && isActive ? 'fill-white' : ''} />
                 <span>{item.name}</span>
               </Link>
             );

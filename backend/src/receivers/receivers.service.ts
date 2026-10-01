@@ -151,7 +151,7 @@ export class ReceiversService {
   }
 
   async complete(verificationCode: string, receiverId: string) {
-    const cleanCode = verificationCode.trim();
+    const cleanCode = verificationCode.trim().toLowerCase();
     let request;
 
     if (cleanCode.length === 36) {
@@ -160,12 +160,12 @@ export class ReceiversService {
         where: { id: cleanCode },
         include: { receiver: true },
       });
-    } else if (cleanCode.length === 6) {
-      // 6-character short code/OTP entered manually
+    } else if (cleanCode.length > 0) {
+      // Short code/OTP or prefix match entered manually
       request = await this.prisma.receivingRequest.findFirst({
         where: {
           id: {
-            startsWith: cleanCode.toLowerCase(),
+            startsWith: cleanCode,
           },
         },
         include: { receiver: true },

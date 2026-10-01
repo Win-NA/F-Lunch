@@ -5,6 +5,9 @@ const getBaseURL = () => {
   // 1. Ưu tiên lấy từ biến môi trường (đã cài trên Vercel hoặc file .env.local)
   if (process.env.NEXT_PUBLIC_API_URL) {
     let url = process.env.NEXT_PUBLIC_API_URL.trim();
+    if (!url.startsWith('http://') && !url.startsWith('https://') && !url.startsWith('/')) {
+      url = `https://${url}`;
+    }
     if (url.endsWith('/')) {
       url = url.slice(0, -1);
     }
