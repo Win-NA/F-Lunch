@@ -139,7 +139,13 @@ function AdminDashboardContent() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [selectedRequestDetail, setSelectedRequestDetail] = useState<RequestItem | null>(null);
+  const [userOrdersModal, setUserOrdersModal] = useState<{ user: UserItem; role: 'STUDENT' | 'RECEIVER' } | null>(null);
   const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
+
+  const openRevenueModal = (tf: TimeframeFilter) => {
+    setRevenueModalTimeframe(tf);
+    setShowRevenueModal(true);
+  };
 
   const fetchData = async () => {
     try {
@@ -441,10 +447,469 @@ function AdminDashboardContent() {
     return 'Tất cả thời gian';
   };
 
-  const openRevenueModal = (tf: TimeframeFilter) => {
-    setRevenueModalTimeframe(tf);
-    setShowRevenueModal(true);
-  };
+  // Helper to render shared modals across views
+  function renderModals() {
+    return (
+      <>
+        {/* REVENUE BREAKDOWN MODAL (BẢNG KÊ CHI TIẾT THU NHẬP) */}
+        {showRevenueModal && (
+          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
+            <div className="bg-slate-900 border border-slate-800 p-5 sm:p-6 rounded-3xl shadow-2xl max-w-3xl w-full space-y-4 sm:space-y-5 relative my-8 max-h-[85vh] flex flex-col overflow-hidden">
+              <button
+                onClick={() => setShowRevenueModal(false)}
+                className="absolute top-4 right-4 text-slate-400 hover:text-white p-1.5 rounded-full bg-slate-800/80 cursor-pointer z-10"
+              >
+                <X size={18} />
+              </button>
+
+              {/* Modal Header */}
+              <div className="border-b border-slate-800 pb-4 shrink-0">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pr-8">
+                  <div>
+                    <h3 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+                      <DollarSign className="text-emerald-400 shrink-0" size={20} />
+                      Bảng Kê Chi Tiết Thu Nhập ({getTimeframeLabel(revenueModalTimeframe)})
+                    </h3>
+                    <p className="text-xs text-slate-400 mt-0.5">Danh sách các đơn hàng đã hoàn thành (Phí dịch vụ 5.000 VNĐ / đơn)</p>
+                  </div>
+
+                  <div className="text-left sm:text-right shrink-0">
+                    <span className="text-[10px] uppercase font-bold text-slate-500 block">Tổng Doanh Thu</span>
+                    <span className="text-lg sm:text-xl font-extrabold text-emerald-400">
+                      {(revenueModalRequests.length * 5000).toLocaleString()} VNĐ
+                    </span>
+                  </div>
+                </div>
+
+                {/* Timeframe Quick Switcher */}
+                <div className="flex items-center gap-1 mt-4 bg-slate-955 p-1 rounded-xl border border-slate-800 overflow-x-auto max-w-full">
+                  <button
+                    onClick={() => setRevenueModalTimeframe('TODAY')}
+                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+                      revenueModalTimeframe === 'TODAY' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    Hôm nay ({requests.filter(r => r.status === 'COMPLETED' && isDateInTimeframe(r.updatedAt || r.createdAt, 'TODAY')).length})
+                  </button>
+                  <button
+                    onClick={() => setRevenueModalTimeframe('MONTH')}
+                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+                      revenueModalTimeframe === 'MONTH' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    Tháng này ({requests.filter(r => r.status === 'COMPLETED' && isDateInTimeframe(r.updatedAt || r.createdAt, 'MONTH')).length})
+                  </button>
+                  <button
+                    onClick={() => setRevenueModalTimeframe('YEAR')}
+                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+                      revenueModalTimeframe === 'YEAR' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    Năm nay ({requests.filter(r => r.status === 'COMPLETED' && isDateInTimeframe(r.updatedAt || r.createdAt, 'YEAR')).length})
+                  </button>
+                  <button
+                    onClick={() => setRevenueModalTimeframe('ALL')}
+                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+                      revenueModalTimeframe === 'ALL' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    Tất cả ({requests.filter(r => r.status === 'COMPLETED').length})
+                  </button>
+                </div>
+              </div>
+
+              {/* Revenue Requests Content (Responsive Table on Desktop, Cards on Mobile) */}
+              <div className="flex-1 overflow-y-auto pr-1">
+                {revenueModalRequests.length === 0 ? (
+                  <div className="text-center py-10 text-slate-500 text-xs border border-dashed border-slate-800 rounded-2xl">
+                    Chưa có đơn hàng nào hoàn thành trong khoảng thời gian này.
+                  </div>
+                ) : (
+                  <>
+                    {/* Desktop Table View */}
+                    <div className="hidden md:block">
+                      <table className="w-full text-left text-xs text-slate-350 border-collapse">
+                        <thead className="text-[10px] text-slate-500 uppercase border-b border-slate-800 sticky top-0 bg-slate-900 z-10">
+                          <tr>
+                            <th className="pb-3 font-semibold">Đơn hàng / Mã</th>
+                            <th className="pb-3 font-semibold">Người nhận hộ (Thu nhập)</th>
+                            <th className="pb-3 font-semibold">Sinh viên người dùng</th>
+                            <th className="pb-3 font-semibold">Thời gian hoàn thành</th>
+                            <th className="pb-3 font-semibold text-right">Phí dịch vụ</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-855">
+                          {revenueModalRequests.map((req) => (
+                            <tr key={req.id} className="hover:bg-slate-800/20">
+                              <td className="py-3 pr-2">
+                                <p className="font-bold text-white">{req.foodPlatform}</p>
+                                <p className="text-[10px] font-mono text-slate-400">
+                                  {req.orderCode ? `Mã: ${req.orderCode}` : 'Có ảnh đơn'}
+                                </p>
+                              </td>
+                              <td className="py-3 pr-2">
+                                <p className="font-bold text-blue-400 truncate max-w-[180px]">{req.receiver?.fullName || 'Người nhận hộ'}</p>
+                                <p className="text-[10px] text-slate-500 truncate max-w-[180px]">{req.receiver?.email}</p>
+                              </td>
+                              <td className="py-3 pr-2">
+                                <p className="font-bold text-slate-200 truncate max-w-[180px]">{req.student?.fullName}</p>
+                                <p className="text-[10px] text-slate-500 truncate max-w-[180px]">{req.student?.email}</p>
+                              </td>
+                              <td className="py-3 pr-2 text-[10px] text-slate-400">
+                                {new Date(req.updatedAt || req.createdAt).toLocaleString('vi-VN')}
+                              </td>
+                              <td className="py-3 text-right">
+                                <span className="font-bold text-emerald-400 text-xs bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                                  +5.000 VNĐ
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Mobile Native Cards View (Prevents text squeeze & overlap) */}
+                    <div className="md:hidden space-y-3">
+                      {revenueModalRequests.map((req) => (
+                        <div key={req.id} className="p-3.5 bg-slate-955 rounded-2xl border border-slate-800 space-y-2.5">
+                          <div className="flex items-center justify-between border-b border-slate-850 pb-2">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-bold text-orange-400">#{req.orderCode || req.id.slice(0, 8)}</span>
+                              <span className="text-[10px] font-semibold px-2 py-0.5 bg-slate-800 text-slate-300 rounded-full">
+                                {req.foodPlatform}
+                              </span>
+                            </div>
+                            <span className="text-xs font-extrabold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                              +5.000 VNĐ
+                            </span>
+                          </div>
+                          <div className="space-y-1.5 text-xs">
+                            <div className="flex items-start justify-between gap-2">
+                              <span className="text-[10px] text-slate-400 shrink-0">Người nhận hộ:</span>
+                              <span className="font-bold text-blue-400 text-right text-xs break-all">
+                                {req.receiver?.fullName || 'N/A'} ({req.receiver?.email})
+                              </span>
+                            </div>
+                            <div className="flex items-start justify-between gap-2">
+                              <span className="text-[10px] text-slate-400 shrink-0">Sinh viên đặt:</span>
+                              <span className="font-bold text-slate-200 text-right text-xs break-all">
+                                {req.student?.fullName} ({req.student?.email})
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between text-[10px] text-slate-400 pt-1 border-t border-slate-855">
+                              <span>Thời gian hoàn thành:</span>
+                              <span>{new Date(req.updatedAt || req.createdAt).toLocaleString('vi-VN')}</span>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => setSelectedRequestDetail(req)}
+                            className="w-full text-center text-[10px] font-bold text-orange-400 hover:text-orange-300 pt-1 border-t border-slate-855 flex items-center justify-center gap-1 cursor-pointer"
+                          >
+                            <Eye size={12} /> Xem chi tiết đơn hàng
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+
+              <div className="pt-3 border-t border-slate-800 flex justify-end shrink-0">
+                <button
+                  onClick={() => setShowRevenueModal(false)}
+                  className="bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs px-4 py-2 rounded-xl transition-all cursor-pointer"
+                >
+                  Đóng bảng kê
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* USER ORDER HISTORY MODAL */}
+        {userOrdersModal && (
+          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
+            <div className="bg-slate-900 border border-slate-800 p-5 sm:p-6 rounded-3xl shadow-2xl max-w-3xl w-full space-y-4 relative my-8 max-h-[85vh] flex flex-col overflow-hidden">
+              <button
+                onClick={() => setUserOrdersModal(null)}
+                className="absolute top-4 right-4 text-slate-400 hover:text-white p-1.5 rounded-full bg-slate-800/80 cursor-pointer z-10"
+              >
+                <X size={18} />
+              </button>
+
+              {/* Modal Header */}
+              <div className="border-b border-slate-800 pb-3 pr-8 shrink-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider ${
+                    userOrdersModal.role === 'STUDENT' ? 'bg-orange-500/10 text-orange-400 border border-orange-500/20' : 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
+                  }`}>
+                    {userOrdersModal.role === 'STUDENT' ? 'Sinh Viên Đặt Đơn' : 'Người Nhận Hộ'}
+                  </span>
+                  <h3 className="text-base sm:text-lg font-extrabold text-white">
+                    Lịch Sử Đơn Hàng: {userOrdersModal.user.fullName}
+                  </h3>
+                </div>
+                <p className="text-xs text-slate-400 mt-1">
+                  {userOrdersModal.user.email} {userOrdersModal.user.mssv ? `• MSSV: ${userOrdersModal.user.mssv}` : ''}
+                </p>
+              </div>
+
+              {/* Compute user orders */}
+              {(() => {
+                const userReqs = requests.filter(r => {
+                  if (userOrdersModal.role === 'STUDENT') {
+                    return r.student?.id === userOrdersModal.user.id || r.student?.email?.toLowerCase() === userOrdersModal.user.email?.toLowerCase();
+                  } else {
+                    return r.receiver?.id === userOrdersModal.user.id || r.receiver?.email?.toLowerCase() === userOrdersModal.user.email?.toLowerCase();
+                  }
+                });
+
+                const completedCount = userReqs.filter(r => r.status === 'COMPLETED').length;
+                const activeCount = userReqs.filter(r => r.status !== 'COMPLETED' && r.status !== 'CANCELLED').length;
+
+                return (
+                  <>
+                    {/* Summary Bar */}
+                    <div className="grid grid-cols-3 gap-2 text-center text-xs bg-slate-955 p-3 rounded-2xl border border-slate-800 shrink-0">
+                      <div>
+                        <span className="text-[10px] text-slate-500 font-semibold uppercase block">Tổng số đơn</span>
+                        <span className="font-extrabold text-white text-sm">{userReqs.length} đơn</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-slate-500 font-semibold uppercase block">Đã hoàn thành</span>
+                        <span className="font-extrabold text-emerald-400 text-sm">{completedCount} đơn</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-slate-500 font-semibold uppercase block">Đang xử lý</span>
+                        <span className="font-extrabold text-orange-400 text-sm">{activeCount} đơn</span>
+                      </div>
+                    </div>
+
+                    {/* List of user's orders */}
+                    <div className="flex-1 overflow-y-auto space-y-3 pr-1">
+                      {userReqs.length === 0 ? (
+                        <div className="text-center py-10 text-slate-500 text-xs border border-dashed border-slate-800 rounded-2xl">
+                          Thành viên này chưa có dữ liệu đơn hàng nào.
+                        </div>
+                      ) : (
+                        userReqs.map((req) => (
+                          <div key={req.id} className="p-3.5 bg-slate-955 rounded-2xl border border-slate-800 space-y-2.5 hover:border-slate-700 transition-all">
+                            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-850 pb-2">
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs font-bold text-orange-400">#{req.orderCode || req.id.slice(0, 8)}</span>
+                                <span className="text-[10px] font-semibold px-2 py-0.5 bg-slate-800 text-slate-300 rounded-full">
+                                  {req.foodPlatform}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                {getStatusBadge(req.status)}
+                                <button
+                                  onClick={() => setSelectedRequestDetail(req)}
+                                  className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg text-[10px] font-bold flex items-center gap-1 transition-colors cursor-pointer"
+                                >
+                                  <Eye size={12} /> Chi tiết
+                                </button>
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                              <div className="space-y-1">
+                                <p className="text-[10px] text-slate-400">
+                                  <span className="font-semibold text-slate-300">Giao đến:</span> {req.pickupLocation} → {req.dropoffLocation || 'Sảnh Trống Đồng'}
+                                </p>
+                                <p className="text-[10px] text-slate-400">
+                                  <span className="font-semibold text-slate-300">Giờ hẹn:</span> {new Date(req.pickupTime).toLocaleString('vi-VN')}
+                                </p>
+                              </div>
+
+                              <div className="space-y-1 sm:text-right">
+                                {userOrdersModal.role === 'STUDENT' ? (
+                                  <p className="text-[10px] text-slate-400">
+                                    <span className="font-semibold text-slate-300">Người nhận hộ:</span>{' '}
+                                    <span className="text-blue-400 font-bold">{req.receiver?.fullName || 'Chưa ai nhận'}</span>
+                                  </p>
+                                ) : (
+                                  <p className="text-[10px] text-slate-400">
+                                    <span className="font-semibold text-slate-300">Sinh viên đặt:</span>{' '}
+                                    <span className="text-slate-200 font-bold">{req.student?.fullName}</span>
+                                  </p>
+                                )}
+                                <p className="text-[10px] text-slate-400">
+                                  <span className="font-semibold text-slate-300">Cập nhật:</span> {new Date(req.updatedAt || req.createdAt).toLocaleString('vi-VN')}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </>
+                );
+              })()}
+
+              <div className="pt-3 border-t border-slate-800 flex justify-end shrink-0">
+                <button
+                  onClick={() => setUserOrdersModal(null)}
+                  className="bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs px-4 py-2 rounded-xl transition-all cursor-pointer"
+                >
+                  Đóng
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* REQUEST DETAIL MODAL */}
+        {selectedRequestDetail && (
+          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
+            <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl shadow-2xl max-w-xl w-full space-y-5 relative my-8">
+              <button
+                onClick={() => setSelectedRequestDetail(null)}
+                className="absolute top-4 right-4 text-slate-400 hover:text-white p-1 rounded-full bg-slate-800/50 cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+
+              {/* Modal Header */}
+              <div className="border-b border-slate-800 pb-4">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-white px-2.5 py-1 rounded-lg bg-orange-600/20 text-orange-400 border border-orange-500/30">
+                    {selectedRequestDetail.foodPlatform}
+                  </span>
+                  {getStatusBadge(selectedRequestDetail.status)}
+                </div>
+                <h3 className="text-lg font-bold text-white mt-2">
+                  Mã đơn: {selectedRequestDetail.orderCode || 'Đã đính kèm ảnh đơn hàng'}
+                </h3>
+                <p className="text-[10px] text-slate-400 mt-0.5">ID: {selectedRequestDetail.id}</p>
+              </div>
+
+              {/* Student & Receiver Info Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Student info */}
+                <div className="bg-slate-955 p-3.5 rounded-2xl border border-slate-800 space-y-1.5">
+                  <p className="text-[9px] font-bold uppercase tracking-wider text-orange-400">Người gửi (Sinh viên)</p>
+                  <p className="text-xs font-bold text-white">{selectedRequestDetail.student.fullName}</p>
+                  <p className="text-[10px] text-slate-400">{selectedRequestDetail.student.email}</p>
+                  {selectedRequestDetail.student.phoneNumber && (
+                    <p className="text-[10px] text-slate-400">SĐT: {selectedRequestDetail.student.phoneNumber}</p>
+                  )}
+                  {selectedRequestDetail.student.mssv && (
+                    <p className="text-[10px] text-slate-400">MSSV: {selectedRequestDetail.student.mssv}</p>
+                  )}
+                </div>
+
+                {/* Receiver info */}
+                <div className="bg-slate-955 p-3.5 rounded-2xl border border-slate-800 space-y-1.5">
+                  <p className="text-[9px] font-bold uppercase tracking-wider text-blue-400">Người nhận hộ được giao</p>
+                  {selectedRequestDetail.receiver ? (
+                    <>
+                      <p className="text-xs font-bold text-white">{selectedRequestDetail.receiver.fullName}</p>
+                      <p className="text-[10px] text-slate-400">{selectedRequestDetail.receiver.email}</p>
+                      {selectedRequestDetail.receiver.phoneNumber && (
+                        <p className="text-[10px] text-slate-400">SĐT: {selectedRequestDetail.receiver.phoneNumber}</p>
+                      )}
+                    </>
+                  ) : (
+                    <p className="text-xs text-slate-500 italic mt-1">Chưa có ai nhận đơn này</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Location & Time info */}
+              <div className="space-y-2 text-xs bg-slate-955 p-3.5 rounded-2xl border border-slate-800">
+                <div className="flex items-center gap-2">
+                  <MapPin size={14} className="text-orange-500 shrink-0" />
+                  <div>
+                    <span className="text-[10px] text-slate-500">Giao tới: </span>
+                    <span className="font-bold text-white">{selectedRequestDetail.pickupLocation}</span>
+                    <span className="text-[10px] text-slate-500"> → Trả khách tại: </span>
+                    <span className="font-bold text-white">{selectedRequestDetail.dropoffLocation || 'Sảnh Trống Đồng'}</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 pt-1 border-t border-slate-855">
+                  <Clock size={14} className="text-orange-500 shrink-0" />
+                  <div>
+                    <span className="text-[10px] text-slate-500">Giờ hẹn giao: </span>
+                    <span className="font-bold text-white">{new Date(selectedRequestDetail.pickupTime).toLocaleString()}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Note if present */}
+              {selectedRequestDetail.note && (
+                <div className="bg-slate-955 p-3.5 rounded-2xl border border-slate-800">
+                  <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400 mb-1">Ghi chú của sinh viên</p>
+                  <p className="text-xs text-slate-300">{selectedRequestDetail.note}</p>
+                </div>
+              )}
+
+              {/* Image Preview if present */}
+              {selectedRequestDetail.imageUrl && (
+                <div className="bg-slate-955 p-3.5 rounded-2xl border border-slate-800">
+                  <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400 mb-2">Ảnh màn hình đơn hàng</p>
+                  <div className="relative max-w-full h-40 rounded-xl overflow-hidden border border-slate-800 bg-slate-900 flex items-center justify-center">
+                    <img
+                      src={selectedRequestDetail.imageUrl}
+                      alt="Ảnh đơn hàng"
+                      className="max-h-full max-w-full object-contain cursor-zoom-in rounded-lg"
+                      onClick={() => setFullscreenImage(selectedRequestDetail.imageUrl || null)}
+                    />
+                  </div>
+                  <p className="text-[9px] text-slate-500 mt-1.5 text-center">Chạm vào ảnh để phóng to</p>
+                </div>
+              )}
+
+              {/* Feedback if completed */}
+              {selectedRequestDetail.feedback && (
+                <div className="bg-slate-955 p-3.5 rounded-2xl border border-slate-800 space-y-1.5">
+                  <p className="text-[9px] font-bold uppercase tracking-wider text-yellow-400">Đánh giá của sinh viên</p>
+                  <div className="flex items-center gap-1">
+                    {[1, 2, 3, 4, 5].map((s) => (
+                      <Star 
+                        key={s} 
+                        size={12} 
+                        className={s <= selectedRequestDetail.feedback!.rating ? 'text-yellow-500 fill-yellow-500' : 'text-slate-800'} 
+                      />
+                    ))}
+                  </div>
+                  {selectedRequestDetail.feedback.comment && (
+                    <p className="text-xs italic text-slate-300">&ldquo;{selectedRequestDetail.feedback.comment}&rdquo;</p>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* FULLSCREEN IMAGE OVERLAY */}
+        {fullscreenImage && (
+          <div 
+            className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4"
+            onClick={() => setFullscreenImage(null)}
+          >
+            <button 
+              className="absolute top-4 right-4 text-white hover:text-slate-300 p-2 cursor-pointer bg-slate-900/50 rounded-full"
+              onClick={() => setFullscreenImage(null)}
+            >
+              <X size={24} />
+            </button>
+            <div className="relative max-w-full max-h-[85vh] flex items-center justify-center">
+              <img 
+                src={fullscreenImage} 
+                alt="Ảnh đơn hàng phóng to" 
+                className="max-w-full max-h-[85vh] object-contain rounded-2xl border border-slate-800 shadow-2xl"
+                onClick={(e) => e.stopPropagation()}
+              />
+            </div>
+            <p className="absolute bottom-6 text-slate-400 text-xs font-medium">Chạm vào vùng trống hoặc nút X để đóng</p>
+          </div>
+        )}
+      </>
+    );
+  }
 
   if (loading) {
     return <div className="text-slate-400 text-sm py-4">Đang tải bảng phân tích quản trị...</div>;
@@ -611,23 +1076,40 @@ function AdminDashboardContent() {
               {ceoAnalytics.topStudents.length === 0 ? (
                 <p className="text-xs text-slate-500 py-3">Chưa có dữ liệu sinh viên đặt đơn</p>
               ) : (
-                ceoAnalytics.topStudents.map((s, idx) => (
-                  <div key={s.id} className="py-3 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-extrabold ${idx === 0 ? 'bg-amber-500 text-slate-950 shadow-md' : 'bg-slate-800 text-slate-300'}`}>
-                        {idx + 1}
-                      </span>
-                      <div>
-                        <p className="text-xs font-bold text-white">{s.fullName}</p>
-                        <p className="text-[10px] text-slate-400">{s.email} {s.mssv ? `• ${s.mssv}` : ''}</p>
+                ceoAnalytics.topStudents.map((s, idx) => {
+                  const targetUser = users.find(u => u.id === s.id || u.email.toLowerCase() === s.email.toLowerCase()) || {
+                    id: s.id,
+                    fullName: s.fullName,
+                    email: s.email,
+                    mssv: s.mssv,
+                    role: 'STUDENT',
+                    status: 'ACTIVE',
+                    createdAt: ''
+                  };
+
+                  return (
+                    <div
+                      key={s.id}
+                      onClick={() => setUserOrdersModal({ user: targetUser, role: 'STUDENT' })}
+                      className="py-3 px-2 rounded-xl flex items-center justify-between hover:bg-slate-800/50 transition-all cursor-pointer group"
+                      title="Bấm để xem danh sách đơn hàng đã đặt"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-extrabold ${idx === 0 ? 'bg-amber-500 text-slate-950 shadow-md' : 'bg-slate-800 text-slate-300'}`}>
+                          {idx + 1}
+                        </span>
+                        <div>
+                          <p className="text-xs font-bold text-white group-hover:text-orange-400 transition-colors">{s.fullName}</p>
+                          <p className="text-[10px] text-slate-400">{s.email} {s.mssv ? `• ${s.mssv}` : ''}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-xs font-extrabold text-orange-400 group-hover:underline">{s.totalOrdered} đơn đã đặt</span>
+                        <p className="text-[10px] text-slate-400">{s.completedCount} đã giao ({s.totalSpent.toLocaleString()} VNĐ)</p>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <span className="text-xs font-extrabold text-orange-400">{s.totalOrdered} đơn đã đặt</span>
-                      <p className="text-[10px] text-slate-400">{s.completedCount} đã giao ({s.totalSpent.toLocaleString()} VNĐ)</p>
-                    </div>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
           </div>
@@ -647,23 +1129,40 @@ function AdminDashboardContent() {
               {ceoAnalytics.topReceivers.length === 0 ? (
                 <p className="text-xs text-slate-500 py-3">Chưa có dữ liệu người nhận hộ</p>
               ) : (
-                ceoAnalytics.topReceivers.map((r, idx) => (
-                  <div key={r.id} className="py-3 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-extrabold ${idx === 0 ? 'bg-amber-500 text-slate-950 shadow-md' : 'bg-slate-800 text-slate-300'}`}>
-                        {idx + 1}
-                      </span>
-                      <div>
-                        <p className="text-xs font-bold text-white">{r.fullName}</p>
-                        <p className="text-[10px] text-slate-400">{r.email} {r.mssv ? `• ${r.mssv}` : ''}</p>
+                ceoAnalytics.topReceivers.map((r, idx) => {
+                  const targetUser = users.find(u => u.id === r.id || u.email.toLowerCase() === r.email.toLowerCase()) || {
+                    id: r.id,
+                    fullName: r.fullName,
+                    email: r.email,
+                    mssv: r.mssv,
+                    role: 'RECEIVER',
+                    status: 'ACTIVE',
+                    createdAt: ''
+                  };
+
+                  return (
+                    <div
+                      key={r.id}
+                      onClick={() => setUserOrdersModal({ user: targetUser, role: 'RECEIVER' })}
+                      className="py-3 px-2 rounded-xl flex items-center justify-between hover:bg-slate-800/50 transition-all cursor-pointer group"
+                      title="Bấm để xem danh sách đơn hàng đã nhận"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-extrabold ${idx === 0 ? 'bg-amber-500 text-slate-950 shadow-md' : 'bg-slate-800 text-slate-300'}`}>
+                          {idx + 1}
+                        </span>
+                        <div>
+                          <p className="text-xs font-bold text-white group-hover:text-emerald-400 transition-colors">{r.fullName}</p>
+                          <p className="text-[10px] text-slate-400">{r.email} {r.mssv ? `• ${r.mssv}` : ''}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-xs font-extrabold text-emerald-400 group-hover:underline">{r.completedCount} đơn hoàn thành</span>
+                        <p className="text-[10px] text-slate-400">Tiền công: {r.totalEarnings.toLocaleString()} VNĐ {r.avgRating !== 'Chưa có' ? `• Star: ${r.avgRating}⭐` : ''}</p>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <span className="text-xs font-extrabold text-emerald-400">{r.completedCount} đơn hoàn thành</span>
-                      <p className="text-[10px] text-slate-400">Tiền công: {r.totalEarnings.toLocaleString()} VNĐ {r.avgRating !== 'Chưa có' ? `• Star: ${r.avgRating}⭐` : ''}</p>
-                    </div>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
           </div>
@@ -740,54 +1239,7 @@ function AdminDashboardContent() {
           </div>
         </div>
 
-        {/* REVENUE BREAKDOWN MODAL */}
-        {showRevenueModal && (
-          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-            <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-3xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
-              <div className="p-5 border-b border-slate-800 flex items-center justify-between bg-slate-955">
-                <div>
-                  <h3 className="text-base font-extrabold text-white flex items-center gap-2">
-                    <DollarSign size={18} className="text-emerald-400" />
-                    Bảng Kê Hóa Đơn Doanh Thu Phí Dịch Vụ ({getTimeframeLabel(revenueModalTimeframe)})
-                  </h3>
-                  <p className="text-xs text-slate-400 mt-0.5">
-                    Tổng doanh thu: <strong className="text-emerald-400">{(revenueModalRequests.length * 5000).toLocaleString()} VNĐ</strong> ({revenueModalRequests.length} đơn hoàn thành)
-                  </p>
-                </div>
-                <button
-                  onClick={() => setShowRevenueModal(false)}
-                  className="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
-                >
-                  <X size={16} />
-                </button>
-              </div>
-
-              <div className="p-5 overflow-y-auto space-y-3 flex-1">
-                {revenueModalRequests.length === 0 ? (
-                  <p className="text-xs text-slate-500 py-6 text-center">Không có đơn hàng hoàn thành trong khoảng thời gian này</p>
-                ) : (
-                  revenueModalRequests.map((req) => (
-                    <div key={req.id} className="p-3.5 bg-slate-955 rounded-2xl border border-slate-850 flex items-center justify-between">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs font-bold text-orange-400">#{req.orderCode || req.id.slice(0, 8)}</span>
-                          <span className="text-[10px] font-semibold px-2 py-0.5 bg-slate-800 text-slate-300 rounded-full">{req.foodPlatform}</span>
-                        </div>
-                        <p className="text-xs font-semibold text-white mt-1">SV: {req.student.fullName} ({req.student.email})</p>
-                        <p className="text-[10px] text-slate-400">Nhận hộ: {req.receiver?.fullName || 'N/A'} • Thời gian: {new Date(req.updatedAt || req.createdAt).toLocaleString('vi-VN')}</p>
-                      </div>
-                      <div className="text-right">
-                        <span className="text-xs font-extrabold text-emerald-400">+5.000 VNĐ</span>
-                        <p className="text-[10px] text-slate-400">Phí cố định</p>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
+        {renderModals()}
       </div>
     );
   }
@@ -1381,17 +1833,25 @@ function AdminDashboardContent() {
                         <td className="px-4 py-3.5 text-center">
                           {u.role === 'STUDENT' ? (
                             studentStat && studentStat.totalOrdered > 0 ? (
-                              <span className="px-2 py-0.5 text-[10px] font-extrabold rounded-md bg-orange-500/10 text-orange-400 border border-orange-500/20">
+                              <button
+                                onClick={() => setUserOrdersModal({ user: u, role: 'STUDENT' })}
+                                className="px-2 py-0.5 text-[10px] font-extrabold rounded-md bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 border border-orange-500/30 transition-all cursor-pointer hover:scale-105 active:scale-95"
+                                title="Bấm để xem chi tiết danh sách đơn hàng"
+                              >
                                 {studentStat.totalOrdered} đơn đã đặt
-                              </span>
+                              </button>
                             ) : (
                               <span className="text-[10px] text-slate-600">0 đơn</span>
                             )
                           ) : u.role === 'RECEIVER' ? (
                             receiverKPI && receiverKPI.totalAssigned > 0 ? (
-                              <span className="px-2 py-0.5 text-[10px] font-extrabold rounded-md bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                              <button
+                                onClick={() => setUserOrdersModal({ user: u, role: 'RECEIVER' })}
+                                className="px-2 py-0.5 text-[10px] font-extrabold rounded-md bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/30 transition-all cursor-pointer hover:scale-105 active:scale-95"
+                                title="Bấm để xem chi tiết danh sách đơn hàng"
+                              >
                                 {receiverKPI.totalAssigned} đơn đã nhận
-                              </span>
+                              </button>
                             ) : (
                               <span className="text-[10px] text-slate-600">0 đơn</span>
                             )
@@ -1552,9 +2012,17 @@ function AdminDashboardContent() {
                     </div>
 
                     <div className="grid grid-cols-2 gap-2 text-center text-[10px]">
-                      <div className="p-2 bg-slate-900 rounded-xl border border-slate-850">
-                        <span className="text-slate-500 font-semibold block text-[9px] uppercase">Số đơn</span>
-                        <span className="font-extrabold text-orange-400">
+                      <div 
+                        onClick={() => {
+                          if (u.role === 'STUDENT' || u.role === 'RECEIVER') {
+                            setUserOrdersModal({ user: u, role: u.role as 'STUDENT' | 'RECEIVER' });
+                          }
+                        }}
+                        className="p-2 bg-slate-900 rounded-xl border border-slate-850 cursor-pointer hover:border-orange-500/50 active:scale-95 transition-all"
+                        title="Bấm để xem chi tiết danh sách đơn hàng"
+                      >
+                        <span className="text-slate-500 font-semibold block text-[9px] uppercase">Số đơn (Bấm xem)</span>
+                        <span className="font-extrabold text-orange-400 underline decoration-dashed">
                           {u.role === 'STUDENT' ? `${studentStat?.totalOrdered || 0} đã đặt` : `${receiverKPI?.totalAssigned || 0} đã nhận`}
                         </span>
                       </div>
@@ -1613,295 +2081,31 @@ function AdminDashboardContent() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {feedbacks.map((f) => (
-                <div key={f.id} className="p-4 bg-slate-955 border border-slate-800 rounded-2xl space-y-2.5 flex flex-col justify-between">
+                <div key={f.id} className="p-4 bg-slate-950 border border-slate-800 rounded-2xl space-y-2.5 flex flex-col justify-between">
                   <div className="space-y-1.5">
-                    <div className="flex justify-between items-start gap-2">
-                      <div>
-                        <p className="text-xs font-bold text-white">{f.student.fullName}</p>
-                        <p className="text-[9px] text-slate-500">{f.student.email}</p>
-                      </div>
-                      {/* Rating Stars */}
-                      <div className="flex items-center gap-0.5 shrink-0 bg-yellow-500/10 px-2 py-0.5 rounded-full border border-yellow-500/20">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-slate-200">{f.student?.fullName || 'Sinh viên'}</span>
+                      <div className="flex items-center gap-0.5">
                         {[1, 2, 3, 4, 5].map((s) => (
                           <Star 
                             key={s} 
-                            size={10} 
+                            size={12} 
                             className={s <= f.rating ? 'text-yellow-500 fill-yellow-500' : 'text-slate-800'} 
                           />
                         ))}
                       </div>
                     </div>
-
-                    <p className="text-[10px] text-slate-400">
-                      Đơn hàng: <span className="text-orange-400 font-semibold">{f.request.foodPlatform}</span> ({f.request.orderCode || 'Có ảnh chụp'})
-                    </p>
-
                     {f.comment && (
-                      <p className="text-xs italic text-slate-300 bg-slate-950 p-2.5 rounded-xl border border-slate-855 mt-1">
-                        &ldquo;{f.comment}&rdquo;
-                      </p>
+                      <p className="text-xs italic text-slate-300">&ldquo;{f.comment}&rdquo;</p>
                     )}
+                    <p className="text-[10px] text-slate-500">
+                      Mã đơn: #{f.request?.orderCode || f.id.slice(-6)} • {new Date(f.createdAt).toLocaleDateString('vi-VN')}
+                    </p>
                   </div>
-
-                  <span className="text-[9px] text-slate-500 self-end">
-                    {new Date(f.createdAt).toLocaleDateString('vi-VN')}
-                  </span>
                 </div>
               ))}
             </div>
           )}
-        </div>
-      )}
-
-      {/* REVENUE BREAKDOWN MODAL (BẢNG KÊ CHI TIẾT THU NHẬP) */}
-      {showRevenueModal && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl shadow-2xl max-w-3xl w-full space-y-5 relative my-8">
-            <button
-              onClick={() => setShowRevenueModal(false)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-white p-1 rounded-full bg-slate-800/50 cursor-pointer"
-            >
-              <X size={18} />
-            </button>
-
-            {/* Modal Header */}
-            <div className="border-b border-slate-800 pb-4">
-              <div className="flex items-center justify-between gap-4 pr-6">
-                <div>
-                  <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                    <DollarSign className="text-emerald-400" size={20} />
-                    Bảng Kê Chi Tiết Thu Nhập ({getTimeframeLabel(revenueModalTimeframe)})
-                  </h3>
-                  <p className="text-xs text-slate-400 mt-1">Danh sách các đơn hàng đã hoàn thành tạo ra doanh thu 5.000 VNĐ / đơn</p>
-                </div>
-
-                <div className="text-right shrink-0">
-                  <span className="text-[10px] uppercase font-bold text-slate-500 block">Tổng Doanh Thu</span>
-                  <span className="text-xl font-extrabold text-emerald-400">
-                    {(revenueModalRequests.length * 5000).toLocaleString()} VNĐ
-                  </span>
-                </div>
-              </div>
-
-              {/* Timeframe Quick Switcher */}
-              <div className="flex items-center gap-1.5 mt-4 bg-slate-955 p-1 rounded-xl border border-slate-800 w-fit">
-                <button
-                  onClick={() => setRevenueModalTimeframe('TODAY')}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-                    revenueModalTimeframe === 'TODAY' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  Hôm nay ({requests.filter(r => r.status === 'COMPLETED' && isDateInTimeframe(r.updatedAt || r.createdAt, 'TODAY')).length})
-                </button>
-                <button
-                  onClick={() => setRevenueModalTimeframe('MONTH')}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-                    revenueModalTimeframe === 'MONTH' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  Tháng này ({requests.filter(r => r.status === 'COMPLETED' && isDateInTimeframe(r.updatedAt || r.createdAt, 'MONTH')).length})
-                </button>
-                <button
-                  onClick={() => setRevenueModalTimeframe('YEAR')}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-                    revenueModalTimeframe === 'YEAR' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  Năm nay ({requests.filter(r => r.status === 'COMPLETED' && isDateInTimeframe(r.updatedAt || r.createdAt, 'YEAR')).length})
-                </button>
-                <button
-                  onClick={() => setRevenueModalTimeframe('ALL')}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-                    revenueModalTimeframe === 'ALL' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  Tất cả ({requests.filter(r => r.status === 'COMPLETED').length})
-                </button>
-              </div>
-            </div>
-
-            {/* Revenue Requests Table */}
-            <div className="max-h-[50vh] overflow-y-auto pr-1">
-              {revenueModalRequests.length === 0 ? (
-                <div className="text-center py-10 text-slate-500 text-xs border border-dashed border-slate-800 rounded-2xl">
-                  Chưa có đơn hàng nào hoàn thành trong khoảng thời gian này.
-                </div>
-              ) : (
-                <table className="w-full text-left text-xs text-slate-350">
-                  <thead className="text-[10px] text-slate-500 uppercase border-b border-slate-800 sticky top-0 bg-slate-900">
-                    <tr>
-                      <th className="pb-3 font-semibold">Đơn hàng / Mã</th>
-                      <th className="pb-3 font-semibold">Người nhận hộ (Thu nhập)</th>
-                      <th className="pb-3 font-semibold">Sinh viên người dùng</th>
-                      <th className="pb-3 font-semibold">Thời gian hoàn thành</th>
-                      <th className="pb-3 font-semibold text-right">Phí dịch vụ</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-850">
-                    {revenueModalRequests.map((req) => (
-                      <tr key={req.id} className="hover:bg-slate-800/20">
-                        <td className="py-3">
-                          <p className="font-bold text-white">{req.foodPlatform}</p>
-                          <p className="text-[10px] font-mono text-slate-400">
-                            {req.orderCode ? `Mã: ${req.orderCode}` : 'Có ảnh đơn'}
-                          </p>
-                        </td>
-                        <td className="py-3">
-                          <p className="font-bold text-blue-400">{req.receiver?.fullName || 'Người nhận hộ'}</p>
-                          <p className="text-[10px] text-slate-500">{req.receiver?.email}</p>
-                        </td>
-                        <td className="py-3">
-                          <p className="font-bold text-slate-200">{req.student?.fullName}</p>
-                          <p className="text-[10px] text-slate-500">{req.student?.email}</p>
-                        </td>
-                        <td className="py-3 text-[10px] text-slate-400">
-                          {new Date(req.updatedAt || req.createdAt).toLocaleString()}
-                        </td>
-                        <td className="py-3 text-right">
-                          <span className="font-bold text-emerald-400 text-xs bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
-                            +5.000 VNĐ
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </div>
-
-            <div className="pt-3 border-t border-slate-800 flex justify-end">
-              <button
-                onClick={() => setShowRevenueModal(false)}
-                className="bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs px-4 py-2 rounded-xl transition-all cursor-pointer"
-              >
-                Đóng bảng kê
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* REQUEST DETAIL MODAL */}
-      {selectedRequestDetail && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl shadow-2xl max-w-xl w-full space-y-5 relative my-8">
-            <button
-              onClick={() => setSelectedRequestDetail(null)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-white p-1 rounded-full bg-slate-800/50 cursor-pointer"
-            >
-              <X size={18} />
-            </button>
-
-            {/* Modal Header */}
-            <div className="border-b border-slate-800 pb-4">
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-white px-2.5 py-1 rounded-lg bg-orange-600/20 text-orange-400 border border-orange-500/30">
-                  {selectedRequestDetail.foodPlatform}
-                </span>
-                {getStatusBadge(selectedRequestDetail.status)}
-              </div>
-              <h3 className="text-lg font-bold text-white mt-2">
-                Mã đơn: {selectedRequestDetail.orderCode || 'Đã đính kèm ảnh đơn hàng'}
-              </h3>
-              <p className="text-[10px] text-slate-400 mt-0.5">ID: {selectedRequestDetail.id}</p>
-            </div>
-
-            {/* Student & Receiver Info Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Student info */}
-              <div className="bg-slate-955 p-3.5 rounded-2xl border border-slate-800 space-y-1.5">
-                <p className="text-[9px] font-bold uppercase tracking-wider text-orange-400">Người gửi (Sinh viên)</p>
-                <p className="text-xs font-bold text-white">{selectedRequestDetail.student.fullName}</p>
-                <p className="text-[10px] text-slate-400">{selectedRequestDetail.student.email}</p>
-                {selectedRequestDetail.student.phoneNumber && (
-                  <p className="text-[10px] text-slate-400">SĐT: {selectedRequestDetail.student.phoneNumber}</p>
-                )}
-                {selectedRequestDetail.student.mssv && (
-                  <p className="text-[10px] text-slate-400">MSSV: {selectedRequestDetail.student.mssv}</p>
-                )}
-              </div>
-
-              {/* Receiver info */}
-              <div className="bg-slate-955 p-3.5 rounded-2xl border border-slate-800 space-y-1.5">
-                <p className="text-[9px] font-bold uppercase tracking-wider text-blue-400">Người nhận hộ được giao</p>
-                {selectedRequestDetail.receiver ? (
-                  <>
-                    <p className="text-xs font-bold text-white">{selectedRequestDetail.receiver.fullName}</p>
-                    <p className="text-[10px] text-slate-400">{selectedRequestDetail.receiver.email}</p>
-                    {selectedRequestDetail.receiver.phoneNumber && (
-                      <p className="text-[10px] text-slate-400">SĐT: {selectedRequestDetail.receiver.phoneNumber}</p>
-                    )}
-                  </>
-                ) : (
-                  <p className="text-xs text-slate-500 italic mt-1">Chưa có ai nhận đơn này</p>
-                )}
-              </div>
-            </div>
-
-            {/* Location & Time info */}
-            <div className="space-y-2 text-xs bg-slate-955 p-3.5 rounded-2xl border border-slate-800">
-              <div className="flex items-center gap-2">
-                <MapPin size={14} className="text-orange-500 shrink-0" />
-                <div>
-                  <span className="text-[10px] text-slate-500">Giao tới: </span>
-                  <span className="font-bold text-white">{selectedRequestDetail.pickupLocation}</span>
-                  <span className="text-[10px] text-slate-500"> → Trả khách tại: </span>
-                  <span className="font-bold text-white">{selectedRequestDetail.dropoffLocation || 'Sảnh Trống Đồng'}</span>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2 pt-1 border-t border-slate-855">
-                <Clock size={14} className="text-orange-500 shrink-0" />
-                <div>
-                  <span className="text-[10px] text-slate-500">Giờ hẹn giao: </span>
-                  <span className="font-bold text-white">{new Date(selectedRequestDetail.pickupTime).toLocaleString()}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Note if present */}
-            {selectedRequestDetail.note && (
-              <div className="bg-slate-955 p-3.5 rounded-2xl border border-slate-800">
-                <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400 mb-1">Ghi chú của sinh viên</p>
-                <p className="text-xs text-slate-300">{selectedRequestDetail.note}</p>
-              </div>
-            )}
-
-            {/* Image Preview if present */}
-            {selectedRequestDetail.imageUrl && (
-              <div className="bg-slate-955 p-3.5 rounded-2xl border border-slate-800">
-                <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400 mb-2">Ảnh màn hình đơn hàng</p>
-                <div className="relative max-w-full h-40 rounded-xl overflow-hidden border border-slate-800 bg-slate-900 flex items-center justify-center">
-                  <img
-                    src={selectedRequestDetail.imageUrl}
-                    alt="Ảnh đơn hàng"
-                    className="max-h-full max-w-full object-contain cursor-zoom-in rounded-lg"
-                    onClick={() => setFullscreenImage(selectedRequestDetail.imageUrl || null)}
-                  />
-                </div>
-                <p className="text-[9px] text-slate-500 mt-1.5 text-center">Chạm vào ảnh để phóng to</p>
-              </div>
-            )}
-
-            {/* Feedback if completed */}
-            {selectedRequestDetail.feedback && (
-              <div className="bg-slate-955 p-3.5 rounded-2xl border border-slate-800 space-y-1.5">
-                <p className="text-[9px] font-bold uppercase tracking-wider text-yellow-400">Đánh giá của sinh viên</p>
-                <div className="flex items-center gap-1">
-                  {[1, 2, 3, 4, 5].map((s) => (
-                    <Star 
-                      key={s} 
-                      size={12} 
-                      className={s <= selectedRequestDetail.feedback!.rating ? 'text-yellow-500 fill-yellow-500' : 'text-slate-800'} 
-                    />
-                  ))}
-                </div>
-                {selectedRequestDetail.feedback.comment && (
-                  <p className="text-xs italic text-slate-300">&ldquo;{selectedRequestDetail.feedback.comment}&rdquo;</p>
-                )}
-              </div>
-            )}
-          </div>
         </div>
       )}
 
@@ -1928,6 +2132,8 @@ function AdminDashboardContent() {
           <p className="absolute bottom-6 text-slate-400 text-xs font-medium">Chạm vào vùng trống hoặc nút X để đóng</p>
         </div>
       )}
+
+      {renderModals()}
     </div>
   );
 }
