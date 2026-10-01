@@ -2,7 +2,7 @@
 
 :root {
   --background: #fffbf7;
-  --foreground: #a34900;
+  --foreground: #4a1f05;
 }
 
 body {
@@ -12,7 +12,7 @@ body {
 
 @theme inline {
   --color-background: #fffbf7;
-  --color-foreground: #a34900;
+  --color-foreground: #4a1f05;
   
   /* Map slate colors to light warm creams and browns */
   --color-slate-950: #fffbf7;
@@ -32,53 +32,65 @@ body {
   --color-slate-355: #5c2c0e;
   --color-slate-350: #5c2c0e;
   --color-slate-300: #4a1f05;
-  --color-slate-200: #a34900;
-  --color-slate-100: #a34900;
+  --color-slate-200: #8c3b00;
+  --color-slate-100: #8c3b00;
   
   /* Accent orange (FPT standard) */
   --color-orange-500: #ff5f00;
   --color-orange-600: #e65200;
 }
 
-/* Global utility overrides for light theme */
-/* Make all text-white items FPT Orange (#ff5f00) as requested! */
+/* Global utility overrides for high-contrast light theme */
+
+/* General headings and text-white mapped to high-contrast dark brown for light theme background */
 .text-white {
-  color: #ff5f00 !important;
+  color: #4a1f05 !important;
 }
 
 .text-white * {
-  color: #ff5f00 !important;
+  color: #4a1f05 !important;
 }
 
-/* White text ONLY for solid buttons and badges */
+/* MANDATORY WHITE TEXT FOR ALL SOLID & GRADIENT ACCENT BUTTONS / BADGES */
 .bg-orange-600,
 .bg-orange-500,
+.bg-amber-500,
+.bg-amber-600,
 .bg-red-500,
+.bg-red-600,
 .bg-purple-600,
 .bg-emerald-600,
 .bg-green-600,
-.bg-emerald-500 {
+.bg-emerald-500,
+[class*="bg-gradient"],
+.bg-gradient-to-r {
   color: #ffffff !important;
 }
 
-/* Force text inside orange/accent background components to remain white */
 .bg-orange-600 *,
 .bg-orange-500 *,
+.bg-amber-500 *,
+.bg-amber-600 *,
 .bg-red-500 *,
+.bg-red-600 *,
 .bg-purple-600 *,
 .bg-emerald-600 *,
 .bg-green-600 *,
-.bg-emerald-500 * {
+.bg-emerald-500 *,
+[class*="bg-gradient"] *,
+.bg-gradient-to-r * {
   color: #ffffff !important;
 }
 
 /* Button overrides for contrast */
 button.bg-orange-600,
 button.bg-orange-500,
+button.bg-amber-500,
 button.bg-red-500,
 button.bg-purple-600,
 button.bg-green-600,
-button.bg-emerald-600 {
+button.bg-emerald-600,
+button[class*="bg-gradient"] {
   color: #ffffff !important;
   border: none !important;
 }
@@ -88,7 +100,7 @@ button.bg-slate-900,
 button.bg-slate-800,
 button.bg-slate-955 {
   background-color: #ebd6c2 !important;
-  color: #a34900 !important;
+  color: #7c3500 !important;
   border: 1px solid #dcbba3 !important;
 }
 
@@ -96,7 +108,7 @@ button.bg-slate-900:hover,
 button.bg-slate-800:hover,
 button.bg-slate-955:hover {
   background-color: #dcbba3 !important;
-  color: #823a00 !important;
+  color: #5c2700 !important;
 }
 
 /* Disabled buttons styling */
@@ -112,30 +124,30 @@ button.disabled {
 .bg-white,
 .bg-white * {
   background-color: #ffffff !important;
-  color: initial !important; /* Let QR elements draw normally */
+  color: initial !important;
 }
 
 /* Override input placeholder texts to be darker warm orange */
 ::placeholder {
-  color: #c48c60 !important;
-  opacity: 0.8;
+  color: #a3653b !important;
+  opacity: 0.9;
 }
 
-/* Accent texts - high contrast for light theme */
+/* Accent texts - high contrast, soft non-glare for light theme */
 .text-slate-100 {
-  color: #a34900 !important;
+  color: #4a1f05 !important;
 }
 .text-slate-200 {
-  color: #a34900 !important;
+  color: #5c2700 !important;
 }
 .text-slate-300 {
   color: #4a1f05 !important;
 }
 .text-slate-350 {
-  color: #5c2c0e !important;
+  color: #4a1f05 !important;
 }
 .text-slate-355 {
-  color: #5c2c0e !important;
+  color: #4a1f05 !important;
 }
 .text-slate-400 {
   color: #6e3919 !important;
@@ -153,9 +165,13 @@ button.disabled {
   color: #7d4420 !important;
 }
 
-/* Make text-orange-500 slightly darker for high legibility as text */
+/* Make text-orange-500 deep warm orange for maximum legibility */
 .text-orange-500 {
-  color: #d94f00 !important;
+  color: #c94700 !important;
+}
+
+.text-orange-400 {
+  color: #c94700 !important;
 }
 
 /* Badge text color high-contrast overrides */
@@ -163,7 +179,7 @@ button.disabled {
   color: #1d4ed8 !important;
 }
 .text-amber-400, .text-amber-500, .text-yellow-500, .text-yellow-400 {
-  color: #b45309 !important;
+  color: #92400e !important;
 }
 .text-red-400, .text-red-500 {
   color: #b91c1c !important;
@@ -177,3 +193,4 @@ button.disabled {
 .bg-orange-600.text-white * {
   color: #ffffff !important;
 }
+

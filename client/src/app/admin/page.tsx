@@ -483,14 +483,14 @@ function AdminDashboardContent() {
           </div>
 
           {/* Timeframe Filter Tabs */}
-          <div className="flex items-center gap-1 bg-slate-955 p-1 rounded-2xl border border-slate-800 self-start sm:self-auto shadow-md">
+          <div className="flex items-center gap-1 bg-slate-955 p-1 rounded-2xl border border-slate-800 self-start sm:self-auto shadow-md overflow-x-auto max-w-full">
             {(['TODAY', 'MONTH', 'YEAR', 'ALL'] as TimeframeFilter[]).map((tf) => (
               <button
                 key={tf}
                 onClick={() => setTimeframe(tf)}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                   timeframe === tf
-                    ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-lg shadow-orange-500/20'
+                    ? 'bg-orange-600 text-white shadow-md shadow-orange-600/25'
                     : 'text-slate-400 hover:text-white hover:bg-slate-900'
                 }`}
               >
@@ -990,10 +990,10 @@ function AdminDashboardContent() {
             </div>
 
             {/* Timeframe selector */}
-            <div className="flex items-center gap-1.5 bg-slate-955 p-1 rounded-xl border border-slate-800 self-start sm:self-auto">
+            <div className="flex items-center gap-1.5 bg-slate-955 p-1 rounded-xl border border-slate-800 self-start sm:self-auto overflow-x-auto max-w-full">
               <button
                 onClick={() => setTimeframe('TODAY')}
-                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap shrink-0 ${
                   timeframe === 'TODAY' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'
                 }`}
               >
@@ -1001,7 +1001,7 @@ function AdminDashboardContent() {
               </button>
               <button
                 onClick={() => setTimeframe('MONTH')}
-                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap shrink-0 ${
                   timeframe === 'MONTH' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'
                 }`}
               >
@@ -1009,7 +1009,7 @@ function AdminDashboardContent() {
               </button>
               <button
                 onClick={() => setTimeframe('YEAR')}
-                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap shrink-0 ${
                   timeframe === 'YEAR' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'
                 }`}
               >
@@ -1017,7 +1017,7 @@ function AdminDashboardContent() {
               </button>
               <button
                 onClick={() => setTimeframe('ALL')}
-                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap shrink-0 ${
                   timeframe === 'ALL' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'
                 }`}
               >
@@ -1146,8 +1146,8 @@ function AdminDashboardContent() {
           </div>
 
           {/* Requests Table */}
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs text-slate-350">
+          <div className="overflow-x-auto border border-slate-800 rounded-2xl">
+            <table className="w-full min-w-[700px] text-left text-xs text-slate-350">
               <thead className="text-[10px] text-slate-500 uppercase border-b border-slate-800">
                 <tr>
                   <th className="pb-3 font-semibold">Mã đơn / Ứng dụng</th>
@@ -1229,10 +1229,10 @@ function AdminDashboardContent() {
             </div>
 
             {/* Sub-filter by Role */}
-            <div className="flex items-center gap-1 bg-slate-955 p-1 rounded-xl border border-slate-800 self-start sm:self-auto">
+            <div className="flex items-center gap-1 bg-slate-955 p-1 rounded-xl border border-slate-800 self-start sm:self-auto overflow-x-auto max-w-full">
               <button
                 onClick={() => setUserRoleFilter('ALL')}
-                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap shrink-0 ${
                   userRoleFilter === 'ALL' ? 'bg-orange-600 text-white shadow' : 'text-slate-400 hover:text-white'
                 }`}
               >
@@ -1240,7 +1240,7 @@ function AdminDashboardContent() {
               </button>
               <button
                 onClick={() => setUserRoleFilter('RECEIVER')}
-                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap shrink-0 ${
                   userRoleFilter === 'RECEIVER' ? 'bg-blue-600 text-white shadow' : 'text-slate-400 hover:text-white'
                 }`}
               >
@@ -1248,7 +1248,7 @@ function AdminDashboardContent() {
               </button>
               <button
                 onClick={() => setUserRoleFilter('STUDENT')}
-                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap shrink-0 ${
                   userRoleFilter === 'STUDENT' ? 'bg-orange-600 text-white shadow' : 'text-slate-400 hover:text-white'
                 }`}
               >
@@ -1256,7 +1256,7 @@ function AdminDashboardContent() {
               </button>
               <button
                 onClick={() => setUserRoleFilter('ADMIN')}
-                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap shrink-0 ${
                   userRoleFilter === 'ADMIN' ? 'bg-red-600 text-white shadow' : 'text-slate-400 hover:text-white'
                 }`}
               >
@@ -1266,8 +1266,8 @@ function AdminDashboardContent() {
           </div>
 
           {/* TABLE OF MEMBERS & BOTH STUDENT & RECEIVER METRICS FOR CEO DASHBOARD */}
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs text-slate-350">
+          <div className="overflow-x-auto border border-slate-800 rounded-2xl">
+            <table className="w-full min-w-[760px] text-left text-xs text-slate-350">
               <thead className="text-[10px] text-slate-500 uppercase border-b border-slate-800">
                 <tr>
                   <th className="pb-3 font-semibold">Tên / Email / MSSV</th>
