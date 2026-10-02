@@ -31,16 +31,22 @@ export default function RegisterPage() {
         client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com",
         callback: handleGoogleCallback,
       });
-      window.google.accounts.id.renderButton(
-        document.getElementById("google-signin-btn"),
-        { 
-          theme: "outline", 
-          size: "large", 
-          width: 380,
-          text: "signup_with", 
-          shape: "rectangular"
-        }
-      );
+      const btnContainer = document.getElementById("google-signin-btn");
+      if (btnContainer) {
+        const parentWidth = btnContainer.parentElement?.clientWidth || 360;
+        const calcWidth = Math.min(Math.max(parentWidth, 240), 380);
+        window.google.accounts.id.renderButton(
+          btnContainer,
+          { 
+            theme: "outline", 
+            size: "large", 
+            width: calcWidth,
+            text: "signup_with", 
+            shape: "rectangular",
+            logo_alignment: "left"
+          }
+        );
+      }
     }
   };
 
@@ -222,8 +228,8 @@ export default function RegisterPage() {
         </div>
 
         {/* Google Register Button */}
-        <div className="flex justify-center w-full min-h-[44px] relative bg-slate-950/20 py-1.5 rounded-xl border border-slate-800/80">
-          <div id="google-signin-btn" className="w-full flex justify-center"></div>
+        <div className="flex justify-center w-full min-h-[44px] my-1">
+          <div id="google-signin-btn" className="w-full flex justify-center overflow-hidden max-w-full"></div>
         </div>
 
         <p className="text-center text-xs text-slate-400 mt-6">

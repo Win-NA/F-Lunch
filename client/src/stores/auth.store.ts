@@ -9,6 +9,8 @@ export interface User {
   phoneNumber?: string | null;
   avatar?: string | null;
   mssv?: string | null;
+  realBalance?: number;
+  bonusBalance?: number;
 }
 
 interface AuthState {

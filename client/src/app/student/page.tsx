@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
 import Tesseract from 'tesseract.js';
+import { useAuthStore } from '@/stores/auth.store';
 import { 
   Plus, 
   MapPin, 
@@ -12,7 +13,9 @@ import {
   Calendar,
   ChevronRight,
   Clock,
-  X
+  X,
+  Wallet,
+  AlertCircle
 } from 'lucide-react';
 
 interface RequestItem {
@@ -32,9 +35,12 @@ interface RequestItem {
 
 export default function StudentDashboard() {
   const router = useRouter();
+  const { user } = useAuthStore();
   
   const [requests, setRequests] = useState<RequestItem[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const totalBal = user ? (user.realBalance || 0) + (user.bonusBalance || 0) : 0;
 
   // Form State
   const [foodPlatform, setFoodPlatform] = useState('GRABFOOD');

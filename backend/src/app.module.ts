@@ -9,6 +9,7 @@ import { ReceiversModule } from './receivers/receivers.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { FeedbackModule } from './feedback/feedback.module';
 import { AdminModule } from './admin/admin.module';
+import { TransactionsModule } from './transactions/transactions.module';
 import { ConfigModule } from '@nestjs/config';
 
 @Module({
@@ -22,6 +23,7 @@ import { ConfigModule } from '@nestjs/config';
     NotificationsModule,
     FeedbackModule,
     AdminModule,
+    TransactionsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

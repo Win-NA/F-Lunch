@@ -2,7 +2,7 @@ import { Injectable, BadRequestException, NotFoundException } from '@nestjs/comm
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateRequestDto } from './dto/create-request.dto';
 import { UpdateRequestDto } from './dto/update-request.dto';
-import { NotificationType, RequestStatus } from '@prisma/client';
+import { NotificationType, RequestStatus, TransactionType, TransactionStatus } from '@prisma/client';
 
 @Injectable()
 export class RequestsService {
@@ -12,6 +12,19 @@ export class RequestsService {
     const pickupDate = new Date(dto.pickupTime);
     if (pickupDate <= new Date()) {
       throw new BadRequestException('Pickup time must be in the future');
+    }
+
+    // Check student wallet balance
+    const user = await this.prisma.user.findUnique({ where: { id: studentId } });
+    if (!user) throw new NotFoundException('User not found');
+
+    const SERVICE_FEE = 5000;
+    const totalBalance = user.realBalance + user.bonusBalance;
+
+    if (totalBalance < SERVICE_FEE) {
+      throw new BadRequestException(
+        `Số dư ví của bạn không đủ (${totalBalance.toLocaleString()}đ). Phí nhận hộ là 5.000đ. Vui lòng nạp thêm tiền vào ví!`
+      );
     }
 
     // Check duplicate active requests
@@ -30,42 +43,82 @@ export class RequestsService {
       }
     }
 
-    // Create request
-    const request = await this.prisma.receivingRequest.create({
-      data: {
-        studentId,
-        foodPlatform: dto.foodPlatform,
-        orderCode: dto.orderCode,
-        pickupLocation: dto.pickupLocation || 'FPT Main Gate',
-        dropoffLocation: dto.dropoffLocation || 'Sảnh Trống Đồng',
-        pickupTime: pickupDate,
-        status: RequestStatus.PENDING,
-        note: dto.note,
-        imageUrl: dto.imageUrl,
-      },
-      include: {
-        student: {
-          select: {
-            id: true,
-            fullName: true,
-            email: true,
+    // Execute creation and fee deduction in a transaction
+    return await this.prisma.$transaction(async (tx) => {
+      // Calculate deduction: priority to bonusBalance
+      let bonusDeduct = 0;
+      let realDeduct = 0;
+
+      if (user.bonusBalance >= SERVICE_FEE) {
+        bonusDeduct = SERVICE_FEE;
+      } else if (user.bonusBalance > 0) {
+        bonusDeduct = user.bonusBalance;
+        realDeduct = SERVICE_FEE - bonusDeduct;
+      } else {
+        realDeduct = SERVICE_FEE;
+      }
+
+      await tx.user.update({
+        where: { id: studentId },
+        data: {
+          bonusBalance: { decrement: bonusDeduct },
+          realBalance: { decrement: realDeduct },
+        },
+      });
+
+      // Create request
+      const request = await tx.receivingRequest.create({
+        data: {
+          studentId,
+          foodPlatform: dto.foodPlatform,
+          orderCode: dto.orderCode,
+          pickupLocation: dto.pickupLocation || 'FPT Main Gate',
+          dropoffLocation: dto.dropoffLocation || 'Sảnh Trống Đồng',
+          pickupTime: pickupDate,
+          status: RequestStatus.PENDING,
+          serviceFee: SERVICE_FEE,
+          note: dto.note,
+          imageUrl: dto.imageUrl,
+        },
+        include: {
+          student: {
+            select: {
+              id: true,
+              fullName: true,
+              email: true,
+            },
           },
         },
-      },
-    });
+      });
 
-    // Create notification
-    await this.prisma.notification.create({
-      data: {
-        userId: studentId,
-        requestId: request.id,
-        title: 'Request Created',
-        message: `Your receiving request for ${request.foodPlatform} (Order Code: ${request.orderCode}) has been submitted.`,
-        type: NotificationType.REQUEST,
-      },
-    });
+      // Create Transaction record
+      const transactionCode = `FL-ORD-${Date.now().toString().slice(-6)}${Math.floor(1000 + Math.random() * 9000)}`;
+      await tx.transaction.create({
+        data: {
+          userId: studentId,
+          requestId: request.id,
+          amount: SERVICE_FEE,
+          type: TransactionType.ORDER_PAYMENT,
+          status: TransactionStatus.APPROVED,
+          paymentMethod: 'SYSTEM',
+          transactionCode,
+          note: `Thanh toán phí dịch vụ nhận hộ cho đơn hàng ${request.orderCode || request.foodPlatform}`,
+        },
+      });
 
-    return request;
+      // Create notification
+      await tx.notification.create({
+        data: {
+          userId: studentId,
+          requestId: request.id,
+          title: 'Đơn hàng mới đã được tạo',
+          message: `Đơn nhận hộ ${request.foodPlatform} (Mã: ${request.orderCode || 'N/A'}) đã tạo thành công. Phí dịch vụ: 5.000đ.`,
+          type: NotificationType.REQUEST,
+        },
+      });
+
+      return request;
+    });
   }
 
   async findAllForStudent(studentId: string) {
@@ -137,23 +190,47 @@ export class RequestsService {
       throw new BadRequestException('Cannot cancel request once it has been accepted by a receiver');
     }
 
-    const updated = await this.prisma.receivingRequest.update({
-      where: { id: requestId },
-      data: { status: RequestStatus.CANCELLED },
-    });
+    return await this.prisma.$transaction(async (tx) => {
+      const updated = await tx.receivingRequest.update({
+        where: { id: requestId },
+        data: { status: RequestStatus.CANCELLED },
+      });
 
-    // Create notification
-    await this.prisma.notification.create({
-      data: {
-        userId: studentId,
-        requestId,
-        title: 'Request Cancelled',
-        message: `Your request for ${request.foodPlatform} has been cancelled.`,
-        type: NotificationType.WARNING,
-      },
-    });
+      // Refund 5,000đ back to student realBalance
+      await tx.user.update({
+        where: { id: studentId },
+        data: {
+          realBalance: { increment: request.serviceFee || 5000 },
+        },
+      });
 
-    return updated;
+      const transactionCode = `FL-REF-${Date.now().toString().slice(-6)}${Math.floor(1000 + Math.random() * 9000)}`;
+      await tx.transaction.create({
+        data: {
+          userId: studentId,
+          requestId,
+          amount: request.serviceFee || 5000,
+          type: TransactionType.ORDER_REFUND,
+          status: TransactionStatus.APPROVED,
+          paymentMethod: 'SYSTEM',
+          transactionCode,
+          note: `Hoàn phí dịch vụ 5.000đ do hủy đơn hàng ${request.orderCode || request.foodPlatform}`,
+        },
+      });
+
+      // Create notification
+      await tx.notification.create({
+        data: {
+          userId: studentId,
+          requestId,
+          title: 'Đã hủy đơn hàng & Hoàn tiền',
+          message: `Đơn nhận hộ ${request.foodPlatform} đã được hủy. 5.000đ phí dịch vụ đã được hoàn lại vào ví của bạn.`,
+          type: NotificationType.WARNING,
+        },
+      });
+
+      return updated;
+    });
   }
 
   async update(requestId: string, studentId: string, dto: UpdateRequestDto) {

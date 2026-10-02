@@ -8,13 +8,17 @@ import BottomNav from './BottomNav';
 import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
-import { MapPin } from 'lucide-react';
+import WalletModal from '../wallet/WalletModal';
+import { Wallet, MapPin } from 'lucide-react';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const { user, logout, updateUser } = useAuthStore();
   const [mounted, setMounted] = useState(false);
+
+  // Wallet Modal State
+  const [isWalletOpen, setIsWalletOpen] = useState(false);
 
   // MSSV Overlay Form State
   const [mssvInput, setMssvInput] = useState('');
@@ -23,6 +27,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Fetch initial profile & balance
+  useEffect(() => {
+    if (user && mounted) {
+      api.get('/users/profile')
+        .then((res) => updateUser(res.data))
+        .catch(() => {});
+    }
+  }, [mounted]);
 
   // Global Notification Polling & Toasts
   useEffect(() => {
@@ -122,7 +135,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   if (isMssvMissing) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-950 p-4 relative overflow-hidden">
+      <div className="min-h-screen flex items-center justify-center bg-slate-955 p-4 relative overflow-hidden">
         {/* Decorative gradient glowing circles */}
         <div className="absolute w-96 h-96 rounded-full bg-orange-600/10 blur-[100px] -top-20 -left-20 pointer-events-none" />
         <div className="absolute w-96 h-96 rounded-full bg-blue-600/10 blur-[100px] -bottom-20 -right-20 pointer-events-none" />
@@ -148,7 +161,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 value={mssvInput}
                 onChange={(e) => setMssvInput(e.target.value)}
                 placeholder="Ví dụ: SE123456, HE181234..."
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-650 focus:outline-none focus:border-orange-500 transition-colors uppercase font-mono"
+                className="w-full bg-slate-955 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-650 focus:outline-none focus:border-orange-500 transition-colors uppercase font-mono"
               />
               <p className="text-[9px] text-slate-500 mt-1.5 leading-relaxed">
                 Định dạng: 2 chữ cái viết hoa và 6 chữ số (Ví dụ: SE123456). Mỗi sinh viên chỉ có một MSSV duy nhất.
@@ -178,17 +191,19 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     );
   }
 
+  const totalBal = (user.realBalance || 0) + (user.bonusBalance || 0);
+
   return (
     <div className="flex flex-col md:flex-row bg-slate-900 text-slate-100 min-h-screen">
       {/* Desktop Sidebar */}
-      <div className="md:flex hidden shrink-0">
-        <Sidebar />
+      <div className="md:flex hidden shrink-0 h-screen sticky top-0 z-30">
+        <Sidebar onOpenWallet={() => setIsWalletOpen(true)} />
       </div>
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0 pb-16 md:pb-0">
         {/* Mobile Header Bar */}
-        <header className="md:hidden flex items-center justify-between px-4 py-3 bg-slate-950/80 backdrop-blur-lg border-b border-slate-800 sticky top-0 z-30">
+        <header className="md:hidden flex items-center justify-between px-4 py-3 bg-slate-955/80 backdrop-blur-lg border-b border-slate-800 sticky top-0 z-30">
           <Link
             href={user.role === 'RECEIVER' ? '/receiver' : user.role === 'ADMIN' ? '/admin' : '/student'}
             className="flex items-center gap-2 hover:opacity-90 active:scale-[0.98] transition-all cursor-pointer"
@@ -197,23 +212,31 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               FL
             </div>
             <span className="font-extrabold text-sm tracking-wide text-white">F-LUNCH</span>
-            <span className="text-[9px] uppercase font-bold px-1.5 py-0.5 rounded bg-orange-650/10 text-orange-500 border border-orange-500/20 scale-90">
-              {user.role}
-            </span>
           </Link>
-          <Link
-            href="/profile"
-            className="flex items-center gap-2 hover:bg-slate-900 px-2.5 py-1.5 rounded-xl transition-all active:scale-[0.98] cursor-pointer"
-          >
-            <span className="text-xs font-semibold text-slate-350 max-w-[120px] truncate">{user.fullName}</span>
-            <div className="w-7 h-7 rounded-full bg-slate-800 border border-slate-700 overflow-hidden flex items-center justify-center text-[10px] font-bold text-orange-500 uppercase shrink-0">
-              {user.avatar ? (
-                <img src={user.avatar} alt="Avatar" className="w-full h-full object-cover" />
-              ) : (
-                user.fullName ? user.fullName[0] : 'U'
-              )}
-            </div>
-          </Link>
+
+          <div className="flex items-center gap-2">
+            {/* Mobile Wallet Button */}
+            <button
+              onClick={() => setIsWalletOpen(true)}
+              className="flex items-center gap-1.5 bg-orange-600/10 border border-orange-500/20 px-2.5 py-1 rounded-xl text-orange-400 hover:bg-orange-600/20 transition-all cursor-pointer"
+            >
+              <Wallet size={14} />
+              <span className="text-xs font-extrabold font-mono">{totalBal.toLocaleString('vi-VN')}đ</span>
+            </button>
+
+            <Link
+              href="/profile"
+              className="flex items-center gap-2 hover:bg-slate-900 px-2.5 py-1.5 rounded-xl transition-all active:scale-[0.98] cursor-pointer"
+            >
+              <div className="w-7 h-7 rounded-full bg-slate-800 border border-slate-700 overflow-hidden flex items-center justify-center text-[10px] font-bold text-orange-500 uppercase shrink-0">
+                {user.avatar ? (
+                  <img src={user.avatar} alt="Avatar" className="w-full h-full object-cover" />
+                ) : (
+                  user.fullName ? user.fullName[0] : 'U'
+                )}
+              </div>
+            </Link>
+          </div>
         </header>
 
         <main className="flex-grow p-4 md:p-8 overflow-y-auto max-w-7xl w-full mx-auto">
@@ -223,6 +246,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
       {/* Mobile Bottom Navigation */}
       <BottomNav />
+
+      {/* Global Wallet Modal */}
+      <WalletModal isOpen={isWalletOpen} onClose={() => setIsWalletOpen(false)} />
     </div>
   );
 }

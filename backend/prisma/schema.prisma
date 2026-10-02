@@ -44,6 +44,26 @@ enum NotificationType {
   WARNING
 }
 
+enum TransactionType {
+  DEPOSIT
+  WITHDRAW
+  ORDER_PAYMENT
+  ORDER_REFUND
+  ADMIN_ADJUST
+}
+
+enum TransactionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum PaymentMethod {
+  BANK_TRANSFER
+  MOMO
+  SYSTEM
+}
+
 model User {
   id           String     @id @default(uuid())
   fullName     String
@@ -54,6 +74,8 @@ model User {
   mssv         String?
   role         UserRole
   status       UserStatus @default(ACTIVE)
+  realBalance  Int        @default(0)
+  bonusBalance Int        @default(0)
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
 
@@ -61,6 +83,7 @@ model User {
   receiverRequests ReceivingRequest[] @relation("ReceiverRequests")
   notifications    Notification[]
   feedbacks        Feedback[]
+  transactions     Transaction[]
 
   @@map("users")
 }
@@ -77,6 +100,7 @@ model ReceivingRequest {
   dropoffLocation String       @default("Sảnh Trống Đồng")
   pickupTime     DateTime
   status         RequestStatus @default(PENDING)
+  serviceFee     Int           @default(5000)
   note           String?
   imageUrl       String?
   createdAt      DateTime      @default(now())
@@ -84,6 +108,7 @@ model ReceivingRequest {
 
   feedback      Feedback?
   notifications Notification[]
+  transactions  Transaction[]
 
   @@map("receiving_requests")
 }
@@ -114,4 +139,27 @@ model Feedback {
   createdAt DateTime         @default(now())
 
   @@map("feedbacks")
+}
+
+model Transaction {
+  id              String            @id @default(uuid())
+  userId          String
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  requestId       String?
+  request         ReceivingRequest? @relation(fields: [requestId], references: [id], onDelete: SetNull)
+  amount          Int
+  bonusAmount     Int               @default(0)
+  type            TransactionType
+  status          TransactionStatus @default(PENDING)
+  paymentMethod   PaymentMethod?
+  transactionCode String            @unique
+  bankName        String?
+  accountNumber   String?
+  accountName     String?
+  note            String?
+  proofImage      String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  @@map("transactions")
 }

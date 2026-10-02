@@ -11,10 +11,11 @@ import {
   Shield, 
   LogOut, 
   ClipboardList,
-  Crown
+  Crown,
+  Wallet
 } from 'lucide-react';
 
-export default function Sidebar() {
+export default function Sidebar({ onOpenWallet }: { onOpenWallet?: () => void }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { user, logout } = useAuthStore();
@@ -52,13 +53,14 @@ export default function Sidebar() {
   }
 
   const currentView = searchParams.get('view');
+  const totalBalance = (user.realBalance || 0) + (user.bonusBalance || 0);
 
   return (
-    <aside className="w-64 bg-slate-955 text-white min-h-screen p-5 flex flex-col justify-between border-r border-slate-800 shadow-xl">
-      <div>
+    <aside className="w-64 bg-slate-955 text-white h-full p-5 flex flex-col justify-between border-r border-slate-800 shadow-xl overflow-hidden shrink-0">
+      <div className="flex-1 overflow-y-auto pr-1">
         <Link
           href={role === 'RECEIVER' ? '/receiver' : role === 'ADMIN' ? '/admin' : '/student'}
-          className="flex items-center gap-3 px-3 py-4 mb-8 hover:opacity-90 active:scale-[0.98] transition-all cursor-pointer"
+          className="flex items-center gap-3 px-3 py-4 mb-4 hover:opacity-90 active:scale-[0.98] transition-all cursor-pointer"
         >
           <div className="w-10 h-10 rounded-xl bg-orange-600 flex items-center justify-center font-bold text-xl text-white shadow-lg shadow-orange-600/30">
             FL
@@ -68,6 +70,27 @@ export default function Sidebar() {
             <span className="text-[10px] uppercase font-bold text-orange-500 tracking-widest">{getRoleLabel(role)}</span>
           </div>
         </Link>
+
+        {/* Wallet Balance Card */}
+        <div 
+          onClick={onOpenWallet}
+          className="bg-slate-900 border border-slate-800 hover:border-orange-500/40 p-3 rounded-2xl flex items-center justify-between text-left transition-all mb-4 cursor-pointer group shadow-md"
+        >
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-orange-600/10 text-orange-500 border border-orange-500/20 flex items-center justify-center group-hover:scale-105 transition-transform">
+              <Wallet size={16} />
+            </div>
+            <div>
+              <p className="text-[10px] text-slate-400 font-semibold uppercase">Ví F-Lunch</p>
+              <p className="text-xs font-extrabold text-white font-mono">
+                {totalBalance.toLocaleString('vi-VN')} đ
+              </p>
+            </div>
+          </div>
+          <span className="text-[10px] font-bold px-2 py-1 rounded-lg bg-orange-600 text-white shadow-sm shadow-orange-600/20 hover:bg-orange-500 transition-colors">
+            Nạp
+          </span>
+        </div>
 
         <nav className="space-y-1.5">
           {menuItems.map((item) => {
@@ -102,7 +125,7 @@ export default function Sidebar() {
         </nav>
       </div>
 
-      <div className="pt-4 border-t border-slate-800">
+      <div className="pt-4 border-t border-slate-800 shrink-0 mt-4">
         <div className="px-3 mb-4 flex items-center gap-3">
           <div className="w-9 h-9 rounded-full bg-slate-900 border border-slate-800 overflow-hidden flex items-center justify-center text-sm font-semibold text-orange-500 shrink-0">
             {user.avatar ? (

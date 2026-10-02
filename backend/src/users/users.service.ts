@@ -72,6 +72,8 @@ export class UsersService {
         mssv: true,
         role: true,
         status: true,
+        realBalance: true,
+        bonusBalance: true,
         createdAt: true,
         updatedAt: true,
       },
