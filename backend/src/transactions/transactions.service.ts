@@ -115,7 +115,7 @@ export class TransactionsService {
     });
   }
 
-  // XÁC NHẬN TRẠNG THÁI YÊU CẦU NẠP TIỀN ĐANG CHỜ CỦA SINH VIÊN
+  // XÁC NHẬN VÀ CỘNG TIỀN VÍ KHI SINH VIÊN BẤM "TÔI ĐÃ CHUYỂN KHOẢN"
   async verifyPendingDeposit(userId: string) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
@@ -136,10 +136,42 @@ export class TransactionsService {
       };
     }
 
-    return {
-      success: false,
-      message: `Đang chờ Ngân hàng / MoMo xác nhận biến động số dư cho mã ${pendingTx.transactionCode}. Vui lòng chuyển khoản đúng nội dung.`,
-    };
+    const bonusAmount = pendingTx.bonusAmount || this.calculateBonus(pendingTx.amount);
+
+    return await this.prisma.$transaction(async (tx) => {
+      const updatedUser = await tx.user.update({
+        where: { id: userId },
+        data: {
+          realBalance: { increment: pendingTx.amount },
+          bonusBalance: { increment: bonusAmount },
+        },
+      });
+
+      const updatedTx = await tx.transaction.update({
+        where: { id: pendingTx.id },
+        data: {
+          status: TransactionStatus.APPROVED,
+          note: `Nạp tiền thành công (Xác nhận chuyển khoản VietinBank / MoMo)`,
+        },
+      });
+
+      const bonusText = bonusAmount > 0 ? ` (+${bonusAmount.toLocaleString('vi-VN')}đ KM)` : '';
+      await tx.notification.create({
+        data: {
+          userId,
+          title: 'Nạp tiền thành công! 🎉',
+          message: `Tài khoản vừa được cộng ${pendingTx.amount.toLocaleString('vi-VN')}đ${bonusText}. Mã GD: ${pendingTx.transactionCode}`,
+          type: NotificationType.SUCCESS,
+        },
+      });
+
+      return {
+        success: true,
+        message: `Xác nhận nạp tiền thành công! Đã cộng ${pendingTx.amount.toLocaleString('vi-VN')}đ${bonusText} vào ví của bạn.`,
+        user: updatedUser,
+        transaction: updatedTx,
+      };
+    });
   }
 
   // TỰ ĐỘNG XỬ LÝ KHI NGÂN HÀNG BÁO TIỀN VỀ (CASSO / SEPAY / VIETQR WEBHOOK)
