@@ -5,6 +5,17 @@ import { WithdrawDto } from './dto/withdraw.dto';
 import { AdminAdjustDto } from './dto/admin-adjust.dto';
 import { TransactionType, TransactionStatus, NotificationType, PaymentMethod } from '@prisma/client';
 
+function removeAccents(str: string): string {
+  if (!str) return '';
+  return str
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/Đ/g, 'D')
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, '');
+}
+
 @Injectable()
 export class TransactionsService {
   constructor(private prisma: PrismaService) {}
@@ -56,25 +67,81 @@ export class TransactionsService {
     return transaction;
   }
 
+  // CỘNG TIỀN TRỰC TIẾP KHI SINH VIÊN XÁC NHẬN ĐÃ CHUYỂN KHOẢN
+  async confirmDeposit(userId: string, dto: DepositDto) {
+    if (!dto.amount || dto.amount < 10000) {
+      throw new BadRequestException('Số tiền nạp tối thiểu là 10.000đ');
+    }
+
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found');
+
+    const bonusAmount = this.calculateBonus(dto.amount);
+    const transactionCode = this.generateCode('DEP');
+
+    return await this.prisma.$transaction(async (tx) => {
+      // 1. Cộng tiền trực tiếp vào số dư thực tế và khuyến mãi
+      const updatedUser = await tx.user.update({
+        where: { id: userId },
+        data: {
+          realBalance: { increment: dto.amount },
+          bonusBalance: { increment: bonusAmount },
+        },
+      });
+
+      // 2. Tạo giao dịch DEPOSIT trạng thái APPROVED
+      const transaction = await tx.transaction.create({
+        data: {
+          userId,
+          amount: dto.amount,
+          bonusAmount,
+          type: TransactionType.DEPOSIT,
+          status: TransactionStatus.APPROVED,
+          paymentMethod: dto.paymentMethod || PaymentMethod.BANK_TRANSFER,
+          transactionCode,
+          note: dto.note || `Nạp tiền thành công qua ${dto.paymentMethod === 'MOMO' ? 'Ví MoMo' : 'VietinBank VietQR'}`,
+        },
+      });
+
+      // 3. Thông báo cho sinh viên
+      const bonusText = bonusAmount > 0 ? ` (+${bonusAmount.toLocaleString('vi-VN')}đ KM)` : '';
+      await tx.notification.create({
+        data: {
+          userId,
+          title: 'Nạp tiền thành công! 🎉',
+          message: `Tài khoản vừa được cộng ${dto.amount.toLocaleString('vi-VN')}đ${bonusText}. Mã GD: ${transactionCode}`,
+          type: NotificationType.SUCCESS,
+        },
+      });
+
+      return {
+        success: true,
+        message: `Nạp tiền thành công! Đã cộng ${dto.amount.toLocaleString('vi-VN')}đ vào ví.`,
+        transaction,
+        user: updatedUser,
+      };
+    });
+  }
+
   // TỰ ĐỘNG XỬ LÝ KHI NGÂN HÀNG BÁO TIỀN VỀ (CASSO / VIETQR WEBHOOK)
   async handleBankWebhook(memoContent: string, amount: number) {
     if (!memoContent || amount <= 0) {
       throw new BadRequestException('Thông tin biến động số dư không hợp lệ');
     }
 
-    const cleanMemo = memoContent.toUpperCase().replace(/\s+/g, '');
+    const rawCleanMemo = removeAccents(memoContent);
     const users = await this.prisma.user.findMany();
 
-    // 1. Ưu tiên tìm chính xác Sinh viên dựa trên MSSV, Tên hoặc Email trong Nội dung chuyển khoản (Memo)
+    // 1. Tìm Sinh viên dựa trên MSSV, Tên (không dấu), Email prefix trong Nội dung chuyển khoản (Memo)
     let matchedUser = users.find(u => {
-      const mssvClean = u.mssv ? u.mssv.trim().toUpperCase() : '';
-      const mssvMatch = mssvClean.length >= 3 && cleanMemo.includes(mssvClean);
+      const mssvClean = u.mssv ? removeAccents(u.mssv) : '';
+      const mssvMatch = mssvClean.length >= 3 && rawCleanMemo.includes(mssvClean);
 
-      const nameClean = u.fullName ? u.fullName.toUpperCase().replace(/\s+/g, '') : '';
-      const nameMatch = nameClean.length >= 3 && cleanMemo.includes(nameClean);
+      const nameClean = u.fullName ? removeAccents(u.fullName) : '';
+      const nameMatch = nameClean.length >= 3 && rawCleanMemo.includes(nameClean);
 
-      const emailPrefix = u.email ? u.email.split('@')[0].toUpperCase() : '';
-      const emailMatch = emailPrefix.length >= 3 && cleanMemo.includes(emailPrefix);
+      const emailPrefix = u.email ? removeAccents(u.email.split('@')[0]) : '';
+      const emailMatch = emailPrefix.length >= 3 && rawCleanMemo.includes(emailPrefix);
 
       return mssvMatch || nameMatch || emailMatch;
     });
@@ -83,7 +150,6 @@ export class TransactionsService {
     let pendingTx = null;
 
     if (targetUserId) {
-      // Tìm giao dịch PENDING của chính sinh viên này (nếu có)
       pendingTx = await this.prisma.transaction.findFirst({
         where: {
           userId: targetUserId,
@@ -94,18 +160,19 @@ export class TransactionsService {
         orderBy: { createdAt: 'desc' },
       });
     } else {
-      // 2. Nếu chưa khớp user trực tiếp, tìm theo mã giao dịch PENDING
       const pendingTxs = await this.prisma.transaction.findMany({
         where: {
           type: TransactionType.DEPOSIT,
           status: TransactionStatus.PENDING,
-          amount: amount,
         },
         include: { user: true },
         orderBy: { createdAt: 'desc' },
       });
 
-      pendingTx = pendingTxs.find(tx => cleanMemo.includes(tx.transactionCode.replace(/-/g, '')));
+      pendingTx = pendingTxs.find(tx => {
+        const cleanTxCode = removeAccents(tx.transactionCode);
+        return rawCleanMemo.includes(cleanTxCode);
+      });
       if (pendingTx) {
         targetUserId = pendingTx.userId;
       }

@@ -62,6 +62,30 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
     }
   };
 
+  const handleConfirmDeposit = async () => {
+    if (!depositAmount || depositAmount < 10000) {
+      toast.error('Vui lòng chọn số tiền nạp từ 10.000đ trở lên');
+      return;
+    }
+    setVerifying(true);
+    try {
+      const res = await api.post('/transactions/deposit-confirm', {
+        amount: depositAmount,
+        paymentMethod,
+      });
+      toast.success(res.data?.message || 'Nạp tiền thành công! Đã cộng tiền vào ví!');
+      
+      const profileRes = await api.get('/users/profile');
+      updateUser(profileRes.data);
+      fetchHistory();
+    } catch (err: any) {
+      const msg = err.response?.data?.message || 'Không thể xác nhận nạp tiền';
+      toast.error(msg);
+    } finally {
+      setVerifying(false);
+    }
+  };
+
   const memoCode = `FLUNCH ${user?.mssv || user?.fullName?.replace(/\s+/g, '') || ''}`;
 
   useEffect(() => {
@@ -488,6 +512,23 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
                       </div>
                     </div>
                   )}
+
+                  {/* Confirm Deposit Button */}
+                  <button
+                    type="button"
+                    onClick={handleConfirmDeposit}
+                    disabled={verifying}
+                    style={{ backgroundColor: '#16a34a', color: '#ffffff' }}
+                    className="w-full py-4.5 px-5 rounded-2xl font-black text-sm sm:text-lg flex items-center justify-center gap-2 hover:bg-emerald-500 transition-all shadow-2xl cursor-pointer active:scale-95 border-2 border-emerald-400"
+                  >
+                    {verifying ? (
+                      'Đang xác nhận & cộng tiền...'
+                    ) : (
+                      <>
+                        <Sparkles size={24} /> TÔI ĐÃ CHUYỂN TIỀN - XÁC NHẬN CỘNG TIỀN VÀO VÍ
+                      </>
+                    )}
+                  </button>
 
                   {/* Red Warning Banner */}
                   <div style={{ backgroundColor: '#450a0a', borderColor: '#dc2626' }} className="p-5 rounded-2xl border-2 flex items-start gap-3.5 text-sm sm:text-base shadow-xl">

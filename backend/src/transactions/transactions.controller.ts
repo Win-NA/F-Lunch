@@ -18,6 +18,11 @@ export class TransactionsController {
     return this.transactionsService.createDeposit(req.user.id, dto);
   }
 
+  @Post('deposit-confirm')
+  async confirmDeposit(@Request() req: any, @Body() dto: DepositDto) {
+    return this.transactionsService.confirmDeposit(req.user.id, dto);
+  }
+
   @Post('withdraw')
   async createWithdraw() {
     throw new BadRequestException('Hệ thống không hỗ trợ rút tiền. Số dư ví dùng để thanh toán phí 5.000đ/đơn.');
