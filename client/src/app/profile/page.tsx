@@ -138,7 +138,13 @@ export default function ProfilePage() {
             <User className="text-orange-500" size={24} />
             Hồ sơ của bạn
           </h1>
-          <p className="text-slate-450 text-xs mt-1">Thông tin tài khoản cá nhân và liên lạc</p>
+          <p className="text-slate-450 text-xs mt-1">
+            {user.role === 'ADMIN'
+              ? 'Thông tin tài khoản quản trị hệ thống'
+              : user.role === 'RECEIVER'
+              ? 'Thông tin cá nhân, liên lạc và vai trò nhận hộ'
+              : 'Thông tin tài khoản cá nhân và liên lạc'}
+          </p>
         </div>
 
         {!isEditing && (
@@ -200,13 +206,17 @@ export default function ProfilePage() {
 
               <div>
                 <label className="block text-[9px] font-semibold uppercase tracking-wider text-slate-550 mb-1">
-                  Mã số Sinh viên (MSSV)
+                  {user.role === 'ADMIN'
+                    ? 'Mã số Quản trị (Admin ID)'
+                    : user.role === 'RECEIVER'
+                    ? 'Mã số Sinh viên / Định danh'
+                    : 'Mã số Sinh viên (MSSV)'}
                 </label>
                 <input
                   type="text"
                   value={mssv}
                   onChange={(e) => setMssv(e.target.value)}
-                  placeholder="Ví dụ: SE123456, HE181234..."
+                  placeholder={user.role === 'ADMIN' ? 'Ví dụ: AD001, ADMIN...' : 'Ví dụ: SE123456, HE181234...'}
                   className="w-full bg-slate-955 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-orange-500"
                 />
               </div>
@@ -274,7 +284,13 @@ export default function ProfilePage() {
               <div className="flex items-center gap-3">
                 <IdCard className="text-slate-550 shrink-0" size={16} />
                 <div>
-                  <p className="text-[9px] text-slate-550 font-semibold uppercase tracking-wider">Mã số Sinh viên (MSSV)</p>
+                  <p className="text-[9px] text-slate-550 font-semibold uppercase tracking-wider">
+                    {user.role === 'ADMIN'
+                      ? 'Mã số Quản trị'
+                      : user.role === 'RECEIVER'
+                      ? 'Mã số Sinh viên / Mã định danh'
+                      : 'Mã số Sinh viên (MSSV)'}
+                  </p>
                   <p className="text-xs font-semibold text-white mt-0.5">{user.mssv || 'Chưa cập nhật'}</p>
                 </div>
               </div>
@@ -299,6 +315,24 @@ export default function ProfilePage() {
                     <div className="text-left">
                       <p className="font-bold text-white">Báo cáo sự cố / Lỗi nạp tiền</p>
                       <p className="text-[10px] text-slate-400 font-normal">Gửi chứng từ chuyển khoản sai ND hoặc báo lỗi hệ thống</p>
+                    </div>
+                  </div>
+                  <ChevronRight size={16} className="text-orange-500" />
+                </Link>
+              </div>
+            )}
+
+            {user.role === 'ADMIN' && (
+              <div className="pt-3 border-t border-slate-850">
+                <Link
+                  href="/admin?view=reports"
+                  className="w-full flex items-center justify-between p-3.5 bg-orange-500/10 border border-orange-500/20 hover:bg-orange-500/20 rounded-2xl transition-all text-xs font-bold text-orange-400 cursor-pointer group"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <AlertTriangle size={18} className="text-orange-500 group-hover:scale-110 transition-transform" />
+                    <div className="text-left">
+                      <p className="font-bold text-white">Duyệt khiếu nại & báo cáo nạp tiền</p>
+                      <p className="text-[10px] text-slate-400 font-normal">Xem chứng từ đối chiếu và duyệt nạp tiền cho sinh viên</p>
                     </div>
                   </div>
                   <ChevronRight size={16} className="text-orange-500" />

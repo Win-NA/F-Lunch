@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
+import { useAuthStore } from '@/stores/auth.store';
 import { 
   Bell, 
   Check, 
@@ -20,9 +21,24 @@ interface NotificationItem {
 }
 
 export default function NotificationsPage() {
+  const { user } = useAuthStore();
+  const role = user?.role || 'STUDENT';
+
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [btnLoading, setBtnLoading] = useState(false);
+
+  const getSubtitle = () => {
+    if (role === 'ADMIN') return 'Cập nhật biến động hệ thống, duyệt nạp tiền và khiếu nại';
+    if (role === 'RECEIVER') return 'Cập nhật đơn nhận hộ, tiền công và thông báo hệ thống';
+    return 'Theo dõi trạng thái đơn hàng, biến động số dư và phản hồi sự cố';
+  };
+
+  const getEmptyStateMessage = () => {
+    if (role === 'ADMIN') return 'Chưa có thông báo hệ thống hoặc khiếu nại mới nào.';
+    if (role === 'RECEIVER') return 'Bạn chưa có thông báo mới nào về đơn hàng hoặc thu nhập.';
+    return 'Bạn chưa nhận được thông báo mới nào.';
+  };
 
   const fetchNotifications = async () => {
     try {
@@ -86,7 +102,7 @@ export default function NotificationsPage() {
             <Bell className="text-orange-500" size={24} />
             Thông báo
           </h1>
-          <p className="text-slate-400 text-xs mt-1">Theo dõi quá trình giao nhận đồ ăn của bạn</p>
+          <p className="text-slate-400 text-xs mt-1">{getSubtitle()}</p>
         </div>
 
         {notifications.some(n => !n.isRead) && (
@@ -105,7 +121,7 @@ export default function NotificationsPage() {
       ) : notifications.length === 0 ? (
         <div className="text-center py-12 border border-dashed border-slate-800 rounded-3xl bg-slate-900/40">
           <Inbox className="mx-auto text-slate-700 mb-2" size={32} />
-          <p className="text-slate-500 text-xs">Bạn chưa nhận được thông báo nào.</p>
+          <p className="text-slate-500 text-xs">{getEmptyStateMessage()}</p>
         </div>
       ) : (
         <div className="space-y-3">
