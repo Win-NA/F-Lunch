@@ -250,4 +250,55 @@ export class ReceiversService {
       orderBy: { updatedAt: 'desc' },
     });
   }
+
+  async cancelAssignment(requestId: string, receiverId: string) {
+    const request = await this.prisma.receivingRequest.findUnique({
+      where: { id: requestId },
+      include: { student: true, receiver: true },
+    });
+
+    if (!request) {
+      throw new NotFoundException('Không tìm thấy đơn hàng');
+    }
+
+    if (request.receiverId !== receiverId) {
+      throw new BadRequestException('Bạn không được gán cho đơn hàng này');
+    }
+
+    if (request.status !== RequestStatus.ACCEPTED && request.status !== RequestStatus.RECEIVED) {
+      throw new BadRequestException('Chỉ có thể hủy nhận đơn khi đơn đang ở trạng thái Đã tiếp nhận hoặc Đã lấy đơn');
+    }
+
+    const updated = await this.prisma.receivingRequest.update({
+      where: { id: requestId },
+      data: {
+        receiverId: null,
+        status: RequestStatus.PENDING,
+      },
+    });
+
+    // Notify student
+    await this.prisma.notification.create({
+      data: {
+        userId: request.studentId,
+        requestId,
+        title: 'Đơn hàng đã trở lại danh sách chờ 🔄',
+        message: `Người nhận hộ ${request.receiver?.fullName || ''} đã hủy nhận đơn do sự cố. Đơn hàng của bạn đã quay lại danh sách chờ để người nhận hộ khác tiếp nhận!`,
+        type: NotificationType.WARNING,
+      },
+    });
+
+    // Notify receiver
+    await this.prisma.notification.create({
+      data: {
+        userId: receiverId,
+        requestId,
+        title: 'Hủy nhận đơn thành công',
+        message: `Bạn đã hủy nhận đơn hàng ${request.foodPlatform} (#${request.orderCode || request.id.slice(0, 8)}).`,
+        type: NotificationType.SYSTEM,
+      },
+    });
+
+    return updated;
+  }
 }

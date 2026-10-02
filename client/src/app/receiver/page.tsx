@@ -4,13 +4,13 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
-import { 
-  ClipboardList, 
-  MapPin, 
-  Clock, 
-  User, 
-  CheckCircle, 
-  Play, 
+import {
+  ClipboardList,
+  MapPin,
+  Clock,
+  User,
+  CheckCircle,
+  Play,
   Inbox,
   ArrowRight,
   DollarSign,
@@ -71,8 +71,8 @@ export default function ReceiverDashboard() {
       const completedToday = historyRes.data.filter((req: any) => {
         const d = new Date(req.updatedAt);
         return d.getDate() === today.getDate() &&
-               d.getMonth() === today.getMonth() &&
-               d.getFullYear() === today.getFullYear();
+          d.getMonth() === today.getMonth() &&
+          d.getFullYear() === today.getFullYear();
       });
       setCompletedTodayCount(completedToday.length);
     } catch (err: any) {
@@ -120,6 +120,24 @@ export default function ReceiverDashboard() {
     }
   };
 
+  const handleCancelAssignment = async () => {
+    if (!activeTask) return;
+    if (!confirm('Bạn có chắc chắn muốn hủy nhận đơn hàng này không? Đơn sẽ quay trở lại danh sách chờ cho người nhận hộ khác.')) {
+      return;
+    }
+    setBtnLoading(true);
+    try {
+      await api.post(`/receivers/cancel/${activeTask.id}`);
+      toast.success('Đã hủy nhận đơn thành công. Đơn hàng đã về lại danh sách chờ.');
+      fetchData();
+    } catch (err: any) {
+      const msg = err.response?.data?.message || 'Không thể hủy nhận đơn';
+      toast.error(msg);
+    } finally {
+      setBtnLoading(false);
+    }
+  };
+
   const getStatusLabel = (status: string) => {
     if (status === 'ACCEPTED') return 'Đang đợi shipper';
     if (status === 'RECEIVED') return 'Đã lấy đơn';
@@ -158,18 +176,18 @@ export default function ReceiverDashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
+
         {/* Active Task */}
         <div className="lg:col-span-2 space-y-6">
           <div className="bg-slate-900/60 backdrop-blur-xl border border-slate-800 p-5 rounded-3xl shadow-xl">
             <h2 className="text-md font-bold text-white mb-4">Nhiệm vụ đang thực hiện</h2>
-            
+
             {loading ? (
               <p className="text-slate-500 text-xs">Đang tải...</p>
             ) : !activeTask ? (
               <div className="text-center py-10 border border-dashed border-slate-800 rounded-2xl">
                 <ClipboardList className="mx-auto text-slate-700 mb-2" size={32} />
-                <p className="text-slate-500 text-xs">Hiện tại chưa nhận nhiệm vụ nào. Nhận ngay các đơn trống bên phải nhé!</p>
+                <p className="text-slate-500 text-xs">Hiện tại chưa nhận nhiệm vụ nào. Nhanh tay nhận các đơn mới nhé!</p>
               </div>
             ) : (
               <div className="space-y-6">
@@ -272,6 +290,16 @@ export default function ReceiverDashboard() {
                       Xác thực bàn giao và hoàn thành <ArrowRight size={14} />
                     </button>
                   )}
+
+                  {['ACCEPTED', 'RECEIVED'].includes(activeTask.status) && (
+                    <button
+                      onClick={handleCancelAssignment}
+                      disabled={btnLoading}
+                      className="px-4 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 font-bold text-xs py-3.5 rounded-xl transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+                    >
+                      <X size={14} /> Hủy nhận đơn
+                    </button>
+                  )}
                 </div>
               </div>
             )}
@@ -280,7 +308,7 @@ export default function ReceiverDashboard() {
           {/* Lịch sử nhận hộ đơn hàng */}
           <div className="bg-slate-900/60 backdrop-blur-xl border border-slate-800 p-5 rounded-3xl shadow-xl">
             <h2 className="text-md font-bold text-white mb-4">Lịch sử đơn nhận hộ ({historyRequests.length})</h2>
-            
+
             {loading ? (
               <p className="text-slate-500 text-xs">Đang tải...</p>
             ) : historyRequests.length === 0 ? (
@@ -404,20 +432,20 @@ export default function ReceiverDashboard() {
 
       {/* Fullscreen Image Zoom Overlay */}
       {fullscreenImage && (
-        <div 
+        <div
           className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4"
           onClick={() => setFullscreenImage(null)}
         >
-          <button 
+          <button
             className="absolute top-4 right-4 text-white hover:text-slate-300 p-2 cursor-pointer bg-slate-900/50 rounded-full"
             onClick={() => setFullscreenImage(null)}
           >
             <X size={24} />
           </button>
           <div className="relative max-w-full max-h-[85vh] flex items-center justify-center">
-            <img 
-              src={fullscreenImage} 
-              alt="Ảnh đơn hàng phóng to" 
+            <img
+              src={fullscreenImage}
+              alt="Ảnh đơn hàng phóng to"
               className="max-w-full max-h-[85vh] object-contain rounded-2xl border border-slate-800 shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             />
