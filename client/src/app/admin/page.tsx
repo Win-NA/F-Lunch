@@ -144,6 +144,7 @@ function AdminDashboardContent() {
   const [adminTransactions, setAdminTransactions] = useState<any[]>([]);
   const [txStatusFilter, setTxStatusFilter] = useState<string>('ALL');
   const [userTxModal, setUserTxModal] = useState<UserItem | null>(null);
+  const [userTxTypeFilter, setUserTxTypeFilter] = useState<'ALL' | 'DEPOSIT' | 'ORDER_PAYMENT'>('ALL');
 
   // Reports State
   const [adminReports, setAdminReports] = useState<ReportTicketItem[]>([]);
@@ -861,10 +862,14 @@ function AdminDashboardContent() {
                 return (
                   <>
                     {/* Summary Bar */}
-                    <div className="grid grid-cols-3 gap-2 text-center text-xs bg-slate-955 p-3 rounded-2xl border border-slate-800 shrink-0">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs bg-slate-955 p-3 rounded-2xl border border-slate-800 shrink-0">
                       <div>
                         <span className="text-[10px] text-slate-500 font-semibold uppercase block">Tổng số đơn</span>
                         <span className="font-extrabold text-white text-sm">{userReqs.length} đơn</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-slate-500 font-semibold uppercase block">Phí dịch vụ 5k</span>
+                        <span className="font-extrabold text-orange-400 text-sm">{(userReqs.length * 5000).toLocaleString('vi-VN')}đ</span>
                       </div>
                       <div>
                         <span className="text-[10px] text-slate-500 font-semibold uppercase block">Đã hoàn thành</span>
@@ -872,7 +877,7 @@ function AdminDashboardContent() {
                       </div>
                       <div>
                         <span className="text-[10px] text-slate-500 font-semibold uppercase block">Đang xử lý</span>
-                        <span className="font-extrabold text-orange-400 text-sm">{activeCount} đơn</span>
+                        <span className="font-extrabold text-blue-400 text-sm">{activeCount} đơn</span>
                       </div>
                     </div>
 
@@ -885,11 +890,18 @@ function AdminDashboardContent() {
                       ) : (
                         userReqs.map((req) => (
                           <div key={req.id} className="p-3.5 bg-slate-955 rounded-2xl border border-slate-800 space-y-2.5 hover:border-slate-700 transition-all">
-                            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-850 pb-2">
-                              <div className="flex items-center gap-2">
+                            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-855 pb-2">
+                              <div className="flex flex-wrap items-center gap-2">
                                 <span className="text-xs font-bold text-orange-400">#{req.orderCode || req.id.slice(0, 8)}</span>
                                 <span className="text-[10px] font-semibold px-2 py-0.5 bg-slate-800 text-slate-300 rounded-full">
                                   {req.foodPlatform}
+                                </span>
+                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                  req.status === 'CANCELLED' 
+                                    ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' 
+                                    : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                                }`}>
+                                  {req.status === 'CANCELLED' ? 'Hoàn phí 5.000đ' : 'Phí 5.000đ (Đã thanh toán ví)'}
                                 </span>
                               </div>
                               <div className="flex items-center gap-2">
@@ -1254,35 +1266,77 @@ function AdminDashboardContent() {
                   t.user?.id === userTxModal.id || 
                   (t.user?.email && t.user.email.toLowerCase() === userTxModal.email?.toLowerCase())
                 );
+
                 const totalDep = userTxs.filter(t => t.type === 'DEPOSIT' && t.status === 'APPROVED').reduce((sum, t) => sum + (t.amount || 0), 0);
                 const totalBon = userTxs.filter(t => t.type === 'DEPOSIT' && t.status === 'APPROVED').reduce((sum, t) => sum + (t.bonusAmount || 0), 0);
+                const totalPaidFees = userTxs.filter(t => t.type === 'ORDER_PAYMENT').reduce((sum, t) => sum + (t.amount || 0), 0);
+                const orderPaymentCount = userTxs.filter(t => t.type === 'ORDER_PAYMENT').length;
+
+                const filteredUserTxs = userTxs.filter(t => {
+                  if (userTxTypeFilter === 'DEPOSIT') return t.type === 'DEPOSIT' || t.type === 'ADMIN_ADJUST';
+                  if (userTxTypeFilter === 'ORDER_PAYMENT') return t.type === 'ORDER_PAYMENT' || t.type === 'ORDER_REFUND';
+                  return true;
+                });
 
                 return (
                   <>
+                    {/* Summary Bar */}
                     <div className="grid grid-cols-3 gap-2 text-center text-xs bg-slate-955 p-3 rounded-2xl border border-slate-800 shrink-0">
                       <div>
-                        <span className="text-[10px] text-slate-500 font-semibold uppercase block">Tổng tiền nạp</span>
-                        <span className="font-extrabold text-emerald-400 text-sm">{totalDep.toLocaleString('vi-VN')} đ</span>
-                      </div>
-                      <div>
-                        <span className="text-[10px] text-slate-500 font-semibold uppercase block">Tổng khuyến mãi</span>
-                        <span className="font-extrabold text-orange-400 text-sm">{totalBon.toLocaleString('vi-VN')} đ</span>
-                      </div>
-                      <div>
                         <span className="text-[10px] text-slate-500 font-semibold uppercase block">Số dư hiện tại</span>
-                        <span className="font-extrabold text-white text-sm">
-                          {((userTxModal.realBalance || 0) + (userTxModal.bonusBalance || 0)).toLocaleString('vi-VN')} đ
+                        <span className="font-extrabold text-emerald-400 text-sm">
+                          {((userTxModal.realBalance || 0) + (userTxModal.bonusBalance || 0)).toLocaleString('vi-VN')}đ
                         </span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-slate-500 font-semibold uppercase block">Tổng nạp (+KM)</span>
+                        <span className="font-extrabold text-white text-sm">{(totalDep + totalBon).toLocaleString('vi-VN')}đ</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-slate-500 font-semibold uppercase block">Phí 5k đã trả</span>
+                        <span className="font-extrabold text-rose-400 text-sm">-{totalPaidFees.toLocaleString('vi-VN')}đ ({orderPaymentCount} đơn)</span>
                       </div>
                     </div>
 
+                    {/* Filter Tabs */}
+                    <div className="flex items-center gap-1 bg-slate-955 p-1 rounded-xl border border-slate-800 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => setUserTxTypeFilter('ALL')}
+                        className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                          userTxTypeFilter === 'ALL' ? 'bg-blue-600 text-white shadow' : 'text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        Tất cả ({userTxs.length})
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setUserTxTypeFilter('DEPOSIT')}
+                        className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                          userTxTypeFilter === 'DEPOSIT' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        💳 Nạp tiền & KM ({userTxs.filter(t => t.type === 'DEPOSIT' || t.type === 'ADMIN_ADJUST').length})
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setUserTxTypeFilter('ORDER_PAYMENT')}
+                        className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                          userTxTypeFilter === 'ORDER_PAYMENT' ? 'bg-rose-600 text-white shadow' : 'text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        🍱 Phí thanh toán đơn ({orderPaymentCount})
+                      </button>
+                    </div>
+
+                    {/* List of user's transactions */}
                     <div className="flex-1 overflow-y-auto space-y-2 pr-1">
-                      {userTxs.length === 0 ? (
+                      {filteredUserTxs.length === 0 ? (
                         <div className="text-center py-10 text-slate-500 text-xs border border-dashed border-slate-800 rounded-2xl">
-                          Thành viên này chưa thực hiện giao dịch ví nào.
+                          Không có lịch sử giao dịch nào phù hợp với bộ lọc này.
                         </div>
                       ) : (
-                        userTxs.map((tx: any) => {
+                        filteredUserTxs.map((tx: any) => {
                           const isNegative = tx.type === 'ORDER_PAYMENT';
                           return (
                             <div key={tx.id} className="p-3 bg-slate-955 rounded-xl border border-slate-800 flex items-center justify-between text-xs hover:border-slate-700 transition-colors">
@@ -1295,7 +1349,7 @@ function AdminDashboardContent() {
                                     'bg-amber-500/10 text-amber-400 border border-amber-500/20'
                                   }`}>
                                     {tx.type === 'DEPOSIT' ? 'NẠP TIỀN VÀO VÍ' :
-                                     tx.type === 'ORDER_PAYMENT' ? 'THANH TOÁN ĐƠN' :
+                                     tx.type === 'ORDER_PAYMENT' ? 'THANH TOÁN PHÍ ĐƠN 5K' :
                                      tx.type === 'ORDER_REFUND' ? 'HOÀN PHÍ HỦY ĐƠN' :
                                      tx.type === 'ADMIN_ADJUST' ? 'ADMIN ĐIỀU CHỈNH' : tx.type}
                                   </span>
