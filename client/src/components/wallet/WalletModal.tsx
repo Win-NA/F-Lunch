@@ -31,6 +31,7 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
   // Deposit Form State
   const [depositAmount, setDepositAmount] = useState<number | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<'BANK_TRANSFER' | 'MOMO'>('BANK_TRANSFER');
+  const [momoMode, setMomoMode] = useState<'MOMO_APP' | 'BANK_APP'>('MOMO_APP');
 
   // History State
   const [transactions, setTransactions] = useState<any[]>([]);
@@ -63,61 +64,16 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
 
   const memoCode = `FLUNCH ${user?.mssv || user?.fullName?.replace(/\s+/g, '') || ''}`;
 
-  const autoCheckDeposit = async () => {
-    if (!depositAmount || depositAmount < 10000) return;
-    try {
-      const res = await api.post('/transactions/bank-webhook', {
-        memo: memoCode,
-        amount: depositAmount,
-      });
-      if (res.data?.success) {
-        toast.success(`🎉 TỰ ĐỘNG XÁC NHẬN: ${res.data.message || 'Số dư ví đã được cập nhật thành công!'}`);
-        setDepositAmount(null); // Dừng polling ngầm ngay sau khi đã xác thực nạp thành công
-        await fetchProfile();
-        fetchHistory();
-      }
-    } catch (err) {
-      // Silent catch for background auto-check
-    }
-  };
-
-  const handleVerifyDeposit = async () => {
-    if (!depositAmount || depositAmount < 10000) return;
-    setVerifying(true);
-    try {
-      const res = await api.post('/transactions/bank-webhook', {
-        memo: memoCode,
-        amount: depositAmount,
-      });
-      if (res.data?.success) {
-        toast.success(res.data.message || 'Xác nhận nạp tiền thành công! Số dư đã được cập nhật.');
-        await fetchProfile();
-        fetchHistory();
-      } else {
-        toast.info(res.data?.message || 'Hệ thống chưa nhận được tiền từ ngân hàng. Hãy thử lại sau vài giây nhé.');
-      }
-    } catch (err: any) {
-      toast.error('Không thể xác thực tự động. Bạn có thể gửi ảnh biên lai qua mục Báo cáo sự cố.');
-    } finally {
-      setVerifying(false);
-    }
-  };
-
   useEffect(() => {
     if (isOpen) {
       fetchProfile();
       if (tab === 'HISTORY') {
         fetchHistory();
       }
-      const interval = setInterval(() => {
-        fetchProfile();
-        if (depositAmount && depositAmount >= 10000) {
-          autoCheckDeposit();
-        }
-      }, 3000);
+      const interval = setInterval(fetchProfile, 3000);
       return () => clearInterval(interval);
     }
-  }, [isOpen, tab, depositAmount]);
+  }, [isOpen, tab]);
 
   if (!isOpen || !user) return null;
 
@@ -418,18 +374,61 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
                   ) : (
                     <div style={{ backgroundColor: '#1e293b', borderColor: '#334155' }} className="border-2 rounded-3xl p-5 sm:p-7 text-center space-y-6 shadow-2xl">
                       <div style={{ color: '#ffffff' }} className="flex items-center justify-center gap-2 text-base sm:text-xl font-black">
-                        <span>Quét mã QR bằng Ví MoMo</span>
+                        <span>Chuyển tiền Ví MoMo</span>
                         <span style={{ color: '#f472b6' }} className="font-mono text-lg sm:text-2xl">({depositAmount.toLocaleString('vi-VN')}đ)</span>
                       </div>
 
-                      {/* HUGE CRISP QR CODE CONTAINER */}
-                      <div className="w-72 h-72 sm:w-96 sm:h-96 bg-white p-4 rounded-3xl mx-auto shadow-2xl overflow-hidden flex items-center justify-center border-4 border-slate-600">
+                      {/* MoMo Mode Switcher Tabs */}
+                      <div style={{ backgroundColor: '#0f172a', borderColor: '#334155' }} className="flex border-2 p-1 rounded-2xl gap-1">
+                        <button
+                          type="button"
+                          onClick={() => setMomoMode('MOMO_APP')}
+                          style={{
+                            backgroundColor: momoMode === 'MOMO_APP' ? '#be185d' : 'transparent',
+                            color: momoMode === 'MOMO_APP' ? '#ffffff' : '#cbd5e1',
+                          }}
+                          className="flex-1 py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer"
+                        >
+                          📱 Dùng App MoMo Quét
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setMomoMode('BANK_APP')}
+                          style={{
+                            backgroundColor: momoMode === 'BANK_APP' ? '#be185d' : 'transparent',
+                            color: momoMode === 'BANK_APP' ? '#ffffff' : '#cbd5e1',
+                          }}
+                          className="flex-1 py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer"
+                        >
+                          🏦 Dùng App Ngân Hàng Quét (VietQR)
+                        </button>
+                      </div>
+
+                      {/* CRISP QR CODE CONTAINER */}
+                      <div className="w-72 h-72 sm:w-96 sm:h-96 bg-white p-4 rounded-3xl mx-auto shadow-2xl overflow-hidden flex items-center justify-center border-4 border-slate-600 relative">
                         <img 
-                          src={`https://img.vietqr.io/image/momo-0797906979-compact.png?amount=${depositAmount}&addInfo=${encodeURIComponent(memoCode)}&accountName=LE%20DO%20NHAT%20ANH`} 
+                          src={
+                            momoMode === 'MOMO_APP'
+                              ? `https://api.qrserver.com/v1/create-qr-code/?size=350x350&data=${encodeURIComponent(`https://nhantien.momo.vn/0797906979/${depositAmount}`)}`
+                              : `https://img.vietqr.io/image/momo-0797906979-compact.png?amount=${depositAmount}&addInfo=${encodeURIComponent(memoCode)}&accountName=LE%20DO%20NHAT%20ANH`
+                          } 
                           alt="MoMo QR" 
                           className="w-full h-full object-contain" 
                         />
                       </div>
+
+                      {/* Direct Open MoMo App Button for Mobile users when in MOMO_APP mode */}
+                      {momoMode === 'MOMO_APP' && (
+                        <a
+                          href={`https://nhantien.momo.vn/0797906979/${depositAmount}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          style={{ backgroundColor: '#ec4899', color: '#ffffff' }}
+                          className="w-full py-3.5 px-4 rounded-2xl font-black text-sm sm:text-base flex items-center justify-center gap-2 hover:bg-pink-600 transition-all shadow-lg cursor-pointer"
+                        >
+                          <Sparkles size={20} /> Bấm vào đây để mở App MoMo chuyển tiền ngay
+                        </a>
+                      )}
 
                       {/* High-Contrast Crisp Details Box */}
                       <div style={{ backgroundColor: '#0f172a', borderColor: '#334155' }} className="p-5 sm:p-6 rounded-2xl border-2 space-y-4 text-left font-sans shadow-inner">
@@ -437,14 +436,27 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
                         <div style={{ backgroundColor: '#831843', borderColor: '#f472b6' }} className="p-3.5 rounded-xl border-2 space-y-1">
                           <p style={{ color: '#fbcfe8' }} className="font-extrabold text-xs sm:text-sm flex items-center gap-1.5">
                             <AlertTriangle size={18} className="text-pink-400 shrink-0" />
-                            HƯỚNG DẪN CHUYỂN BẰNG VÍ MOMO:
+                            {momoMode === 'MOMO_APP' ? 'HƯỚNG DẪN DÙNG APP MOMO:' : 'HƯỚNG DẪN DÙNG APP NGÂN HÀNG:'}
                           </p>
-                          <p style={{ color: '#fce7f3' }} className="text-xs leading-normal">
-                            ⚠️ <strong className="text-white underline">KHÔNG chọn "Chuyển Đến ngân hàng"</strong> trong MoMo (sẽ báo tài khoản không hợp lệ).
-                          </p>
-                          <p style={{ color: '#fce7f3' }} className="text-xs leading-normal">
-                            👉 <strong>Cách chuẩn</strong>: Mở MoMo ➔ Chọn <strong>"Chuyển tiền MoMo"</strong> (Đến Số điện thoại) ➔ Nhập SĐT <strong>0797906979</strong> ➔ Nhập Lời nhắn: <strong className="font-mono text-orange-300 font-bold">{memoCode}</strong>.
-                          </p>
+                          {momoMode === 'MOMO_APP' ? (
+                            <>
+                              <p style={{ color: '#fce7f3' }} className="text-xs leading-normal">
+                                👉 Mở App MoMo quét mã QR trên HOẶC chọn <strong>"Chuyển tiền MoMo"</strong> (Chuyển đến SĐT <strong>0797906979</strong>).
+                              </p>
+                              <p style={{ color: '#fce7f3' }} className="text-xs leading-normal">
+                                ⚠️ Nhớ dán lời nhắn: <strong className="font-mono text-orange-300 font-bold">{memoCode}</strong> khi chuyển tiền.
+                              </p>
+                            </>
+                          ) : (
+                            <>
+                              <p style={{ color: '#fce7f3' }} className="text-xs leading-normal">
+                                👉 Dùng App Ngân hàng (MB, VCB, ACB...) quét mã VietQR NAPAS MoMo ở trên.
+                              </p>
+                              <p style={{ color: '#fce7f3' }} className="text-xs leading-normal">
+                                ⚠️ <strong>KHÔNG dùng App MoMo quét mã VietQR này</strong> vì MoMo sẽ hiểu nhầm là chuyển khoản ngân hàng và báo lỗi số tài khoản.
+                              </p>
+                            </>
+                          )}
                         </div>
 
                         <div className="flex justify-between items-center flex-wrap gap-2">
@@ -490,34 +502,18 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
                     </div>
                   </div>
 
-                  {/* Auto Bank Listener Box & Instant Check Button */}
-                  <div style={{ backgroundColor: '#064e3b', borderColor: '#10b981' }} className="p-5 rounded-2xl border-2 text-center space-y-3 shadow-inner">
+                  {/* Auto Bank Listener Box & Incident Report Link */}
+                  <div style={{ backgroundColor: '#064e3b', borderColor: '#10b981' }} className="p-5 rounded-2xl border-2 text-center space-y-2.5 shadow-inner">
                     <div style={{ color: '#34d399' }} className="inline-flex items-center gap-2.5 text-base sm:text-lg font-black">
                       <span className="relative flex h-3.5 w-3.5">
                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                         <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500"></span>
                       </span>
-                      Hệ thống đang tự động theo dõi biến động số dư...
+                      Hệ thống tự động đồng bộ biến động ngân hàng...
                     </div>
                     <p style={{ color: '#ecfdf5' }} className="text-xs sm:text-sm leading-relaxed font-semibold">
-                      Tiền sẽ <strong style={{ color: '#ffffff' }} className="font-black">tự động cộng vào ví</strong> khi chuyển khoản thành công với nội dung <strong style={{ color: '#fb923c' }} className="font-mono font-black">{memoCode}</strong>.
+                      Tiền sẽ <strong style={{ color: '#ffffff' }} className="font-black">tự động cộng vào ví</strong> ngay khi Ngân hàng/MoMo xác nhận biến động tiền về với đúng nội dung <strong style={{ color: '#fb923c' }} className="font-mono font-black">{memoCode}</strong>.
                     </p>
-
-                    <button
-                      type="button"
-                      onClick={handleVerifyDeposit}
-                      disabled={verifying}
-                      style={{ backgroundColor: '#059669', color: '#ffffff' }}
-                      className="w-full py-3.5 px-4 rounded-2xl font-black text-xs sm:text-sm hover:bg-emerald-500 transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98] border-2 border-emerald-300 mt-2"
-                    >
-                      {verifying ? (
-                        <span className="flex items-center gap-2">
-                          <Sparkles className="animate-spin" size={16} /> Đang kiểm tra & đối chiếu biến động...
-                        </span>
-                      ) : (
-                        <span>🔄 Tôi đã chuyển khoản xong — Kiểm tra & Cập nhật ví ngay!</span>
-                      )}
-                    </button>
                   </div>
                 </div>
               )}
