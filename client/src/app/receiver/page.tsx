@@ -289,16 +289,6 @@ export default function ReceiverDashboard() {
                       Xác thực bàn giao và hoàn thành <ArrowRight size={14} />
                     </button>
                   )}
-
-                  {activeTask.status === 'ACCEPTED' && (
-                    <button
-                      onClick={() => handleCancelOrder(activeTask.id)}
-                      disabled={btnLoading}
-                      className="px-4 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 font-bold text-xs py-3.5 rounded-xl transition-colors cursor-pointer flex items-center justify-center gap-1.5"
-                    >
-                      <X size={14} /> Hủy nhận đơn
-                    </button>
-                  )}
                 </div>
               </div>
             )}

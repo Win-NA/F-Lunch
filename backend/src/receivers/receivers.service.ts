@@ -261,12 +261,8 @@ export class ReceiversService {
       throw new NotFoundException('Không tìm thấy đơn hàng');
     }
 
-    if (request.status !== RequestStatus.PENDING && request.status !== RequestStatus.ACCEPTED) {
-      throw new BadRequestException('Chỉ có thể hủy từ chối đơn khi chưa xác nhận lấy hàng từ shipper');
-    }
-
-    if (request.status === RequestStatus.ACCEPTED && request.receiverId !== receiverId) {
-      throw new BadRequestException('Bạn không được gán cho đơn hàng này');
+    if (request.status !== RequestStatus.PENDING) {
+      throw new BadRequestException('Một khi đã chấp nhận nhận hộ đơn hàng, bạn không thể hủy đơn.');
     }
 
     const feeToRefund = request.serviceFee || 5000;
