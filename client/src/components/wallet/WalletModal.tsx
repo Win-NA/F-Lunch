@@ -72,6 +72,7 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
       });
       if (res.data?.success) {
         toast.success(`🎉 TỰ ĐỘNG XÁC NHẬN: ${res.data.message || 'Số dư ví đã được cập nhật thành công!'}`);
+        setDepositAmount(null); // Dừng polling ngầm ngay sau khi đã xác thực nạp thành công
         await fetchProfile();
         fetchHistory();
       }
