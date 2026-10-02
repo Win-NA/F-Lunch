@@ -55,15 +55,7 @@ export class TransactionsService {
       },
     });
 
-    await this.prisma.notification.create({
-      data: {
-        userId,
-        title: 'Đã tạo yêu cầu nạp tiền ⏳',
-        message: `Mã GD: ${transactionCode}. Tiền sẽ tự động cộng vào ví ngay khi Ngân hàng/MoMo xác nhận biến động số dư.`,
-        type: NotificationType.SYSTEM,
-      },
-    });
-
+    // DO NOT create notification here to prevent notification feed spam
     return transaction;
   }
 
@@ -123,7 +115,66 @@ export class TransactionsService {
     });
   }
 
-  // TỰ ĐỘNG XỬ LÝ KHI NGÂN HÀNG BÁO TIỀN VỀ (CASSO / VIETQR WEBHOOK)
+  // TỰ ĐỘNG XÁC NHẬN YÊU CẦU NẠP TIỀN ĐANG CHỜ CỦA SINH VIÊN
+  async verifyPendingDeposit(userId: string) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found');
+
+    const pendingTx = await this.prisma.transaction.findFirst({
+      where: {
+        userId,
+        type: TransactionType.DEPOSIT,
+        status: TransactionStatus.PENDING,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (!pendingTx) {
+      return {
+        success: false,
+        message: 'Không tìm thấy yêu cầu nạp tiền đang chờ.',
+      };
+    }
+
+    const bonusAmount = pendingTx.bonusAmount || this.calculateBonus(pendingTx.amount);
+
+    return await this.prisma.$transaction(async (tx) => {
+      const updatedUser = await tx.user.update({
+        where: { id: userId },
+        data: {
+          realBalance: { increment: pendingTx.amount },
+          bonusBalance: { increment: bonusAmount },
+        },
+      });
+
+      const updatedTx = await tx.transaction.update({
+        where: { id: pendingTx.id },
+        data: {
+          status: TransactionStatus.APPROVED,
+          note: `Nạp tiền thành công qua Chuyển khoản Ngân hàng / MoMo`,
+        },
+      });
+
+      const bonusText = bonusAmount > 0 ? ` (+${bonusAmount.toLocaleString('vi-VN')}đ KM)` : '';
+      await tx.notification.create({
+        data: {
+          userId,
+          title: 'Nạp tiền thành công! 🎉',
+          message: `Tài khoản vừa được cộng ${pendingTx.amount.toLocaleString('vi-VN')}đ${bonusText}. Mã GD: ${pendingTx.transactionCode}`,
+          type: NotificationType.SUCCESS,
+        },
+      });
+
+      return {
+        success: true,
+        message: `Nạp tiền thành công! Đã cộng ${pendingTx.amount.toLocaleString('vi-VN')}đ vào ví.`,
+        user: updatedUser,
+        transaction: updatedTx,
+      };
+    });
+  }
+
+  // TỰ ĐỘNG XỬ LÝ KHI NGÂN HÀNG BÁO TIỀN VỀ (CASSO / SEPAY / VIETQR WEBHOOK)
   async handleBankWebhook(memoContent: string, amount: number) {
     if (!memoContent || amount <= 0) {
       throw new BadRequestException('Thông tin biến động số dư không hợp lệ');
@@ -137,13 +188,16 @@ export class TransactionsService {
       const mssvClean = u.mssv ? removeAccents(u.mssv) : '';
       const mssvMatch = mssvClean.length >= 3 && rawCleanMemo.includes(mssvClean);
 
+      const mssvDigits = mssvClean.replace(/[^0-9]/g, '');
+      const mssvDigitsMatch = mssvDigits.length >= 4 && rawCleanMemo.includes(mssvDigits);
+
       const nameClean = u.fullName ? removeAccents(u.fullName) : '';
       const nameMatch = nameClean.length >= 3 && rawCleanMemo.includes(nameClean);
 
       const emailPrefix = u.email ? removeAccents(u.email.split('@')[0]) : '';
       const emailMatch = emailPrefix.length >= 3 && rawCleanMemo.includes(emailPrefix);
 
-      return mssvMatch || nameMatch || emailMatch;
+      return mssvMatch || mssvDigitsMatch || nameMatch || emailMatch;
     });
 
     let targetUserId = matchedUser?.id;
@@ -226,8 +280,8 @@ export class TransactionsService {
       await tx.notification.create({
         data: {
           userId: targetUserId,
-          title: 'Ngân hàng đã xác nhận nạp tiền! 🎉',
-          message: `Tài khoản vừa được cộng tự động ${amount.toLocaleString('vi-VN')}đ${bonusText} từ VietinBank/MoMo. Mã GD: ${transactionCode}`,
+          title: 'Nạp tiền thành công! 🎉',
+          message: `Tài khoản vừa được cộng ${amount.toLocaleString('vi-VN')}đ${bonusText} qua VietinBank/MoMo. Mã GD: ${transactionCode}`,
           type: NotificationType.SUCCESS,
         },
       });

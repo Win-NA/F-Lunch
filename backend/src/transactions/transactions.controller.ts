@@ -18,6 +18,11 @@ export class TransactionsController {
     return this.transactionsService.createDeposit(req.user.id, dto);
   }
 
+  @Post('verify-deposit')
+  async verifyDeposit(@Request() req: any) {
+    return this.transactionsService.verifyPendingDeposit(req.user.id);
+  }
+
   @Post('deposit-confirm')
   async confirmDeposit(@Request() req: any, @Body() dto: DepositDto) {
     return this.transactionsService.confirmDeposit(req.user.id, dto);
@@ -31,21 +36,21 @@ export class TransactionsController {
   @Public()
   @Post('bank-webhook')
   async bankWebhook(@Body() body: any) {
-    // 1. Phục vụ Webhook chuẩn Casso.vn / VietQR API
+    // 1. Phục vụ Webhook chuẩn Casso.vn / VietQR API / SePay
     if (body && Array.isArray(body.data) && body.data.length > 0) {
       const results = [];
       for (const item of body.data) {
-        const memo = item.description || item.memo || item.content || '';
-        const amount = Number(item.amount) || 0;
+        const memo = item.description || item.memo || item.content || item.transactionContent || item.transferContent || item.body || item.code || '';
+        const amount = Number(item.amount || item.amountIn || item.transferAmount || item.creditAmount || 0);
         const res = await this.transactionsService.handleBankWebhook(memo, amount);
         results.push(res);
       }
       return { status: 'SUCCESS', results };
     }
 
-    // 2. Phục vụ Webhook trực tiếp
-    const memo = body.description || body.memo || body.content || body.note || '';
-    const amount = Number(body.amount) || 0;
+    // 2. Phục vụ Webhook trực tiếp (SePay, Custom Webhook, MoMo API, etc.)
+    const memo = body.description || body.memo || body.content || body.note || body.transactionContent || body.transferContent || body.code || body.body || '';
+    const amount = Number(body.amount || body.amountIn || body.transferAmount || body.creditAmount || 0);
     return this.transactionsService.handleBankWebhook(memo, amount);
   }
 

@@ -40,6 +40,7 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
 
   // Copy state helper
   const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [checking, setChecking] = useState(false);
 
   // Track balance changes to alert user automatically
   const prevBalanceRef = useRef<number | null>(null);
@@ -51,7 +52,7 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
         const newTotalBal = (res.data.realBalance || 0) + (res.data.bonusBalance || 0);
         if (prevBalanceRef.current !== null && newTotalBal > prevBalanceRef.current) {
           const added = newTotalBal - prevBalanceRef.current;
-          toast.success(`🎉 TỰ ĐỘNG CỘNG TIỀN THÀNH CÔNG! +${added.toLocaleString('vi-VN')} đ`);
+          toast.success(`🎉 Nạp tiền thành công! +${added.toLocaleString('vi-VN')} đ`);
           fetchHistory();
         }
         prevBalanceRef.current = newTotalBal;
@@ -59,6 +60,24 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
       }
     } catch (err) {
       // silent catch
+    }
+  };
+
+  const handleManualCheck = async () => {
+    setChecking(true);
+    try {
+      const res = await api.post('/transactions/verify-deposit');
+      if (res.data?.success) {
+        toast.success(res.data.message || 'Thành công! Số dư đã được cộng vào ví.');
+        fetchProfile();
+        fetchHistory();
+      } else {
+        toast.info(res.data?.message || 'Hệ thống chưa nhận được thông tin từ ngân hàng. Vui lòng chờ ít phút.');
+      }
+    } catch (err: any) {
+      toast.error('Không thể kiểm tra giao dịch vào lúc này.');
+    } finally {
+      setChecking(false);
     }
   };
 
@@ -141,7 +160,7 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
             </div>
             <div>
               <h3 style={{ color: '#ffffff' }} className="font-black text-2xl tracking-tight">Ví F-Lunch</h3>
-              <p style={{ color: '#cbd5e1' }} className="text-sm sm:text-base font-bold">Nạp tiền tự động 100% không cần xác nhận</p>
+              <p style={{ color: '#cbd5e1' }} className="text-sm sm:text-base font-bold">Quản lý số dư &amp; Nạp tiền vào ví</p>
             </div>
           </div>
           <button
@@ -513,18 +532,21 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
                     </div>
                   )}
 
-                  {/* Auto Bank Listener Live Pulse Box */}
-                  <div style={{ backgroundColor: '#064e3b', borderColor: '#10b981' }} className="p-5 sm:p-6 rounded-2xl border-2 text-center space-y-3 shadow-xl">
-                    <div style={{ color: '#34d399' }} className="inline-flex items-center gap-3 text-base sm:text-lg font-black">
-                      <span className="relative flex h-4 w-4">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-4 w-4 bg-emerald-500"></span>
-                      </span>
-                      Hệ thống đang tự động theo dõi chuyển khoản...
-                    </div>
-                    <p style={{ color: '#ecfdf5' }} className="text-xs sm:text-sm leading-relaxed font-semibold">
-                      Bạn <strong style={{ color: '#ffffff' }} className="font-black">KHÔNG CẦN BẤM BẤT KỲ NÚT XÁC NHẬN NÀO</strong>. Ngay khi bạn quét mã &amp; chuyển khoản thành công với nội dung <strong style={{ color: '#fb923c' }} className="font-mono font-black">{memoCode}</strong>, tiền sẽ <strong style={{ color: '#34d399' }} className="font-black underline">tự động cộng ngay lập tức vào số dư ví</strong>!
+                  {/* Clean Footer Note & Manual Refresh Option */}
+                  <div style={{ backgroundColor: '#1e293b', borderColor: '#334155' }} className="p-5 rounded-2xl border-2 text-center space-y-3 shadow-md">
+                    <p style={{ color: '#cbd5e1' }} className="text-xs sm:text-sm font-medium">
+                      💡 Số dư ví sẽ tự động cập nhật ngay khi ngân hàng xác nhận giao dịch.
                     </p>
+                    <button
+                      type="button"
+                      onClick={handleManualCheck}
+                      disabled={checking}
+                      style={{ backgroundColor: '#ea580c', color: '#ffffff' }}
+                      className="w-full sm:w-auto px-6 py-3 rounded-xl font-extrabold text-xs sm:text-sm inline-flex items-center justify-center gap-2 hover:bg-orange-600 transition-all cursor-pointer shadow active:scale-95"
+                    >
+                      <RefreshCw size={16} className={checking ? 'animate-spin' : ''} />
+                      {checking ? 'Đang kiểm tra giao dịch...' : 'Tôi đã chuyển khoản - Kiểm tra số dư'}
+                    </button>
                   </div>
 
                   {/* Red Warning Banner */}
