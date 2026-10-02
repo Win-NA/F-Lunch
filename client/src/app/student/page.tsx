@@ -15,7 +15,9 @@ import {
   Clock,
   X,
   Wallet,
-  AlertCircle
+  AlertCircle,
+  CheckCircle2,
+  Info
 } from 'lucide-react';
 
 interface RequestItem {
@@ -56,6 +58,10 @@ export default function StudentDashboard() {
   const [ocrLoading, setOcrLoading] = useState(false);
   const [extractedOrderCode, setExtractedOrderCode] = useState<string | null>(null);
 
+  // AI Payment Verification State
+  const [paymentStatus, setPaymentStatus] = useState<'PAID' | 'UNPAID' | 'UNKNOWN'>('UNKNOWN');
+  const [detectedPaymentMethod, setDetectedPaymentMethod] = useState<string | null>(null);
+
   const extractOrderCode = (text: string): string | null => {
     const lines = text.split('\n');
     for (const line of lines) {
@@ -85,6 +91,49 @@ export default function StudentDashboard() {
     return null;
   };
 
+  const analyzePaymentStatus = (text: string): { status: 'PAID' | 'UNPAID' | 'UNKNOWN'; method: string | null } => {
+    const lowerText = text.toLowerCase();
+
+    // Check for prepaid / online payment keywords
+    if (lowerText.includes('shopeepay')) {
+      return { status: 'PAID', method: 'Ví ShopeePay' };
+    }
+    if (lowerText.includes('grabpay')) {
+      return { status: 'PAID', method: 'Ví GrabPay' };
+    }
+    if (lowerText.includes('bepay')) {
+      return { status: 'PAID', method: 'Ví bePay' };
+    }
+    if (lowerText.includes('momo')) {
+      return { status: 'PAID', method: 'Ví MoMo' };
+    }
+    if (lowerText.includes('zalopay')) {
+      return { status: 'PAID', method: 'Ví ZaloPay' };
+    }
+    if (lowerText.includes('thẻ tín dụng') || lowerText.includes('thẻ ghi nợ') || lowerText.includes('visa') || lowerText.includes('mastercard') || lowerText.includes('thẻ atm')) {
+      return { status: 'PAID', method: 'Thẻ Ngân Hàng' };
+    }
+    if (lowerText.includes('đã thanh toán') || lowerText.includes('chuyển khoản')) {
+      return { status: 'PAID', method: 'Đã thanh toán trực tuyến' };
+    }
+    if (lowerText.includes('tiền mặt: 0') || lowerText.includes('tiền mặt 0') || lowerText.includes('0đ tiền mặt') || lowerText.includes('0 đ tiền mặt')) {
+      return { status: 'PAID', method: 'Đã trả trước (Tiền mặt 0đ)' };
+    }
+
+    // Check for unpaid / cash COD keywords
+    if (
+      lowerText.includes('tiền mặt') ||
+      lowerText.includes('chưa thanh toán') ||
+      lowerText.includes('thanh toán khi nhận') ||
+      lowerText.includes('thu hộ') ||
+      lowerText.includes('cod')
+    ) {
+      return { status: 'UNPAID', method: 'Tiền mặt (Chưa thanh toán)' };
+    }
+
+    return { status: 'UNKNOWN', method: null };
+  };
+
   const performOCR = async (base64: string) => {
     setOcrLoading(true);
     try {
@@ -92,16 +141,27 @@ export default function StudentDashboard() {
       const text = ret.data.text;
 
       const code = extractOrderCode(text);
+      const paymentInfo = analyzePaymentStatus(text);
+
+      setPaymentStatus(paymentInfo.status);
+      setDetectedPaymentMethod(paymentInfo.method);
+
       if (code) {
         setExtractedOrderCode(code);
-        toast.success(`Đã tự động nhận dạng mã đơn hàng: ${code}`);
       } else {
         setExtractedOrderCode(null);
-        toast.info('Không nhận diện thấy mã đơn tự động. Ảnh chụp sẽ được dùng để đối chiếu thủ công.');
+      }
+
+      if (paymentInfo.status === 'PAID') {
+        toast.success(`Đã tự động xác thực: Đơn hàng ĐÃ THANH TOÁN (${paymentInfo.method || 'Online'})!`);
+      } else if (paymentInfo.status === 'UNPAID') {
+        toast.error(`CẢNH BÁO: Đơn hàng ghi nhận 'Tiền mặt' (Chưa thanh toán). F-Lunch chỉ nhận đơn đã trả trước!`);
+      } else {
+        toast.info(code ? `Đã nhận dạng mã đơn: ${code}. Hãy đảm bảo đơn đã thanh toán trực tuyến.` : 'Đã quét xong ảnh đơn hàng.');
       }
     } catch (err) {
       console.error('OCR Error:', err);
-      toast.error('Nhận diện mã đơn tự động gặp lỗi, ảnh đơn vẫn được chọn thành công.');
+      toast.error('Nhận diện tự động gặp sự cố, ảnh đơn vẫn được chọn thành công.');
     } finally {
       setOcrLoading(false);
     }
@@ -150,6 +210,11 @@ export default function StudentDashboard() {
 
     if (!imageBase64) {
       toast.error('Vui lòng tải lên ảnh chụp màn hình đơn hàng để xác thực');
+      return;
+    }
+
+    if (paymentStatus === 'UNPAID') {
+      toast.error('Không thể gửi! Đơn hàng hiển thị phương thức Tiền mặt (Chưa thanh toán). F-Lunch chỉ nhận hộ các đơn đã trả trước qua ShopeePay/GrabPay/MoMo/Thẻ.');
       return;
     }
 
@@ -379,11 +444,44 @@ export default function StudentDashboard() {
                       onClick={() => {
                         setImageBase64(null);
                         setExtractedOrderCode(null);
+                        setPaymentStatus('UNKNOWN');
+                        setDetectedPaymentMethod(null);
                       }}
                       className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-red-500/80 hover:bg-red-500 text-white flex items-center justify-center text-xs active:scale-90 transition-transform cursor-pointer"
                     >
                       <X size={10} />
                     </button>
+                  </div>
+                )}
+
+                {/* AI Payment Status Verification Banner */}
+                {paymentStatus === 'PAID' && (
+                  <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 p-2.5 rounded-xl text-[10px] flex items-center gap-2">
+                    <CheckCircle2 size={14} className="shrink-0 text-emerald-400" />
+                    <span>
+                      <strong>Xác thực thành công:</strong> Đơn hàng đã trả trước qua {detectedPaymentMethod || 'Ví/Thẻ Trực tuyến'}.
+                    </span>
+                  </div>
+                )}
+
+                {paymentStatus === 'UNPAID' && (
+                  <div className="bg-red-500/15 border border-red-500/40 text-red-400 p-2.5 rounded-xl text-[10px] space-y-1">
+                    <div className="flex items-center gap-1.5 font-bold text-red-300">
+                      <AlertCircle size={14} className="shrink-0 text-red-400" />
+                      <span>Phát hiện đơn "Tiền mặt" (COD)</span>
+                    </div>
+                    <p className="text-[9.5px] text-red-300/80 leading-normal">
+                      F-Lunch chỉ nhận hộ các đơn hàng đã thanh toán trước (ShopeePay, GrabPay, MoMo, Thẻ...). Vui lòng hủy đơn này và chọn đơn trả trước!
+                    </p>
+                  </div>
+                )}
+
+                {paymentStatus === 'UNKNOWN' && imageBase64 && !ocrLoading && (
+                  <div className="bg-blue-500/10 border border-blue-500/20 text-blue-300 p-2.5 rounded-xl text-[10px] flex items-center gap-2">
+                    <Info size={14} className="shrink-0 text-blue-400" />
+                    <span>
+                      Chưa tự động nhận dạng ví thanh toán từ ảnh. Đảm bảo đơn đã thanh toán trả trước nhé.
+                    </span>
                   </div>
                 )}
               </div>
@@ -403,10 +501,14 @@ export default function StudentDashboard() {
 
             <button
               type="submit"
-              disabled={formLoading}
-              className="w-full bg-orange-600 hover:bg-orange-500 disabled:bg-orange-850 text-white font-semibold text-xs py-3 rounded-xl transition-all shadow-lg shadow-orange-600/25 active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer mt-2"
+              disabled={formLoading || paymentStatus === 'UNPAID'}
+              className={`w-full font-semibold text-xs py-3 rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 mt-2 ${
+                paymentStatus === 'UNPAID'
+                  ? 'bg-slate-800 text-slate-500 border border-slate-700 cursor-not-allowed shadow-none'
+                  : 'bg-orange-600 hover:bg-orange-500 disabled:bg-orange-850 text-white shadow-orange-600/25 cursor-pointer active:scale-[0.99]'
+              }`}
             >
-              {formLoading ? 'Đang gửi...' : 'Gửi yêu cầu nhận hộ'}
+              {formLoading ? 'Đang gửi...' : paymentStatus === 'UNPAID' ? 'Không thể gửi đơn Tiền mặt (COD)' : 'Gửi yêu cầu nhận hộ'}
             </button>
           </form>
         </div>
