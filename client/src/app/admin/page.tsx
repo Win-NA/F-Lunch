@@ -1236,8 +1236,8 @@ function AdminDashboardContent() {
 
               <div className="border-b border-slate-800 pb-3 pr-8 shrink-0">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase tracking-wider">
-                    Ví & Lịch Sử Nạp Tiền
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-400 border border-blue-500/20 uppercase tracking-wider">
+                    Lịch Sử Biến Động Ví Thành Viên
                   </span>
                   <h3 className="text-base sm:text-lg font-extrabold text-white">
                     {userTxModal.fullName}
@@ -1249,7 +1249,11 @@ function AdminDashboardContent() {
               </div>
 
               {(() => {
-                const userTxs = adminTransactions.filter(t => t.userId === userTxModal.id || t.user?.id === userTxModal.id);
+                const userTxs = adminTransactions.filter(t => 
+                  t.userId === userTxModal.id || 
+                  t.user?.id === userTxModal.id || 
+                  (t.user?.email && t.user.email.toLowerCase() === userTxModal.email?.toLowerCase())
+                );
                 const totalDep = userTxs.filter(t => t.type === 'DEPOSIT' && t.status === 'APPROVED').reduce((sum, t) => sum + (t.amount || 0), 0);
                 const totalBon = userTxs.filter(t => t.type === 'DEPOSIT' && t.status === 'APPROVED').reduce((sum, t) => sum + (t.bonusAmount || 0), 0);
 
@@ -1275,34 +1279,45 @@ function AdminDashboardContent() {
                     <div className="flex-1 overflow-y-auto space-y-2 pr-1">
                       {userTxs.length === 0 ? (
                         <div className="text-center py-10 text-slate-500 text-xs border border-dashed border-slate-800 rounded-2xl">
-                          Thành viên này chưa thực hiện giao dịch nạp tiền nào.
+                          Thành viên này chưa thực hiện giao dịch ví nào.
                         </div>
                       ) : (
-                        userTxs.map((tx: any) => (
-                          <div key={tx.id} className="p-3 bg-slate-955 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${
-                                  tx.type === 'DEPOSIT' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-orange-500/10 text-orange-400 border border-orange-500/20'
-                                }`}>
-                                  {tx.type === 'DEPOSIT' ? 'NẠP TIỀN VÀO VÍ' : tx.type === 'ADMIN_ADJUST' ? 'ADMIN ĐIỀU CHỈNH' : tx.type}
-                                </span>
-                                <span className="font-mono text-[10px] text-slate-400">#{tx.transactionCode}</span>
+                        userTxs.map((tx: any) => {
+                          const isNegative = tx.type === 'ORDER_PAYMENT';
+                          return (
+                            <div key={tx.id} className="p-3 bg-slate-955 rounded-xl border border-slate-800 flex items-center justify-between text-xs hover:border-slate-700 transition-colors">
+                              <div>
+                                <div className="flex items-center gap-2">
+                                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${
+                                    tx.type === 'DEPOSIT' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
+                                    tx.type === 'ORDER_REFUND' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' :
+                                    tx.type === 'ORDER_PAYMENT' ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20' :
+                                    'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                                  }`}>
+                                    {tx.type === 'DEPOSIT' ? 'NẠP TIỀN VÀO VÍ' :
+                                     tx.type === 'ORDER_PAYMENT' ? 'THANH TOÁN ĐƠN' :
+                                     tx.type === 'ORDER_REFUND' ? 'HOÀN PHÍ HỦY ĐƠN' :
+                                     tx.type === 'ADMIN_ADJUST' ? 'ADMIN ĐIỀU CHỈNH' : tx.type}
+                                  </span>
+                                  <span className="font-mono text-[10px] text-slate-400">#{tx.transactionCode}</span>
+                                </div>
+                                <p className="text-[10px] text-slate-300 mt-1 font-medium">{tx.note || `Thực hiện qua ${tx.paymentMethod}`}</p>
+                                <p className="text-[9px] text-slate-500 mt-0.5 font-mono">{new Date(tx.createdAt).toLocaleString('vi-VN')}</p>
                               </div>
-                              <p className="text-[10px] text-slate-400 mt-1">{tx.note || `Nạp qua ${tx.paymentMethod}`}</p>
-                              <p className="text-[9px] text-slate-500 mt-0.5 font-mono">{new Date(tx.createdAt).toLocaleString('vi-VN')}</p>
+                              <div className="text-right font-mono">
+                                <p className={`font-extrabold text-sm ${isNegative ? 'text-rose-400' : 'text-emerald-400'}`}>
+                                  {isNegative ? '-' : '+'}{tx.amount.toLocaleString('vi-VN')} đ
+                                </p>
+                                {tx.bonusAmount > 0 && (
+                                  <p className="text-[10px] text-orange-400 font-bold">+{tx.bonusAmount.toLocaleString('vi-VN')} đ KM</p>
+                                )}
+                                <span className="text-[9px] font-bold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20 inline-block mt-0.5">
+                                  Thành công
+                                </span>
+                              </div>
                             </div>
-                            <div className="text-right font-mono">
-                              <p className="font-extrabold text-sm text-emerald-400">+{tx.amount.toLocaleString('vi-VN')} đ</p>
-                              {tx.bonusAmount > 0 && (
-                                <p className="text-[10px] text-orange-400 font-bold">+{tx.bonusAmount.toLocaleString('vi-VN')} đ KM</p>
-                              )}
-                              <span className="text-[9px] font-bold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
-                                Thành công
-                              </span>
-                            </div>
-                          </div>
-                        ))
+                          );
+                        })
                       )}
                     </div>
                   </>
