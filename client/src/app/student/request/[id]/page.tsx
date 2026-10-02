@@ -6,14 +6,14 @@ import { api } from '@/lib/api';
 import { toast } from 'sonner';
 import Tesseract from 'tesseract.js';
 import { QRCodeSVG } from 'qrcode.react';
-import { 
-  ArrowLeft, 
-  MapPin, 
-  Calendar, 
-  User, 
-  Phone, 
-  Clock, 
-  CheckCircle2, 
+import {
+  ArrowLeft,
+  MapPin,
+  Calendar,
+  User,
+  Phone,
+  Clock,
+  CheckCircle2,
   X,
   Star
 } from 'lucide-react';
@@ -275,14 +275,14 @@ export default function RequestDetailPage() {
 
       {/* Main Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
+
         {/* Left/Middle column: Details and Tracker */}
         <div className="lg:col-span-2 space-y-6">
-          
+
           {/* Tracker Card */}
           <div className="bg-slate-900/60 backdrop-blur-xl border border-slate-800 p-5 rounded-3xl shadow-xl">
             <h2 className="text-md font-bold text-white mb-6">Trạng thái đơn hàng</h2>
-            
+
             {request.status === 'CANCELLED' ? (
               <div className="flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/20 text-red-400 rounded-2xl">
                 <X size={18} />
@@ -307,17 +307,17 @@ export default function RequestDetailPage() {
                       break;
                     case 'ACCEPTED':
                       stepLabel = 'Đã xác nhận';
-                      stepDesc = request.receiver 
+                      stepDesc = request.receiver
                         ? `Người nhận hộ ${request.receiver.fullName} đã nhận việc và đang đợi shipper giao.`
                         : 'Một người nhận hộ đã chấp nhận đơn hàng.';
                       break;
                     case 'RECEIVED':
                       stepLabel = 'Đã lấy đơn';
-                      stepDesc = 'Đơn hàng đã được nhận từ shipper và đang chuyển về tủ lưu trữ.';
+                      stepDesc = 'Đơn hàng đã được nhận từ shipper và đang chuyển về điểm tập kết.';
                       break;
                     case 'READY_FOR_PICKUP':
                       stepLabel = 'Chờ bạn đến lấy';
-                      stepDesc = 'Đơn hàng đã ở tủ bảo quản. Hãy đến vị trí bàn giao và xuất trình mã QR.';
+                      stepDesc = 'Đơn hàng đã ở điểm tập kết. Hãy đến vị trí bàn giao và xuất trình mã QR.';
                       break;
                     case 'COMPLETED':
                       stepLabel = 'Hoàn thành';
@@ -328,11 +328,10 @@ export default function RequestDetailPage() {
                   return (
                     <div key={step} className="relative flex gap-4">
                       {/* Circle Dot Indicator */}
-                      <span className={`absolute -left-[30px] w-6 h-6 rounded-full border-4 flex items-center justify-center transition-all ${
-                        isCompleted ? 'bg-orange-500 border-orange-500 text-white' :
+                      <span className={`absolute -left-[30px] w-6 h-6 rounded-full border-4 flex items-center justify-center transition-all ${isCompleted ? 'bg-orange-500 border-orange-500 text-white' :
                         isCurrent ? 'bg-slate-900 border-orange-500 text-orange-500 animate-pulse' :
-                        'bg-slate-955 border-slate-800 text-slate-600'
-                      }`}>
+                          'bg-slate-955 border-slate-800 text-slate-600'
+                        }`}>
                         {isCompleted && <CheckCircle2 size={12} className="fill-white stroke-orange-500" />}
                       </span>
 
@@ -352,7 +351,7 @@ export default function RequestDetailPage() {
           {/* Details Card */}
           <div className="bg-slate-900/60 backdrop-blur-xl border border-slate-800 p-5 rounded-3xl shadow-xl space-y-4">
             <h2 className="text-md font-bold text-white border-b border-slate-800 pb-2">Chi tiết đơn hàng</h2>
-            
+
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Ứng dụng</p>
@@ -435,13 +434,13 @@ export default function RequestDetailPage() {
 
         {/* Right column: Action (QR) and Receiver assignment */}
         <div className="space-y-6">
-          
+
           {/* QR Handover Code card (if ready for pickup) */}
           {request.status === 'READY_FOR_PICKUP' && (
             <div className="bg-slate-900/60 backdrop-blur-xl border border-orange-500/30 p-5 rounded-3xl shadow-xl text-center space-y-4">
               <h2 className="text-xs font-extrabold text-orange-500 uppercase tracking-wider">Bàn giao đơn hàng</h2>
               <p className="text-[10px] text-slate-400">Trình mã QR này cho người nhận hộ để lấy lại đơn hàng của bạn.</p>
-              
+
               <div className="bg-white p-3.5 rounded-2xl inline-block shadow-lg">
                 <QRCodeSVG value={request.id.substring(0, 6).toUpperCase()} size={150} />
               </div>
@@ -459,7 +458,7 @@ export default function RequestDetailPage() {
           {request.receiver && (
             <div className="bg-slate-900/60 backdrop-blur-xl border border-slate-800 p-5 rounded-3xl shadow-xl space-y-4">
               <h3 className="text-xs font-extrabold text-white uppercase tracking-wider">Người nhận hộ được phân công</h3>
-              
+
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-full bg-orange-500/10 border border-orange-500/25 flex items-center justify-center text-orange-500 text-xs font-bold">
                   {request.receiver.fullName[0]}
@@ -485,10 +484,10 @@ export default function RequestDetailPage() {
               <h3 className="text-xs font-extrabold text-white uppercase tracking-wider">Đánh giá của bạn</h3>
               <div className="flex items-center gap-1">
                 {[1, 2, 3, 4, 5].map((s) => (
-                  <Star 
-                    key={s} 
-                    size={14} 
-                    className={s <= request.feedback!.rating ? 'text-yellow-500 fill-yellow-500' : 'text-slate-800'} 
+                  <Star
+                    key={s}
+                    size={14}
+                    className={s <= request.feedback!.rating ? 'text-yellow-500 fill-yellow-500' : 'text-slate-800'}
                   />
                 ))}
               </div>
@@ -507,7 +506,7 @@ export default function RequestDetailPage() {
       {showFeedbackModal && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="w-full max-w-md bg-slate-900 border border-slate-800 p-6 rounded-3xl shadow-2xl relative">
-            <button 
+            <button
               onClick={() => setShowFeedbackModal(false)}
               className="absolute right-4 top-4 text-slate-500 hover:text-white transition-colors cursor-pointer"
             >
@@ -532,9 +531,9 @@ export default function RequestDetailPage() {
                     onClick={() => setRating(star)}
                     className="text-slate-650 hover:scale-110 transition-transform cursor-pointer"
                   >
-                    <Star 
-                      size={28} 
-                      className={star <= rating ? 'text-yellow-500 fill-yellow-500' : 'text-slate-700'} 
+                    <Star
+                      size={28}
+                      className={star <= rating ? 'text-yellow-500 fill-yellow-500' : 'text-slate-700'}
                     />
                   </button>
                 ))}
@@ -547,7 +546,7 @@ export default function RequestDetailPage() {
                 <textarea
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
-                  placeholder="Ví dụ: Bàn giao nhanh, tủ bảo quản tốt, nhiệt tình hỗ trợ!"
+                  placeholder="Ví dụ: Bàn giao nhanh, nhiệt tình hỗ trợ!"
                   rows={3}
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-orange-500 resize-none"
                 />
@@ -745,20 +744,20 @@ export default function RequestDetailPage() {
 
       {/* Fullscreen Image Zoom Overlay */}
       {fullscreenImage && (
-        <div 
+        <div
           className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4"
           onClick={() => setFullscreenImage(null)}
         >
-          <button 
+          <button
             className="absolute top-4 right-4 text-white hover:text-slate-300 p-2 cursor-pointer bg-slate-900/50 rounded-full"
             onClick={() => setFullscreenImage(null)}
           >
             <X size={24} />
           </button>
           <div className="relative max-w-full max-h-[85vh] flex items-center justify-center">
-            <img 
-              src={fullscreenImage} 
-              alt="Ảnh đơn hàng phóng to" 
+            <img
+              src={fullscreenImage}
+              alt="Ảnh đơn hàng phóng to"
               className="max-w-full max-h-[85vh] object-contain rounded-2xl border border-slate-800 shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             />

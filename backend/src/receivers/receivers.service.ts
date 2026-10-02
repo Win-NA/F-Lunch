@@ -250,4 +250,84 @@ export class ReceiversService {
       orderBy: { updatedAt: 'desc' },
     });
   }
+
+  async cancelAssignment(requestId: string, receiverId: string) {
+    const request = await this.prisma.receivingRequest.findUnique({
+      where: { id: requestId },
+      include: { student: true, receiver: true },
+    });
+
+    if (!request) {
+      throw new NotFoundException('Không tìm thấy đơn hàng');
+    }
+
+    if (request.status !== RequestStatus.PENDING && request.status !== RequestStatus.ACCEPTED) {
+      throw new BadRequestException('Chỉ có thể hủy từ chối đơn khi chưa xác nhận lấy hàng từ shipper');
+    }
+
+    if (request.status === RequestStatus.ACCEPTED && request.receiverId !== receiverId) {
+      throw new BadRequestException('Bạn không được gán cho đơn hàng này');
+    }
+
+    const feeToRefund = request.serviceFee || 5000;
+    const receiver = await this.prisma.user.findUnique({ where: { id: receiverId } });
+    const receiverName = receiver?.fullName || 'Người nhận hộ';
+
+    return await this.prisma.$transaction(async (tx) => {
+      // 1. Update status to CANCELLED
+      const updated = await tx.receivingRequest.update({
+        where: { id: requestId },
+        data: {
+          status: RequestStatus.CANCELLED,
+        },
+      });
+
+      // 2. Refund 5,000đ to student realBalance
+      await tx.user.update({
+        where: { id: request.studentId },
+        data: {
+          realBalance: { increment: feeToRefund },
+        },
+      });
+
+      // 3. Create refund transaction
+      const transactionCode = `FL-REF-${Date.now().toString().slice(-6)}${Math.floor(1000 + Math.random() * 9000)}`;
+      await tx.transaction.create({
+        data: {
+          userId: request.studentId,
+          requestId,
+          amount: feeToRefund,
+          type: TransactionType.ORDER_REFUND,
+          status: TransactionStatus.APPROVED,
+          paymentMethod: 'SYSTEM',
+          transactionCode,
+          note: `Hoàn phí dịch vụ 5.000đ do người nhận hộ từ chối/hủy đơn hàng`,
+        },
+      });
+
+      // 4. Send notification to student
+      await tx.notification.create({
+        data: {
+          userId: request.studentId,
+          requestId,
+          title: 'Đơn nhận hộ đã bị từ chối / hủy ❌',
+          message: `Người nhận hộ ${receiverName} đã từ chối nhận đơn ${request.foodPlatform} của bạn. Phí 5.000đ đã được hoàn lại vào Ví chính!`,
+          type: NotificationType.WARNING,
+        },
+      });
+
+      // 5. Send notification to receiver
+      await tx.notification.create({
+        data: {
+          userId: receiverId,
+          requestId,
+          title: 'Đã hủy / từ chối đơn thành công 🚫',
+          message: `Bạn đã từ chối / hủy đơn hàng ${request.foodPlatform} (#${request.orderCode || request.id.slice(0, 8)}). Phí 5.000đ đã được hoàn lại cho sinh viên.`,
+          type: NotificationType.SYSTEM,
+        },
+      });
+
+      return updated;
+    });
+  }
 }

@@ -46,4 +46,10 @@ export class ReceiversController {
   complete(@Param('id') id: string, @Request() req: any) {
     return this.receiversService.complete(id, req.user.id);
   }
+
+  @Post('cancel/:id')
+  @HttpCode(HttpStatus.OK)
+  cancelAssignment(@Param('id') id: string, @Request() req: any) {
+    return this.receiversService.cancelAssignment(id, req.user.id);
+  }
 }

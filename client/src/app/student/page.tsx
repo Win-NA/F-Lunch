@@ -275,7 +275,7 @@ export default function StudentDashboard() {
       try {
         const profileRes = await api.get('/users/profile');
         useAuthStore.getState().updateUser(profileRes.data);
-      } catch (profileErr) {}
+      } catch (profileErr) { }
     } catch (err: any) {
       const msg = err.response?.data?.message || 'Không thể hủy yêu cầu';
       toast.error(msg);
@@ -335,9 +335,9 @@ export default function StudentDashboard() {
             <div className="bg-amber-500/10 border border-amber-500/30 text-amber-300 p-3 rounded-2xl text-xs mb-4 flex items-start gap-2.5">
               <AlertCircle className="shrink-0 text-amber-400 mt-0.5" size={16} />
               <div>
-                <p className="font-bold text-amber-200 text-xs">Đang có đơn chưa cất vào tủ</p>
+                <p className="font-bold text-amber-200 text-xs">Đang có đơn chưa đến điểm tập kết</p>
                 <p className="text-[10.5px] text-amber-300/80 mt-0.5 leading-relaxed">
-                  Bạn cần chờ người nhận hộ xác nhận <strong>"Đã cất vào tủ"</strong> đơn hiện tại trước khi có thể tạo đơn nhận hộ mới.
+                  Bạn cần chờ người nhận hộ xác nhận <strong>"Đã đến điểm tập kết"</strong> đơn hiện tại trước khi có thể tạo đơn nhận hộ mới.
                 </p>
               </div>
             </div>
@@ -535,19 +535,18 @@ export default function StudentDashboard() {
             <button
               type="submit"
               disabled={formLoading || paymentStatus === 'UNPAID' || hasActiveUnstoredRequest}
-              className={`w-full font-semibold text-xs py-3 rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 mt-2 ${
-                paymentStatus === 'UNPAID' || hasActiveUnstoredRequest
-                  ? 'bg-slate-800 text-slate-500 border border-slate-700 cursor-not-allowed shadow-none'
-                  : 'bg-orange-600 hover:bg-orange-500 disabled:bg-orange-850 text-white shadow-orange-600/25 cursor-pointer active:scale-[0.99]'
-              }`}
+              className={`w-full font-semibold text-xs py-3 rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 mt-2 ${paymentStatus === 'UNPAID' || hasActiveUnstoredRequest
+                ? 'bg-slate-800 text-slate-500 border border-slate-700 cursor-not-allowed shadow-none'
+                : 'bg-orange-600 hover:bg-orange-500 disabled:bg-orange-850 text-white shadow-orange-600/25 cursor-pointer active:scale-[0.99]'
+                }`}
             >
               {formLoading
                 ? 'Đang gửi...'
                 : hasActiveUnstoredRequest
-                ? 'Đang có đơn chưa cất vào tủ'
-                : paymentStatus === 'UNPAID'
-                ? 'Không thể gửi đơn Tiền mặt (COD)'
-                : 'Gửi yêu cầu nhận hộ'}
+                  ? 'Đang có đơn chưa đến điểm tập kết'
+                  : paymentStatus === 'UNPAID'
+                    ? 'Không thể gửi đơn Tiền mặt (COD)'
+                    : 'Gửi yêu cầu nhận hộ'}
             </button>
           </form>
         </div>

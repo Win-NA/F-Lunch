@@ -120,10 +120,27 @@ export default function ReceiverDashboard() {
     }
   };
 
+  const handleCancelOrder = async (requestId: string) => {
+    if (!confirm('Bạn có chắc chắn muốn từ chối / hủy đơn hàng này không? Đơn hàng sẽ bị HỦY và 5.000đ phí dịch vụ sẽ được hoàn lại cho sinh viên.')) {
+      return;
+    }
+    setBtnLoading(true);
+    try {
+      await api.post(`/receivers/cancel/${requestId}`);
+      toast.success('Đã từ chối / hủy đơn thành công. Đơn hàng đã được hoàn tiền lại cho sinh viên.');
+      fetchData();
+    } catch (err: any) {
+      const msg = err.response?.data?.message || 'Không thể hủy đơn';
+      toast.error(msg);
+    } finally {
+      setBtnLoading(false);
+    }
+  };
+
   const getStatusLabel = (status: string) => {
     if (status === 'ACCEPTED') return 'Đang đợi shipper';
     if (status === 'RECEIVED') return 'Đã lấy đơn';
-    if (status === 'READY_FOR_PICKUP') return 'Đã cất tủ (Chờ SV lấy)';
+    if (status === 'READY_FOR_PICKUP') return 'Đã đến điểm tập kết (Chờ SV lấy)';
     return status;
   };
 
@@ -272,6 +289,16 @@ export default function ReceiverDashboard() {
                       Xác thực bàn giao và hoàn thành <ArrowRight size={14} />
                     </button>
                   )}
+
+                  {activeTask.status === 'ACCEPTED' && (
+                    <button
+                      onClick={() => handleCancelOrder(activeTask.id)}
+                      disabled={btnLoading}
+                      className="px-4 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 font-bold text-xs py-3.5 rounded-xl transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+                    >
+                      <X size={14} /> Hủy nhận đơn
+                    </button>
+                  )}
                 </div>
               </div>
             )}
@@ -386,13 +413,22 @@ export default function ReceiverDashboard() {
                       </div>
                     )}
 
-                    <button
-                      onClick={() => handleAccept(job.id)}
-                      disabled={btnLoading || !!activeTask}
-                      className="w-full bg-slate-900 hover:bg-orange-600 disabled:bg-slate-955 disabled:text-slate-650 border border-slate-850 hover:border-orange-500 text-white font-bold text-[10px] py-2 rounded-xl transition-all cursor-pointer"
-                    >
-                      Nhận đơn hộ
-                    </button>
+                    <div className="grid grid-cols-2 gap-2 pt-1">
+                      <button
+                        onClick={() => handleAccept(job.id)}
+                        disabled={btnLoading || !!activeTask}
+                        className="w-full bg-orange-600 hover:bg-orange-500 disabled:bg-slate-850 disabled:text-slate-600 text-white font-bold text-[10px] py-2 rounded-xl transition-all cursor-pointer shadow-md shadow-orange-600/20"
+                      >
+                        Nhận đơn hộ
+                      </button>
+                      <button
+                        onClick={() => handleCancelOrder(job.id)}
+                        disabled={btnLoading}
+                        className="w-full bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 font-bold text-[10px] py-2 rounded-xl transition-all cursor-pointer"
+                      >
+                        Từ chối / Hủy
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
