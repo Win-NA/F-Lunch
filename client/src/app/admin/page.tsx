@@ -1248,8 +1248,14 @@ function AdminDashboardContent() {
 
               <div className="border-b border-slate-800 pb-3 pr-8 shrink-0">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-400 border border-blue-500/20 uppercase tracking-wider">
-                    Lịch Sử Biến Động Ví Thành Viên
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider ${
+                    userTxModal.role === 'STUDENT' ? 'bg-orange-500/10 text-orange-400 border border-orange-500/20' :
+                    userTxModal.role === 'RECEIVER' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' :
+                    'bg-red-500/10 text-red-400 border border-red-500/20'
+                  }`}>
+                    {userTxModal.role === 'STUDENT' ? '🎓 Lịch Sử Sinh Viên (Nạp Ví & Phí Đơn)' :
+                     userTxModal.role === 'RECEIVER' ? '🛵 Lịch Sử Nhận Hộ (Giao Đơn & KPI)' :
+                     '🛡️ Nhật Ký Thao Tác Quản Trị Viên'}
                   </span>
                   <h3 className="text-base sm:text-lg font-extrabold text-white">
                     {userTxModal.fullName}
@@ -1261,12 +1267,151 @@ function AdminDashboardContent() {
               </div>
 
               {(() => {
+                const targetRole = userTxModal.role;
+
+                // Transactions for Student / Admin
                 const userTxs = adminTransactions.filter(t => 
                   t.userId === userTxModal.id || 
                   t.user?.id === userTxModal.id || 
                   (t.user?.email && t.user.email.toLowerCase() === userTxModal.email?.toLowerCase())
                 );
 
+                // Orders for Student or Receiver
+                const studentReqs = requests.filter(r => 
+                  r.student?.id === userTxModal.id || 
+                  (r.student?.email && r.student.email.toLowerCase() === userTxModal.email?.toLowerCase())
+                );
+
+                const receiverReqs = requests.filter(r => 
+                  r.receiver?.id === userTxModal.id || 
+                  (r.receiver?.email && r.receiver.email.toLowerCase() === userTxModal.email?.toLowerCase())
+                );
+
+                // Admin Operations Log
+                const adminActions = adminTransactions.filter(t => 
+                  t.type === 'ADMIN_ADJUST' || 
+                  (t.note && t.note.toLowerCase().includes(userTxModal.fullName.toLowerCase()))
+                );
+
+                if (targetRole === 'RECEIVER') {
+                  const completedCount = receiverReqs.filter(r => r.status === 'COMPLETED').length;
+                  const activeCount = receiverReqs.filter(r => r.status !== 'COMPLETED' && r.status !== 'CANCELLED').length;
+                  const fulfillRate = receiverReqs.length > 0 ? ((completedCount / receiverReqs.length) * 100).toFixed(0) : '0';
+
+                  return (
+                    <>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs bg-slate-955 p-3 rounded-2xl border border-slate-800 shrink-0">
+                        <div>
+                          <span className="text-[10px] text-slate-500 font-semibold uppercase block">Tổng đơn đã nhận</span>
+                          <span className="font-extrabold text-blue-400 text-sm">{receiverReqs.length} đơn</span>
+                        </div>
+                        <div>
+                          <span className="text-[10px] text-slate-500 font-semibold uppercase block">Đã hoàn thành</span>
+                          <span className="font-extrabold text-emerald-400 text-sm">{completedCount} đơn</span>
+                        </div>
+                        <div>
+                          <span className="text-[10px] text-slate-500 font-semibold uppercase block">Đang đi giao</span>
+                          <span className="font-extrabold text-orange-400 text-sm">{activeCount} đơn</span>
+                        </div>
+                        <div>
+                          <span className="text-[10px] text-slate-500 font-semibold uppercase block">Tỷ lệ thành công</span>
+                          <span className="font-extrabold text-purple-400 text-sm">{fulfillRate}%</span>
+                        </div>
+                      </div>
+
+                      <div className="flex-1 overflow-y-auto space-y-2.5 pr-1">
+                        {receiverReqs.length === 0 ? (
+                          <div className="text-center py-10 text-slate-500 text-xs border border-dashed border-slate-800 rounded-2xl">
+                            Người nhận hộ này chưa có dữ liệu giao đơn nào.
+                          </div>
+                        ) : (
+                          receiverReqs.map((req) => (
+                            <div key={req.id} className="p-3.5 bg-slate-955 rounded-2xl border border-slate-800 space-y-2 hover:border-slate-700 transition-all">
+                              <div className="flex items-center justify-between border-b border-slate-855 pb-2">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs font-bold text-blue-400">#{req.orderCode || req.id.slice(0, 8)}</span>
+                                  <span className="text-[10px] font-semibold px-2 py-0.5 bg-slate-800 text-slate-300 rounded-full">
+                                    {req.foodPlatform}
+                                  </span>
+                                </div>
+                                {getStatusBadge(req.status)}
+                              </div>
+
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                                <div>
+                                  <p className="text-[10px] text-slate-400">
+                                    <span className="font-semibold text-slate-300">Sinh viên đặt:</span>{' '}
+                                    <strong className="text-white">{req.student?.fullName}</strong> ({req.student?.email})
+                                  </p>
+                                  <p className="text-[10px] text-slate-400">
+                                    <span className="font-semibold text-slate-300">Tuyến đường:</span> {req.pickupLocation} → {req.dropoffLocation || 'Sảnh Trống Đồng'}
+                                  </p>
+                                </div>
+                                <div className="sm:text-right">
+                                  <p className="text-[10px] text-slate-400">
+                                    <span className="font-semibold text-slate-300">Giờ hẹn:</span> {new Date(req.pickupTime).toLocaleString('vi-VN')}
+                                  </p>
+                                  <p className="text-[10px] text-slate-400">
+                                    <span className="font-semibold text-slate-300">Cập nhật:</span> {new Date(req.updatedAt || req.createdAt).toLocaleString('vi-VN')}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </>
+                  );
+                }
+
+                if (targetRole === 'ADMIN') {
+                  return (
+                    <>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-center text-xs bg-slate-955 p-3 rounded-2xl border border-slate-800 shrink-0">
+                        <div>
+                          <span className="text-[10px] text-slate-500 font-semibold uppercase block">Vai trò</span>
+                          <span className="font-extrabold text-red-400 text-sm">QUẢN TRỊ VIÊN</span>
+                        </div>
+                        <div>
+                          <span className="text-[10px] text-slate-500 font-semibold uppercase block">Số lần điều chỉnh ví</span>
+                          <span className="font-extrabold text-amber-400 text-sm">{adminActions.length} lần</span>
+                        </div>
+                        <div>
+                          <span className="text-[10px] text-slate-500 font-semibold uppercase block">Trạng thái</span>
+                          <span className="font-extrabold text-emerald-400 text-sm">HOẠT ĐỘNG</span>
+                        </div>
+                      </div>
+
+                      <div className="flex-1 overflow-y-auto space-y-2.5 pr-1">
+                        {adminActions.length === 0 ? (
+                          <div className="text-center py-10 text-slate-500 text-xs border border-dashed border-slate-800 rounded-2xl">
+                            Chưa ghi nhận lịch sử điều chỉnh ví nào từ Quản trị viên này.
+                          </div>
+                        ) : (
+                          adminActions.map((tx: any) => (
+                            <div key={tx.id} className="p-3 bg-slate-955 rounded-xl border border-slate-800 flex items-center justify-between text-xs hover:border-slate-700 transition-colors">
+                              <div>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                                    ADMIN ĐIỀU CHỈNH
+                                  </span>
+                                  <span className="font-mono text-[10px] text-slate-400">#{tx.transactionCode}</span>
+                                </div>
+                                <p className="text-[10px] text-slate-300 mt-1 font-medium">{tx.note || 'Điều chỉnh số dư thành viên'}</p>
+                                <p className="text-[9px] text-slate-500 font-mono">{new Date(tx.createdAt).toLocaleString('vi-VN')}</p>
+                              </div>
+                              <div className="text-right font-mono">
+                                <p className="font-extrabold text-sm text-emerald-400">+{tx.amount.toLocaleString('vi-VN')}đ</p>
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </>
+                  );
+                }
+
+                // Default STUDENT View
                 const totalDep = userTxs.filter(t => t.type === 'DEPOSIT' && t.status === 'APPROVED').reduce((sum, t) => sum + (t.amount || 0), 0);
                 const totalBon = userTxs.filter(t => t.type === 'DEPOSIT' && t.status === 'APPROVED').reduce((sum, t) => sum + (t.bonusAmount || 0), 0);
                 const totalPaidFees = userTxs.filter(t => t.type === 'ORDER_PAYMENT').reduce((sum, t) => sum + (t.amount || 0), 0);
@@ -1280,8 +1425,7 @@ function AdminDashboardContent() {
 
                 return (
                   <>
-                    {/* Summary Bar */}
-                    <div className="grid grid-cols-3 gap-2 text-center text-xs bg-slate-955 p-3 rounded-2xl border border-slate-800 shrink-0">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs bg-slate-955 p-3 rounded-2xl border border-slate-800 shrink-0">
                       <div>
                         <span className="text-[10px] text-slate-500 font-semibold uppercase block">Số dư hiện tại</span>
                         <span className="font-extrabold text-emerald-400 text-sm">
@@ -1296,15 +1440,18 @@ function AdminDashboardContent() {
                         <span className="text-[10px] text-slate-500 font-semibold uppercase block">Phí 5k đã trả</span>
                         <span className="font-extrabold text-rose-400 text-sm">-{totalPaidFees.toLocaleString('vi-VN')}đ ({orderPaymentCount} đơn)</span>
                       </div>
+                      <div>
+                        <span className="text-[10px] text-slate-500 font-semibold uppercase block">Đơn đã đặt</span>
+                        <span className="font-extrabold text-orange-400 text-sm">{studentReqs.length} đơn</span>
+                      </div>
                     </div>
 
-                    {/* Filter Tabs */}
-                    <div className="flex items-center gap-1 bg-slate-955 p-1 rounded-xl border border-slate-800 shrink-0">
+                    <div className="flex items-center gap-1 bg-slate-955 p-1 rounded-xl border border-slate-800 shrink-0 overflow-x-auto">
                       <button
                         type="button"
                         onClick={() => setUserTxTypeFilter('ALL')}
-                        className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                          userTxTypeFilter === 'ALL' ? 'bg-blue-600 text-white shadow' : 'text-slate-400 hover:text-white'
+                        className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                          userTxTypeFilter === 'ALL' ? 'bg-orange-600 text-white shadow' : 'text-slate-400 hover:text-white'
                         }`}
                       >
                         Tất cả ({userTxs.length})
@@ -1312,7 +1459,7 @@ function AdminDashboardContent() {
                       <button
                         type="button"
                         onClick={() => setUserTxTypeFilter('DEPOSIT')}
-                        className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                        className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
                           userTxTypeFilter === 'DEPOSIT' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'
                         }`}
                       >
@@ -1321,7 +1468,7 @@ function AdminDashboardContent() {
                       <button
                         type="button"
                         onClick={() => setUserTxTypeFilter('ORDER_PAYMENT')}
-                        className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                        className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
                           userTxTypeFilter === 'ORDER_PAYMENT' ? 'bg-rose-600 text-white shadow' : 'text-slate-400 hover:text-white'
                         }`}
                       >
@@ -1329,7 +1476,6 @@ function AdminDashboardContent() {
                       </button>
                     </div>
 
-                    {/* List of user's transactions */}
                     <div className="flex-1 overflow-y-auto space-y-2 pr-1">
                       {filteredUserTxs.length === 0 ? (
                         <div className="text-center py-10 text-slate-500 text-xs border border-dashed border-slate-800 rounded-2xl">
