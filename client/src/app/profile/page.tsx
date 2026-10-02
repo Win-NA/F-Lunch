@@ -5,6 +5,7 @@ import { useAuthStore } from '@/stores/auth.store';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
+import Link from 'next/link';
 import { 
   User, 
   Mail, 
@@ -15,7 +16,9 @@ import {
   IdCard,
   Edit2,
   Save,
-  X
+  X,
+  AlertTriangle,
+  ChevronRight
 } from 'lucide-react';
 
 export default function ProfilePage() {
@@ -284,6 +287,24 @@ export default function ProfilePage() {
                 </div>
               </div>
             </div>
+
+            {user.role === 'STUDENT' && (
+              <div className="pt-3 border-t border-slate-850">
+                <Link
+                  href="/student/reports"
+                  className="w-full flex items-center justify-between p-3.5 bg-orange-500/10 border border-orange-500/20 hover:bg-orange-500/20 rounded-2xl transition-all text-xs font-bold text-orange-400 cursor-pointer group"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <AlertTriangle size={18} className="text-orange-500 group-hover:scale-110 transition-transform" />
+                    <div className="text-left">
+                      <p className="font-bold text-white">Báo cáo sự cố / Lỗi nạp tiền</p>
+                      <p className="text-[10px] text-slate-400 font-normal">Gửi chứng từ chuyển khoản sai ND hoặc báo lỗi hệ thống</p>
+                    </div>
+                  </div>
+                  <ChevronRight size={16} className="text-orange-500" />
+                </Link>
+              </div>
+            )}
 
             <button
               onClick={handleLogout}

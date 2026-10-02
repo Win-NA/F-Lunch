@@ -64,6 +64,19 @@ enum PaymentMethod {
   SYSTEM
 }
 
+enum ReportType {
+  DEPOSIT_ERROR
+  SYSTEM_BUG
+  OTHER
+}
+
+enum ReportStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  RESOLVED
+}
+
 model User {
   id           String     @id @default(uuid())
   fullName     String
@@ -84,6 +97,7 @@ model User {
   notifications    Notification[]
   feedbacks        Feedback[]
   transactions     Transaction[]
+  reportTickets    ReportTicket[]
 
   @@map("users")
 }
@@ -162,4 +176,23 @@ model Transaction {
   updatedAt       DateTime          @updatedAt
 
   @@map("transactions")
+}
+
+model ReportTicket {
+  id              String       @id @default(uuid())
+  userId          String
+  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type            ReportType   @default(DEPOSIT_ERROR)
+  title           String
+  description     String
+  proofImage      String?
+  expectedAmount  Int?
+  transactionCode String?
+  status          ReportStatus @default(PENDING)
+  adminNote       String?
+  resolvedAt      DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@map("report_tickets")
 }

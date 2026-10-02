@@ -6,10 +6,10 @@ import { api } from '@/lib/api';
 import { toast } from 'sonner';
 import Tesseract from 'tesseract.js';
 import { useAuthStore } from '@/stores/auth.store';
-import { 
-  Plus, 
-  MapPin, 
-  Pizza, 
+import {
+  Plus,
+  MapPin,
+  Pizza,
   Calendar,
   ChevronRight,
   Clock,
@@ -36,7 +36,7 @@ interface RequestItem {
 export default function StudentDashboard() {
   const router = useRouter();
   const { user } = useAuthStore();
-  
+
   const [requests, setRequests] = useState<RequestItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -200,11 +200,11 @@ export default function StudentDashboard() {
     }
   };
 
-  const activeRequests = requests.filter(r => 
+  const activeRequests = requests.filter(r =>
     ['PENDING', 'ACCEPTED', 'RECEIVED', 'READY_FOR_PICKUP'].includes(r.status)
   );
 
-  const pastRequests = requests.filter(r => 
+  const pastRequests = requests.filter(r =>
     ['COMPLETED', 'CANCELLED'].includes(r.status)
   );
 
@@ -463,7 +463,7 @@ export default function StudentDashboard() {
 
           {/* History */}
           <div className="bg-slate-900/60 backdrop-blur-xl border border-slate-800 p-5 rounded-3xl shadow-xl">
-            <h2 className="text-md font-bold text-white mb-4">Lịch sử nhận hộ ({pastRequests.length})</h2>
+            <h2 className="text-md font-bold text-white mb-4">Lịch sử({pastRequests.length})</h2>
 
             {loading ? (
               <p className="text-slate-550 text-xs">Đang tải...</p>

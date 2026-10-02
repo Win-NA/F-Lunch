@@ -106,16 +106,32 @@ export class RequestsService {
         },
       });
 
-      // Create notification
+      // Create notification for Student
       await tx.notification.create({
         data: {
           userId: studentId,
           requestId: request.id,
-          title: 'Đơn hàng mới đã được tạo',
-          message: `Đơn nhận hộ ${request.foodPlatform} (Mã: ${request.orderCode || 'N/A'}) đã tạo thành công. Phí dịch vụ: 5.000đ.`,
+          title: 'Đơn hàng mới đã được tạo 🍱',
+          message: `Đơn nhận hộ ${request.foodPlatform} (Mã: ${request.orderCode || 'N/A'}) đã tạo thành công. Phí dịch vụ 5.000đ.`,
           type: NotificationType.REQUEST,
         },
       });
+
+      // Notify active receivers about the new available request
+      const activeReceivers = await tx.user.findMany({
+        where: { role: 'RECEIVER', status: 'ACTIVE' },
+      });
+      for (const receiver of activeReceivers) {
+        await tx.notification.create({
+          data: {
+            userId: receiver.id,
+            requestId: request.id,
+            title: '🍱 Đơn nhận hộ mới vừa đăng!',
+            message: `Có đơn nhận hộ ${request.foodPlatform} mới tại ${request.pickupLocation}. Hãy vào Bàn làm việc để nhận đơn ngay!`,
+            type: NotificationType.REQUEST,
+          },
+        });
+      }
 
       return request;
     });

@@ -10,6 +10,7 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { FeedbackModule } from './feedback/feedback.module';
 import { AdminModule } from './admin/admin.module';
 import { TransactionsModule } from './transactions/transactions.module';
+import { ReportsModule } from './reports/reports.module';
 import { ConfigModule } from '@nestjs/config';
 
 @Module({
@@ -24,6 +25,7 @@ import { ConfigModule } from '@nestjs/config';
     FeedbackModule,
     AdminModule,
     TransactionsModule,
+    ReportsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -40,6 +40,7 @@ export default function BottomNav() {
     menuItems.push(
       { name: 'Quản trị', path: '/admin', icon: Shield },
       { name: 'Báo cáo CEO', path: '/admin?view=ceo', icon: Crown },
+      { name: 'Thông báo', path: '/notifications', icon: Bell },
       { name: 'Hồ sơ', path: '/profile', icon: User }
     );
   }

@@ -28,7 +28,8 @@ import {
   PieChart,
   ShoppingBag,
   Briefcase,
-  Crown
+  Crown,
+  AlertTriangle
 } from 'lucide-react';
 
 interface Stats {
@@ -99,8 +100,32 @@ interface FeedbackItem {
   };
 }
 
+interface ReportTicketItem {
+  id: string;
+  userId: string;
+  type: 'DEPOSIT_ERROR' | 'SYSTEM_BUG' | 'OTHER';
+  title: string;
+  description: string;
+  proofImage?: string;
+  expectedAmount?: number;
+  transactionCode?: string;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'RESOLVED';
+  adminNote?: string;
+  resolvedAt?: string;
+  createdAt: string;
+  user: {
+    id: string;
+    fullName: string;
+    email: string;
+    mssv?: string;
+    phoneNumber?: string;
+    realBalance?: number;
+    bonusBalance?: number;
+  };
+}
+
 type TimeframeFilter = 'TODAY' | 'MONTH' | 'YEAR' | 'ALL';
-type ActiveCardType = 'ALL' | 'REQUESTS' | 'REVENUE' | 'USERS' | 'FEEDBACKS' | 'CEO' | 'TRANSACTIONS';
+type ActiveCardType = 'ALL' | 'REQUESTS' | 'REVENUE' | 'USERS' | 'FEEDBACKS' | 'CEO' | 'TRANSACTIONS' | 'REPORTS';
 
 function AdminDashboardContent() {
   const searchParams = useSearchParams();
@@ -120,6 +145,18 @@ function AdminDashboardContent() {
   const [txStatusFilter, setTxStatusFilter] = useState<string>('ALL');
   const [userTxModal, setUserTxModal] = useState<UserItem | null>(null);
 
+  // Reports State
+  const [adminReports, setAdminReports] = useState<ReportTicketItem[]>([]);
+  const [reportStatusFilter, setReportStatusFilter] = useState<string>('ALL');
+
+  // Report Processing Modal State
+  const [processReportModal, setProcessReportModal] = useState<ReportTicketItem | null>(null);
+  const [processAction, setProcessAction] = useState<'APPROVED' | 'REJECTED' | 'RESOLVED'>('APPROVED');
+  const [processAmount, setProcessAmount] = useState<string>('');
+  const [processBonusAmount, setProcessBonusAmount] = useState<string>('');
+  const [processAdminNote, setProcessAdminNote] = useState<string>('');
+  const [processLoading, setProcessLoading] = useState(false);
+
   // Balance Adjust Modal State
   const [adjustModalUser, setAdjustModalUser] = useState<UserItem | null>(null);
   const [adjustAction, setAdjustAction] = useState<'ADD' | 'SUBTRACT'>('ADD');
@@ -129,11 +166,15 @@ function AdminDashboardContent() {
   const [adjustLoading, setAdjustLoading] = useState(false);
 
   // Active Card Widget Navigation
-  const [activeCard, setActiveCard] = useState<ActiveCardType>(viewParam === 'ceo' ? 'CEO' : 'ALL');
+  const [activeCard, setActiveCard] = useState<ActiveCardType>(
+    viewParam === 'ceo' ? 'CEO' : viewParam === 'reports' ? 'REPORTS' : 'ALL'
+  );
 
   useEffect(() => {
     if (viewParam === 'ceo') {
       setActiveCard('CEO');
+    } else if (viewParam === 'reports') {
+      setActiveCard('REPORTS');
     } else if (!viewParam) {
       setActiveCard('ALL');
     }
@@ -168,14 +209,23 @@ function AdminDashboardContent() {
     setAdjustNote('');
   };
 
+  const openProcessReportModal = (report: ReportTicketItem, defaultAction: 'APPROVED' | 'REJECTED' | 'RESOLVED' = 'APPROVED') => {
+    setProcessReportModal(report);
+    setProcessAction(defaultAction);
+    setProcessAmount(report.expectedAmount ? String(report.expectedAmount) : '');
+    setProcessBonusAmount('');
+    setProcessAdminNote('');
+  };
+
   const fetchData = async () => {
     try {
-      const [statsRes, usersRes, requestsRes, feedbacksRes, txRes] = await Promise.all([
+      const [statsRes, usersRes, requestsRes, feedbacksRes, txRes, reportsRes] = await Promise.all([
         api.get('/admin/stats'),
         api.get('/users'),
         api.get('/admin/requests'),
         api.get('/admin/feedbacks'),
         api.get('/transactions/admin'),
+        api.get('/reports/admin'),
       ]);
 
       setStats(statsRes.data);
@@ -183,10 +233,42 @@ function AdminDashboardContent() {
       setRequests(requestsRes.data);
       setFeedbacks(feedbacksRes.data);
       setAdminTransactions(txRes.data || []);
+      setAdminReports(reportsRes.data || []);
     } catch (err: any) {
       toast.error('Không thể tải dữ liệu quản trị viên');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleProcessReportSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!processReportModal) return;
+
+    setProcessLoading(true);
+    try {
+      await api.patch(`/reports/admin/${processReportModal.id}/process`, {
+        status: processAction,
+        approvedAmount: processAmount ? Number(processAmount) : undefined,
+        bonusAmount: processBonusAmount ? Number(processBonusAmount) : undefined,
+        adminNote: processAdminNote.trim() || undefined,
+      });
+
+      toast.success(
+        processAction === 'APPROVED'
+          ? 'Đã duyệt báo cáo & cộng tiền thành công vào ví sinh viên!'
+          : processAction === 'REJECTED'
+          ? 'Đã từ chối khiếu nại báo cáo!'
+          : 'Đã cập nhật trạng thái giải quyết sự cố!'
+      );
+
+      setProcessReportModal(null);
+      fetchData();
+    } catch (err: any) {
+      const msg = err.response?.data?.message || 'Không thể xử lý báo cáo';
+      toast.error(msg);
+    } finally {
+      setProcessLoading(false);
     }
   };
 
@@ -1226,6 +1308,148 @@ function AdminDashboardContent() {
                   </>
                 );
               })()}
+            </div>
+          </div>
+        )}
+
+        {/* REPORT APPROVAL & PROCESS MODAL */}
+        {processReportModal && (
+          <div className="fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-4 overflow-y-auto">
+            <div className="bg-slate-900 border border-slate-800 p-5 sm:p-6 rounded-3xl shadow-2xl max-w-lg w-full space-y-4 relative my-auto max-h-[90vh] flex flex-col overflow-hidden">
+              <button
+                onClick={() => setProcessReportModal(null)}
+                className="absolute top-4 right-4 text-slate-400 hover:text-white p-1.5 rounded-full bg-slate-800/80 cursor-pointer z-10"
+              >
+                <X size={18} />
+              </button>
+
+              <div className="border-b border-slate-800 pb-3 pr-8 shrink-0">
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-orange-500/20 text-orange-400 border border-orange-500/30">
+                    {processReportModal.type === 'DEPOSIT_ERROR' ? '💳 Lỗi nạp tiền' : '🐛 Lỗi hệ thống'}
+                  </span>
+                  <span className="text-[10px] text-slate-500 font-mono">#{processReportModal.id.slice(0, 8)}</span>
+                </div>
+                <h3 className="text-base font-extrabold text-white mt-1">
+                  Xử Lý Phản Ánh: {processReportModal.title}
+                </h3>
+                <p className="text-xs text-slate-400 mt-1">
+                  Sinh viên: <strong className="text-white">{processReportModal.user.fullName}</strong> ({processReportModal.user.email} {processReportModal.user.mssv ? `• ${processReportModal.user.mssv}` : ''})
+                </p>
+              </div>
+
+              <form onSubmit={handleProcessReportSubmit} className="space-y-4 flex-1 overflow-y-auto pr-1">
+                {/* Mode Selector */}
+                <div className="grid grid-cols-3 bg-slate-955 p-1 rounded-xl border border-slate-800 gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setProcessAction('APPROVED')}
+                    className={`py-2 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                      processAction === 'APPROVED' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    + Duyệt Cộng Ví
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setProcessAction('REJECTED')}
+                    className={`py-2 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                      processAction === 'REJECTED' ? 'bg-red-600 text-white shadow' : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    ❌ Từ Chối
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setProcessAction('RESOLVED')}
+                    className={`py-2 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                      processAction === 'RESOLVED' ? 'bg-blue-600 text-white shadow' : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    🟢 Đã Giải Quyết
+                  </button>
+                </div>
+
+                {/* If APPROVED mode */}
+                {processAction === 'APPROVED' && (
+                  <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl space-y-3">
+                    <p className="text-[11px] font-bold text-emerald-400">
+                      Cộng tiền trực tiếp vào Ví Chính của sinh viên
+                    </p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[10px] font-bold uppercase text-slate-400 mb-1">
+                          Số tiền cộng ví chính (VNĐ) *
+                        </label>
+                        <input
+                          type="number"
+                          value={processAmount}
+                          onChange={(e) => setProcessAmount(e.target.value)}
+                          placeholder="VD: 50000"
+                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white font-mono font-extrabold focus:outline-none focus:border-emerald-500"
+                          min={1000}
+                          step={1000}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold uppercase text-slate-400 mb-1">
+                          Thưởng khuyến mãi thêm (Ví KM)
+                        </label>
+                        <input
+                          type="number"
+                          value={processBonusAmount}
+                          onChange={(e) => setProcessBonusAmount(e.target.value)}
+                          placeholder="VD: 5000 (Tùy chọn)"
+                          className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white font-mono font-bold focus:outline-none focus:border-orange-500"
+                          min={0}
+                          step={1000}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Admin Note Input */}
+                <div>
+                  <label className="block text-[10px] font-semibold uppercase text-slate-400 mb-1">
+                    Ghi chú phản hồi cho Sinh viên {processAction === 'REJECTED' ? '(Bắt buộc ghi lý do từ chối)' : ''}
+                  </label>
+                  <textarea
+                    value={processAdminNote}
+                    onChange={(e) => setProcessAdminNote(e.target.value)}
+                    placeholder={
+                      processAction === 'APPROVED'
+                        ? "VD: Admin đã kiểm tra chứng từ CK thành công và cộng 50.000đ vào ví."
+                        : processAction === 'REJECTED'
+                        ? "VD: Không tìm thấy giao dịch 50k nào vào thời điểm nêu trên. Vui lòng kiểm tra lại."
+                        : "VD: Đã tiếp nhận và khắc phục xong lỗi giao diện."
+                    }
+                    rows={3}
+                    className="w-full bg-slate-955 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-orange-500 resize-none"
+                  />
+                </div>
+
+                {/* Submit buttons */}
+                <div className="flex gap-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setProcessReportModal(null)}
+                    className="flex-1 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs transition-colors cursor-pointer"
+                  >
+                    Hủy
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={processLoading}
+                    className={`flex-1 py-2.5 rounded-xl text-white font-bold text-xs transition-all shadow-md cursor-pointer ${
+                      processAction === 'APPROVED' ? 'bg-emerald-600 hover:bg-emerald-500' :
+                      processAction === 'REJECTED' ? 'bg-red-600 hover:bg-red-500' : 'bg-blue-600 hover:bg-blue-500'
+                    }`}
+                  >
+                    {processLoading ? 'Đang xử lý...' : processAction === 'APPROVED' ? 'Xác Nhận & Cộng Tiền Ví' : processAction === 'REJECTED' ? 'Xác Nhận Từ Chối' : 'Xác Nhận Đã Giải Quyết'}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         )}
@@ -2786,6 +3010,248 @@ function AdminDashboardContent() {
                 </table>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* SECTION 3.6: BẢNG QUẢN LÝ BÁO CÁO SỰ CỐ & KHIẾU NẠI NẠP TIỀN */}
+      {(activeCard === 'ALL' || activeCard === 'REPORTS') && (
+        <div className="bg-slate-900/60 backdrop-blur-xl border border-slate-800 p-5 sm:p-6 rounded-3xl shadow-xl space-y-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+            <div>
+              <h2 className="text-md sm:text-lg font-extrabold text-white flex items-center gap-2">
+                <AlertTriangle className="text-orange-500" size={20} />
+                Duyệt Khiếu Nại Nạp Tiền & Báo Cáo Sự Cố ({adminReports.filter(r => r.status === 'PENDING').length} Đang Chờ)
+              </h2>
+              <p className="text-[11px] sm:text-xs text-slate-400 mt-0.5">
+                Xem và duyệt ảnh chứng từ chuyển khoản sai nội dung của sinh viên để tự động cộng tiền vào ví chính.
+              </p>
+            </div>
+
+            {/* Filter Tabs */}
+            <div className="flex items-center gap-1 bg-slate-955 p-1 rounded-xl border border-slate-800 self-start sm:self-auto overflow-x-auto max-w-full">
+              <button
+                onClick={() => setReportStatusFilter('ALL')}
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+                  reportStatusFilter === 'ALL' ? 'bg-orange-600 text-white shadow' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                Tất cả ({adminReports.length})
+              </button>
+              <button
+                onClick={() => setReportStatusFilter('PENDING')}
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+                  reportStatusFilter === 'PENDING' ? 'bg-amber-600 text-white shadow' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                Đang chờ ({adminReports.filter(r => r.status === 'PENDING').length})
+              </button>
+              <button
+                onClick={() => setReportStatusFilter('DEPOSIT_ERROR')}
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+                  reportStatusFilter === 'DEPOSIT_ERROR' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                Lỗi nạp tiền ({adminReports.filter(r => r.type === 'DEPOSIT_ERROR').length})
+              </button>
+            </div>
+          </div>
+
+          {/* Desktop Table View */}
+          <div className="hidden md:block overflow-hidden border border-slate-800 rounded-2xl bg-slate-955/50">
+            <table className="w-full text-left text-xs text-slate-350 min-w-[850px]">
+              <thead className="text-[10px] text-slate-400 uppercase border-b border-slate-800 bg-slate-900/80">
+                <tr>
+                  <th className="px-4 py-3.5 font-bold">Sinh viên khiếu nại</th>
+                  <th className="px-4 py-3.5 font-bold">Loại / Tiêu đề</th>
+                  <th className="px-4 py-3.5 font-bold">Nội dung sự cố</th>
+                  <th className="px-4 py-3.5 font-bold text-right">Số tiền khiếu nại / Mã CK</th>
+                  <th className="px-4 py-3.5 font-bold text-center">Bằng chứng (Screenshot)</th>
+                  <th className="px-4 py-3.5 font-bold text-right">Trạng thái / Xử lý</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-850">
+                {adminReports
+                  .filter(r => {
+                    if (reportStatusFilter === 'PENDING') return r.status === 'PENDING';
+                    if (reportStatusFilter === 'DEPOSIT_ERROR') return r.type === 'DEPOSIT_ERROR';
+                    return true;
+                  })
+                  .length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="text-center py-8 text-slate-500 text-xs">
+                      Không có báo cáo sự cố nào phù hợp.
+                    </td>
+                  </tr>
+                ) : (
+                  adminReports
+                    .filter(r => {
+                      if (reportStatusFilter === 'PENDING') return r.status === 'PENDING';
+                      if (reportStatusFilter === 'DEPOSIT_ERROR') return r.type === 'DEPOSIT_ERROR';
+                      return true;
+                    })
+                    .map((item) => (
+                      <tr key={item.id} className="hover:bg-slate-800/20 transition-colors">
+                        <td className="px-4 py-3.5">
+                          <p className="font-bold text-white text-xs">{item.user?.fullName}</p>
+                          <p className="text-[10px] text-slate-400">{item.user?.email} {item.user?.mssv ? `• ${item.user.mssv}` : ''}</p>
+                          {item.user?.phoneNumber && (
+                            <p className="text-[10px] text-slate-500">SĐT: {item.user.phoneNumber}</p>
+                          )}
+                        </td>
+                        <td className="px-4 py-3.5">
+                          <span className={`text-[9px] font-bold px-2 py-0.5 rounded-md ${
+                            item.type === 'DEPOSIT_ERROR' ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30' : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                          }`}>
+                            {item.type === 'DEPOSIT_ERROR' ? '💳 LỖI NẠP TIỀN' : '🐛 LỖI HỆ THỐNG'}
+                          </span>
+                          <p className="font-bold text-white text-xs mt-1">{item.title}</p>
+                          <p className="text-[9px] text-slate-500 font-mono">{new Date(item.createdAt).toLocaleString('vi-VN')}</p>
+                        </td>
+                        <td className="px-4 py-3.5 text-xs text-slate-300 max-w-xs">
+                          <p className="line-clamp-2">{item.description}</p>
+                          {item.adminNote && (
+                            <p className="text-[10px] text-amber-400 mt-1 italic">Ghi chú Admin: {item.adminNote}</p>
+                          )}
+                        </td>
+                        <td className="px-4 py-3.5 text-right font-mono">
+                          {item.expectedAmount ? (
+                            <p className="font-black text-emerald-400 text-sm">{item.expectedAmount.toLocaleString('vi-VN')} đ</p>
+                          ) : (
+                            <p className="text-[10px] text-slate-500 italic">Không có</p>
+                          )}
+                          {item.transactionCode && (
+                            <p className="text-[10px] text-slate-300 font-bold">Mã CK: {item.transactionCode}</p>
+                          )}
+                        </td>
+                        <td className="px-4 py-3.5 text-center">
+                          {item.proofImage ? (
+                            <button
+                              onClick={() => setFullscreenImage(item.proofImage!)}
+                              className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-orange-500/10 text-orange-400 border border-orange-500/20 hover:bg-orange-500/20 transition-all cursor-pointer inline-flex items-center gap-1"
+                            >
+                              🔍 Xem ảnh CK
+                            </button>
+                          ) : (
+                            <span className="text-[10px] text-slate-500 italic">Không có ảnh</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3.5 text-right">
+                          {item.status === 'PENDING' ? (
+                            <div className="flex items-center justify-end gap-1.5">
+                              <button
+                                onClick={() => openProcessReportModal(item, 'APPROVED')}
+                                className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 transition-all cursor-pointer whitespace-nowrap"
+                                title="Duyệt chứng từ & Cộng tiền ví"
+                              >
+                                ✅ Duyệt Cộng Tiền
+                              </button>
+                              <button
+                                onClick={() => openProcessReportModal(item, 'REJECTED')}
+                                className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 transition-all cursor-pointer whitespace-nowrap"
+                                title="Từ chối khiếu nại"
+                              >
+                                ❌ Từ chối
+                              </button>
+                            </div>
+                          ) : (
+                            <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${
+                              item.status === 'APPROVED' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
+                              item.status === 'REJECTED' ? 'bg-red-500/10 text-red-400 border border-red-500/20' :
+                              'bg-blue-500/10 text-blue-400 border border-blue-500/20'
+                            }`}>
+                              {item.status === 'APPROVED' ? 'Đã cộng tiền ví' : item.status === 'REJECTED' ? 'Đã từ chối' : 'Đã giải quyết'}
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile Native Cards View */}
+          <div className="md:hidden space-y-3">
+            {adminReports
+              .filter(r => {
+                if (reportStatusFilter === 'PENDING') return r.status === 'PENDING';
+                if (reportStatusFilter === 'DEPOSIT_ERROR') return r.type === 'DEPOSIT_ERROR';
+                return true;
+              })
+              .length === 0 ? (
+              <div className="text-center py-8 text-slate-500 text-xs bg-slate-955 border border-slate-800 rounded-2xl">
+                Không có báo cáo sự cố nào phù hợp.
+              </div>
+            ) : (
+              adminReports
+                .filter(r => {
+                  if (reportStatusFilter === 'PENDING') return r.status === 'PENDING';
+                  if (reportStatusFilter === 'DEPOSIT_ERROR') return r.type === 'DEPOSIT_ERROR';
+                  return true;
+                })
+                .map((item) => (
+                  <div key={item.id} className="p-4 bg-slate-955 border border-slate-800 rounded-2xl space-y-3 shadow-sm">
+                    <div className="flex items-center justify-between border-b border-slate-850 pb-2">
+                      <div>
+                        <p className="font-extrabold text-xs text-white">{item.user?.fullName}</p>
+                        <p className="text-[10px] text-slate-400">{item.user?.email} {item.user?.mssv ? `• ${item.user.mssv}` : ''}</p>
+                      </div>
+                      <span className={`text-[9px] font-bold px-2 py-0.5 rounded ${
+                        item.type === 'DEPOSIT_ERROR' ? 'bg-orange-500/20 text-orange-400' : 'bg-blue-500/20 text-blue-400'
+                      }`}>
+                        {item.type === 'DEPOSIT_ERROR' ? '💳 Lỗi nạp tiền' : '🐛 Lỗi hệ thống'}
+                      </span>
+                    </div>
+
+                    <div>
+                      <p className="font-bold text-xs text-white">{item.title}</p>
+                      <p className="text-[11px] text-slate-300 mt-0.5">{item.description}</p>
+                    </div>
+
+                    {item.type === 'DEPOSIT_ERROR' && (
+                      <div className="flex items-center justify-between text-xs font-mono p-2 bg-slate-900 rounded-xl border border-slate-850">
+                        <span>Số tiền nạp: <strong className="text-emerald-400">{item.expectedAmount?.toLocaleString()}đ</strong></span>
+                        {item.transactionCode && <span className="text-[10px] text-slate-400">Mã CK: {item.transactionCode}</span>}
+                      </div>
+                    )}
+
+                    <div className="flex items-center justify-between pt-1 border-t border-slate-850">
+                      {item.proofImage ? (
+                        <button
+                          onClick={() => setFullscreenImage(item.proofImage!)}
+                          className="px-2 py-1 rounded text-[10px] font-bold bg-orange-500/10 text-orange-400 border border-orange-500/20"
+                        >
+                          🔍 Xem ảnh CK
+                        </button>
+                      ) : (
+                        <span className="text-[10px] text-slate-500 italic">Không có ảnh</span>
+                      )}
+
+                      {item.status === 'PENDING' ? (
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => openProcessReportModal(item, 'APPROVED')}
+                            className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-emerald-500 text-white"
+                          >
+                            Duyệt cộng tiền
+                          </button>
+                          <button
+                            onClick={() => openProcessReportModal(item, 'REJECTED')}
+                            className="px-2 py-1 rounded-lg text-[10px] font-bold bg-red-500/10 text-red-400"
+                          >
+                            Từ chối
+                          </button>
+                        </div>
+                      ) : (
+                        <span className="text-[10px] font-bold text-slate-400">
+                          {item.status === 'APPROVED' ? '✅ Đã cộng tiền' : '❌ Từ chối'}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))
+            )}
           </div>
         </div>
       )}

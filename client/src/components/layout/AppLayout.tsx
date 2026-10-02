@@ -62,14 +62,19 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               const toastOptions = {
                 description: n.message,
                 onClick: () => router.push('/notifications'),
-                duration: 2500,
+                duration: 4000,
               };
 
               if (n.type === 'SUCCESS') {
                 toast.success(n.title, toastOptions);
+              } else if (n.type === 'WARNING') {
+                toast.warning(n.title, toastOptions);
               } else {
                 toast.info(n.title, toastOptions);
               }
+
+              // Refresh profile balance on new notification
+              api.get('/users/profile').then((pRes) => updateUser(pRes.data)).catch(() => {});
             }
           }
         });
@@ -79,7 +84,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     };
 
     pollNotifications();
-    const interval = setInterval(pollNotifications, 5000);
+    const interval = setInterval(pollNotifications, 3000);
 
     return () => clearInterval(interval);
   }, [user, mounted, router]);

@@ -12,7 +12,8 @@ import {
   LogOut, 
   ClipboardList,
   Crown,
-  Wallet
+  Wallet,
+  AlertTriangle
 } from 'lucide-react';
 
 export default function Sidebar({ onOpenWallet }: { onOpenWallet?: () => void }) {
@@ -35,7 +36,8 @@ export default function Sidebar({ onOpenWallet }: { onOpenWallet?: () => void })
     menuItems.push(
       { name: 'Bảng điều khiển', path: '/student', icon: Home },
       { name: 'Thông báo', path: '/notifications', icon: Bell },
-      { name: 'Hồ sơ', path: '/profile', icon: User }
+      { name: 'Hồ sơ', path: '/profile', icon: User },
+      { name: 'Báo cáo sự cố', path: '/student/reports', icon: AlertTriangle }
     );
   } else if (role === 'RECEIVER') {
     menuItems.push(
@@ -47,7 +49,9 @@ export default function Sidebar({ onOpenWallet }: { onOpenWallet?: () => void })
   } else if (role === 'ADMIN') {
     menuItems.push(
       { name: 'Quản trị viên', path: '/admin', icon: Shield },
+      { name: 'Duyệt khiếu nại', path: '/admin?view=reports', icon: AlertTriangle },
       { name: 'Báo cáo CEO', path: '/admin?view=ceo', icon: Crown },
+      { name: 'Thông báo', path: '/notifications', icon: Bell },
       { name: 'Hồ sơ', path: '/profile', icon: User }
     );
   }
@@ -98,13 +102,16 @@ export default function Sidebar({ onOpenWallet }: { onOpenWallet?: () => void })
           {menuItems.map((item) => {
             const Icon = item.icon;
             const isCeoItem = item.path === '/admin?view=ceo';
+            const isReportsItem = item.path === '/admin?view=reports';
             const isAdminMainItem = item.path === '/admin';
             
             let isActive = false;
             if (isCeoItem) {
               isActive = pathname === '/admin' && currentView === 'ceo';
+            } else if (isReportsItem) {
+              isActive = pathname === '/admin' && currentView === 'reports';
             } else if (isAdminMainItem) {
-              isActive = pathname === '/admin' && currentView !== 'ceo';
+              isActive = pathname === '/admin' && currentView !== 'ceo' && currentView !== 'reports';
             } else {
               isActive = pathname === item.path;
             }
