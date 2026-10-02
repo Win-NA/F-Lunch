@@ -218,6 +218,26 @@ function AdminDashboardContent() {
     setProcessAdminNote('');
   };
 
+  const handleApproveTx = async (txId: string) => {
+    try {
+      await api.post(`/transactions/admin/${txId}/approve`);
+      toast.success('Đã duyệt & cộng tiền vào ví thành công!');
+      fetchData();
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Không thể duyệt giao dịch');
+    }
+  };
+
+  const handleRejectTx = async (txId: string) => {
+    try {
+      await api.post(`/transactions/admin/${txId}/reject`);
+      toast.success('Đã từ chối giao dịch!');
+      fetchData();
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Không thể từ chối giao dịch');
+    }
+  };
+
   const fetchData = async () => {
     try {
       const [statsRes, usersRes, requestsRes, feedbacksRes, txRes, reportsRes] = await Promise.all([
@@ -1523,9 +1543,19 @@ function AdminDashboardContent() {
                                 {tx.bonusAmount > 0 && (
                                   <p className="text-[10px] text-orange-400 font-bold">+{tx.bonusAmount.toLocaleString('vi-VN')} đ KM</p>
                                 )}
-                                <span className="text-[9px] font-bold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20 inline-block mt-0.5">
-                                  Thành công
-                                </span>
+                                {tx.status === 'APPROVED' ? (
+                                  <span className="text-[9px] font-bold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20 inline-block mt-0.5">
+                                    Thành công
+                                  </span>
+                                ) : tx.status === 'PENDING' ? (
+                                  <span className="text-[9px] font-bold text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20 inline-block mt-0.5">
+                                    Chờ xác nhận
+                                  </span>
+                                ) : (
+                                  <span className="text-[9px] font-bold text-rose-400 bg-rose-500/10 px-1.5 py-0.5 rounded border border-rose-500/20 inline-block mt-0.5">
+                                    Từ chối
+                                  </span>
+                                )}
                               </div>
                             </div>
                           );
@@ -3246,9 +3276,35 @@ function AdminDashboardContent() {
                             )}
                           </td>
                           <td className="px-4 py-3.5 text-right">
-                            <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                              Thành công
-                            </span>
+                            {tx.status === 'APPROVED' ? (
+                              <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                                ✅ Thành công
+                              </span>
+                            ) : tx.status === 'PENDING' ? (
+                              <div className="flex items-center justify-end gap-1.5">
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                                  ⏳ Chờ duyệt
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => handleApproveTx(tx.id)}
+                                  className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold rounded-lg transition-all cursor-pointer shadow"
+                                >
+                                  Duyệt cộng tiền
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleRejectTx(tx.id)}
+                                  className="px-2 py-1 bg-rose-600/80 hover:bg-rose-600 text-white text-[10px] font-bold rounded-lg transition-all cursor-pointer"
+                                >
+                                  Hủy
+                                </button>
+                              </div>
+                            ) : (
+                              <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                                ❌ Từ chối
+                              </span>
+                            )}
                           </td>
                         </tr>
                       ))
