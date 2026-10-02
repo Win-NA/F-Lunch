@@ -3281,25 +3281,9 @@ function AdminDashboardContent() {
                                 ✅ Thành công
                               </span>
                             ) : tx.status === 'PENDING' ? (
-                              <div className="flex items-center justify-end gap-1.5">
-                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                                  ⏳ Chờ duyệt
-                                </span>
-                                <button
-                                  type="button"
-                                  onClick={() => handleApproveTx(tx.id)}
-                                  className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold rounded-lg transition-all cursor-pointer shadow"
-                                >
-                                  Duyệt cộng tiền
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => handleRejectTx(tx.id)}
-                                  className="px-2 py-1 bg-rose-600/80 hover:bg-rose-600 text-white text-[10px] font-bold rounded-lg transition-all cursor-pointer"
-                                >
-                                  Hủy
-                                </button>
-                              </div>
+                              <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                                ⏳ Chờ duyệt
+                              </span>
                             ) : (
                               <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/20">
                                 ❌ Từ chối
