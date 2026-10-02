@@ -1,8 +1,10 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth.store';
+import { api } from '@/lib/api';
 import { 
   Home, 
   Bell, 
@@ -20,6 +22,27 @@ export default function Sidebar({ onOpenWallet }: { onOpenWallet?: () => void })
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { user, logout } = useAuthStore();
+  const [unreadCount, setUnreadCount] = useState<number>(0);
+
+  const fetchUnreadCount = async () => {
+    try {
+      const res = await api.get('/notifications');
+      if (Array.isArray(res.data)) {
+        const count = res.data.filter((n: any) => !n.isRead).length;
+        setUnreadCount(count);
+      }
+    } catch (err) {
+      // silent catch
+    }
+  };
+
+  useEffect(() => {
+    if (user) {
+      fetchUnreadCount();
+      const interval = setInterval(fetchUnreadCount, 3000);
+      return () => clearInterval(interval);
+    }
+  }, [user]);
 
   if (!user) return null;
 
@@ -104,6 +127,7 @@ export default function Sidebar({ onOpenWallet }: { onOpenWallet?: () => void })
             const isCeoItem = item.path === '/admin?view=ceo';
             const isReportsItem = item.path === '/admin?view=reports';
             const isAdminMainItem = item.path === '/admin';
+            const isNotificationItem = item.path === '/notifications';
             
             let isActive = false;
             if (isCeoItem) {
@@ -120,14 +144,22 @@ export default function Sidebar({ onOpenWallet }: { onOpenWallet?: () => void })
               <Link
                 key={item.path}
                 href={item.path}
-                className={`flex items-center gap-3.5 px-4 py-3 rounded-xl transition-all duration-300 font-medium text-sm ${
+                className={`flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-300 font-medium text-sm ${
                   isActive
                     ? 'bg-orange-600 text-white shadow-lg shadow-orange-600/25 scale-[1.02]'
                     : 'text-slate-400 hover:bg-slate-900 hover:text-white'
                 }`}
               >
-                <Icon size={18} className={isCeoItem && isActive ? 'fill-white' : ''} />
-                <span>{item.name}</span>
+                <div className="flex items-center gap-3.5">
+                  <Icon size={18} className={isCeoItem && isActive ? 'fill-white' : ''} />
+                  <span>{item.name}</span>
+                </div>
+
+                {isNotificationItem && unreadCount > 0 && (
+                  <span className="bg-red-500 text-white font-extrabold text-[10px] px-2 py-0.5 rounded-full shadow-md shadow-red-500/40 animate-pulse">
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </span>
+                )}
               </Link>
             );
           })}

@@ -1,8 +1,10 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth.store';
+import { api } from '@/lib/api';
 import { 
   Home, 
   Bell, 
@@ -17,6 +19,27 @@ export default function BottomNav() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { user } = useAuthStore();
+  const [unreadCount, setUnreadCount] = useState<number>(0);
+
+  const fetchUnreadCount = async () => {
+    try {
+      const res = await api.get('/notifications');
+      if (Array.isArray(res.data)) {
+        const count = res.data.filter((n: any) => !n.isRead).length;
+        setUnreadCount(count);
+      }
+    } catch (err) {
+      // silent catch
+    }
+  };
+
+  useEffect(() => {
+    if (user) {
+      fetchUnreadCount();
+      const interval = setInterval(fetchUnreadCount, 3000);
+      return () => clearInterval(interval);
+    }
+  }, [user]);
 
   if (!user) return null;
 
@@ -60,6 +83,7 @@ export default function BottomNav() {
         const Icon = item.icon;
         const isCeoItem = item.path === '/admin?view=ceo';
         const isAdminMainItem = item.path === '/admin';
+        const isNotificationItem = item.path === '/notifications';
         
         let isActive = false;
         if (isCeoItem) {
@@ -74,11 +98,18 @@ export default function BottomNav() {
           <Link
             key={item.path}
             href={item.path}
-            className={`flex flex-col items-center justify-center flex-1 py-1 transition-all duration-300 ${
+            className={`flex flex-col items-center justify-center flex-1 py-1 transition-all duration-300 relative ${
               isActive ? 'text-orange-500 scale-105' : 'text-slate-500'
             }`}
           >
-            <Icon size={20} className={isActive ? 'stroke-[2.5px]' : ''} />
+            <div className="relative">
+              <Icon size={20} className={isActive ? 'stroke-[2.5px]' : ''} />
+              {isNotificationItem && unreadCount > 0 && (
+                <span className="absolute -top-1.5 -right-2.5 bg-red-500 text-white font-extrabold text-[9px] min-w-[16px] h-4 rounded-full flex items-center justify-center px-1 shadow-md shadow-red-500/50 animate-pulse">
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </span>
+              )}
+            </div>
             <span className="text-[10px] font-semibold mt-1">{item.name}</span>
           </Link>
         );
