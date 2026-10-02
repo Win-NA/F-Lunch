@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuthStore } from '@/stores/auth.store';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
@@ -16,7 +16,8 @@ import {
   ShieldCheck,
   AlertTriangle,
   Sparkles,
-  Check
+  Check,
+  RefreshCw
 } from 'lucide-react';
 
 interface WalletModalProps {
@@ -39,12 +40,23 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
 
   // Copy state helper
   const [copiedField, setCopiedField] = useState<string | null>(null);
-  const [verifying, setVerifying] = useState(false);
+
+  // Track balance changes to alert user automatically
+  const prevBalanceRef = useRef<number | null>(null);
 
   const fetchProfile = async () => {
     try {
       const res = await api.get('/users/profile');
-      updateUser(res.data);
+      if (res.data) {
+        const newTotalBal = (res.data.realBalance || 0) + (res.data.bonusBalance || 0);
+        if (prevBalanceRef.current !== null && newTotalBal > prevBalanceRef.current) {
+          const added = newTotalBal - prevBalanceRef.current;
+          toast.success(`🎉 TỰ ĐỘNG CỘNG TIỀN THÀNH CÔNG! +${added.toLocaleString('vi-VN')} đ`);
+          fetchHistory();
+        }
+        prevBalanceRef.current = newTotalBal;
+        updateUser(res.data);
+      }
     } catch (err) {
       // silent catch
     }
@@ -62,31 +74,19 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
     }
   };
 
-  const handleConfirmDeposit = async () => {
-    if (!depositAmount || depositAmount < 10000) {
-      toast.error('Vui lòng chọn số tiền nạp từ 10.000đ trở lên');
-      return;
-    }
-    setVerifying(true);
-    try {
-      const res = await api.post('/transactions/deposit-confirm', {
+  const memoCode = `FLUNCH ${user?.mssv || user?.fullName?.replace(/\s+/g, '') || ''}`;
+
+  // Automatically register a pending deposit in background when user selects amount
+  useEffect(() => {
+    if (depositAmount && depositAmount >= 10000) {
+      api.post('/transactions/deposit', {
         amount: depositAmount,
         paymentMethod,
+      }).catch(() => {
+        // silent catch
       });
-      toast.success(res.data?.message || 'Nạp tiền thành công! Đã cộng tiền vào ví!');
-      
-      const profileRes = await api.get('/users/profile');
-      updateUser(profileRes.data);
-      fetchHistory();
-    } catch (err: any) {
-      const msg = err.response?.data?.message || 'Không thể xác nhận nạp tiền';
-      toast.error(msg);
-    } finally {
-      setVerifying(false);
     }
-  };
-
-  const memoCode = `FLUNCH ${user?.mssv || user?.fullName?.replace(/\s+/g, '') || ''}`;
+  }, [depositAmount, paymentMethod]);
 
   useEffect(() => {
     if (isOpen) {
@@ -94,7 +94,7 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
       if (tab === 'HISTORY') {
         fetchHistory();
       }
-      const interval = setInterval(fetchProfile, 3000);
+      const interval = setInterval(fetchProfile, 2500);
       return () => clearInterval(interval);
     }
   }, [isOpen, tab]);
@@ -141,7 +141,7 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
             </div>
             <div>
               <h3 style={{ color: '#ffffff' }} className="font-black text-2xl tracking-tight">Ví F-Lunch</h3>
-              <p style={{ color: '#cbd5e1' }} className="text-sm sm:text-base font-bold">Quản lý số dư & Phí nhận hộ 5k/đơn</p>
+              <p style={{ color: '#cbd5e1' }} className="text-sm sm:text-base font-bold">Nạp tiền tự động 100% không cần xác nhận</p>
             </div>
           </div>
           <button
@@ -513,22 +513,19 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
                     </div>
                   )}
 
-                  {/* Confirm Deposit Button */}
-                  <button
-                    type="button"
-                    onClick={handleConfirmDeposit}
-                    disabled={verifying}
-                    style={{ backgroundColor: '#16a34a', color: '#ffffff' }}
-                    className="w-full py-4.5 px-5 rounded-2xl font-black text-sm sm:text-lg flex items-center justify-center gap-2 hover:bg-emerald-500 transition-all shadow-2xl cursor-pointer active:scale-95 border-2 border-emerald-400"
-                  >
-                    {verifying ? (
-                      'Đang xác nhận & cộng tiền...'
-                    ) : (
-                      <>
-                        <Sparkles size={24} /> TÔI ĐÃ CHUYỂN TIỀN - XÁC NHẬN CỘNG TIỀN VÀO VÍ
-                      </>
-                    )}
-                  </button>
+                  {/* Auto Bank Listener Live Pulse Box */}
+                  <div style={{ backgroundColor: '#064e3b', borderColor: '#10b981' }} className="p-5 sm:p-6 rounded-2xl border-2 text-center space-y-3 shadow-xl">
+                    <div style={{ color: '#34d399' }} className="inline-flex items-center gap-3 text-base sm:text-lg font-black">
+                      <span className="relative flex h-4 w-4">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-4 w-4 bg-emerald-500"></span>
+                      </span>
+                      Hệ thống đang tự động theo dõi chuyển khoản...
+                    </div>
+                    <p style={{ color: '#ecfdf5' }} className="text-xs sm:text-sm leading-relaxed font-semibold">
+                      Bạn <strong style={{ color: '#ffffff' }} className="font-black">KHÔNG CẦN BẤM BẤT KỲ NÚT XÁC NHẬN NÀO</strong>. Ngay khi bạn quét mã &amp; chuyển khoản thành công với nội dung <strong style={{ color: '#fb923c' }} className="font-mono font-black">{memoCode}</strong>, tiền sẽ <strong style={{ color: '#34d399' }} className="font-black underline">tự động cộng ngay lập tức vào số dư ví</strong>!
+                    </p>
+                  </div>
 
                   {/* Red Warning Banner */}
                   <div style={{ backgroundColor: '#450a0a', borderColor: '#dc2626' }} className="p-5 rounded-2xl border-2 flex items-start gap-3.5 text-sm sm:text-base shadow-xl">
@@ -541,20 +538,6 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
                         Số dư Ví F-Lunch chỉ sử dụng cho phí nhận hộ 5.000đ/đơn và <strong style={{ color: '#ffffff' }} className="font-extrabold underline">KHÔNG THỂ rút ra ngoài hoặc hoàn tiền mặt</strong>. Vui lòng cân nhắc kỹ trước khi quét mã chuyển khoản.
                       </p>
                     </div>
-                  </div>
-
-                  {/* Auto Bank Listener Box & Incident Report Link */}
-                  <div style={{ backgroundColor: '#064e3b', borderColor: '#10b981' }} className="p-5 rounded-2xl border-2 text-center space-y-2.5 shadow-inner">
-                    <div style={{ color: '#34d399' }} className="inline-flex items-center gap-2.5 text-base sm:text-lg font-black">
-                      <span className="relative flex h-3.5 w-3.5">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500"></span>
-                      </span>
-                      Hệ thống tự động đồng bộ biến động ngân hàng...
-                    </div>
-                    <p style={{ color: '#ecfdf5' }} className="text-xs sm:text-sm leading-relaxed font-semibold">
-                      Tiền sẽ <strong style={{ color: '#ffffff' }} className="font-black">tự động cộng vào ví</strong> ngay khi Ngân hàng/MoMo xác nhận biến động tiền về với đúng nội dung <strong style={{ color: '#fb923c' }} className="font-mono font-black">{memoCode}</strong>.
-                    </p>
                   </div>
                 </div>
               )}
