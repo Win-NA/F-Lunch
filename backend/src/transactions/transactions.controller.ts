@@ -1,4 +1,5 @@
-import { Controller, Post, Get, Body, Param, Query, UseGuards, Request, BadRequestException } from '@nestjs/common';
+import * as crypto from 'crypto';
+import { Controller, Post, Get, Body, Param, Query, UseGuards, Request, Headers, BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { TransactionsService } from './transactions.service';
 import { DepositDto } from './dto/deposit.dto';
 import { WithdrawDto } from './dto/withdraw.dto';
@@ -40,13 +41,32 @@ export class TransactionsController {
 
   @Public()
   @Post('bank-webhook')
-  async bankWebhook(@Body() body: any) {
-    // 1. Phục vụ Webhook chuẩn Casso.vn / VietQR API / SePay
+  async bankWebhook(@Headers() headers: any, @Body() body: any) {
+    // Kiểm tra Chữ ký bảo mật HMAC-SHA256 từ SePay Webhook
+    const sepaySignature = headers['x-sepay-signature'] || headers['X-Sepay-Signature'] || '';
+    const sepayTimestamp = headers['x-sepay-timestamp'] || headers['X-Sepay-Timestamp'] || '';
+    const secret = process.env.SEPAY_WEBHOOK_SECRET || 'whsec_eiZmc5uYYPsgkBWDnB5Z1LHkPrKzYgjG';
+
+    if (sepaySignature && sepayTimestamp) {
+      const payload = JSON.stringify(body);
+      const expected = 'sha256=' + crypto.createHmac('sha256', secret)
+        .update(sepayTimestamp + '.' + payload).digest('hex');
+
+      if (sepaySignature !== expected) {
+        console.warn('⚠️ SePay Webhook signature mismatch:', { received: sepaySignature, expected });
+        // Throw exception only if strict mode is enabled, otherwise log warning
+        if (process.env.STRICT_WEBHOOK_AUTH === 'true') {
+          throw new UnauthorizedException('Invalid SePay signature');
+        }
+      }
+    }
+
+    // 1. Phục vụ Webhook chuẩn Casso.vn / VietQR API / SePay (dạng mảng data)
     if (body && Array.isArray(body.data) && body.data.length > 0) {
       const results = [];
       for (const item of body.data) {
-        const memo = item.description || item.memo || item.content || item.transactionContent || item.transferContent || item.body || item.code || '';
-        const amount = Number(item.amount || item.amountIn || item.transferAmount || item.creditAmount || 0);
+        const memo = item.description || item.memo || item.content || item.transactionContent || item.transferContent || item.transaction_content || item.body || item.code || '';
+        const amount = Number(item.amount || item.amountIn || item.transferAmount || item.creditAmount || item.transfer_amount || 0);
         const res = await this.transactionsService.handleBankWebhook(memo, amount);
         results.push(res);
       }
@@ -54,8 +74,8 @@ export class TransactionsController {
     }
 
     // 2. Phục vụ Webhook trực tiếp (SePay, Custom Webhook, MoMo API, etc.)
-    const memo = body.description || body.memo || body.content || body.note || body.transactionContent || body.transferContent || body.code || body.body || '';
-    const amount = Number(body.amount || body.amountIn || body.transferAmount || body.creditAmount || 0);
+    const memo = body.description || body.memo || body.content || body.note || body.transactionContent || body.transferContent || body.transaction_content || body.code || body.body || '';
+    const amount = Number(body.amount || body.amountIn || body.transferAmount || body.creditAmount || body.transfer_amount || 0);
     return this.transactionsService.handleBankWebhook(memo, amount);
   }
 
