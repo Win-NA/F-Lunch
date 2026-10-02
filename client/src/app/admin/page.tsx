@@ -1852,30 +1852,48 @@ function AdminDashboardContent() {
   return (
     <div className="space-y-6 pb-12">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="space-y-1.5">
-          <h1 className="text-2xl font-extrabold tracking-tight text-white flex items-center gap-2">
-            <Shield className="text-orange-500" size={24} />
-            Bảng Điều Khiển Quản Trị
-          </h1>
-          <p className="text-slate-400 text-xs">Chạm trực tiếp vào các ô chỉ số bên dưới để xem mục tương ứng & kiểm soát KPI</p>
+      {activeCard === 'REPORTS' ? (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-orange-500/20 pb-5">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-xl bg-orange-500/10 border border-orange-500/30 flex items-center justify-center text-orange-500">
+                <AlertTriangle size={20} />
+              </div>
+              <h1 className="text-2xl font-extrabold tracking-tight text-white font-sans">
+                Duyệt Khiếu Nại Nạp Tiền & Báo Cáo Sự Cố
+              </h1>
+            </div>
+            <p className="text-slate-400 text-xs pl-10">
+              Xem và đối chiếu chứng từ chuyển khoản sai nội dung của sinh viên để tự động cộng tiền vào ví chính hoặc xử lý sự cố hệ thống
+            </p>
+          </div>
         </div>
+      ) : (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-1.5">
+            <h1 className="text-2xl font-extrabold tracking-tight text-white flex items-center gap-2">
+              <Shield className="text-orange-500" size={24} />
+              Bảng Điều Khiển Quản Trị
+            </h1>
+            <p className="text-slate-400 text-xs">Chạm trực tiếp vào các ô chỉ số bên dưới để xem mục tương ứng & kiểm soát KPI</p>
+          </div>
 
-        {activeCard !== 'ALL' && (
-          <button
-            onClick={() => {
-              setActiveCard('ALL');
-              setUserRoleFilter('ALL');
-            }}
-            className="self-start sm:self-auto flex items-center gap-1.5 bg-slate-955 border border-slate-800 hover:border-orange-500 text-orange-400 font-bold text-xs px-3.5 py-2 rounded-xl transition-all cursor-pointer shadow-md"
-          >
-            <Layers size={14} /> Hiển thị tất cả mục
-          </button>
-        )}
-      </div>
+          {activeCard !== 'ALL' && (
+            <button
+              onClick={() => {
+                setActiveCard('ALL');
+                setUserRoleFilter('ALL');
+              }}
+              className="self-start sm:self-auto flex items-center gap-1.5 bg-slate-955 border border-slate-800 hover:border-orange-500 text-orange-400 font-bold text-xs px-3.5 py-2 rounded-xl transition-all cursor-pointer shadow-md"
+            >
+              <Layers size={14} /> Hiển thị tất cả mục
+            </button>
+          )}
+        </div>
+      )}
 
       {/* INTERACTIVE APP METRIC CARDS (CHẠM TRỰC TIẾP VÀO CÁC Ô ĐỂ XEM MỤC TƯƠNG ỨNG) */}
-      {stats && (
+      {stats && activeCard !== 'REPORTS' && (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
           
           {/* 1. TỔNG ĐƠN CARD */}
