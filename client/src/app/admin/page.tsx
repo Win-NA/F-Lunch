@@ -2969,7 +2969,7 @@ function AdminDashboardContent() {
           <div className="space-y-3 pt-4 border-t border-slate-800">
             <h3 className="text-sm font-extrabold text-white flex items-center gap-2">
               <FileText size={16} className="text-orange-500" />
-              Nhật Ký Nạp Tiền & Giao Dịch Hệ Thống ({adminTransactions.length})
+              Nhật Ký Nạp Tiền & Điều Chỉnh Ví ({adminTransactions.filter((tx: any) => tx.type === 'DEPOSIT' || tx.type === 'ADMIN_ADJUST').length})
             </h3>
             <div className="overflow-hidden border border-slate-800 rounded-2xl bg-slate-955/50">
               <div className="overflow-x-auto">
@@ -2984,14 +2984,16 @@ function AdminDashboardContent() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-850">
-                    {adminTransactions.length === 0 ? (
+                    {adminTransactions.filter((tx: any) => tx.type === 'DEPOSIT' || tx.type === 'ADMIN_ADJUST').length === 0 ? (
                       <tr>
                         <td colSpan={5} className="text-center py-8 text-slate-500 text-xs">
                           Chưa có giao dịch nạp tiền nào được ghi nhận.
                         </td>
                       </tr>
                     ) : (
-                      adminTransactions.map((tx: any) => (
+                      adminTransactions
+                        .filter((tx: any) => tx.type === 'DEPOSIT' || tx.type === 'ADMIN_ADJUST')
+                        .map((tx: any) => (
                         <tr key={tx.id} className="hover:bg-slate-800/20 transition-colors">
                           <td className="px-4 py-3.5 font-mono">
                             <p className="font-bold text-white text-xs">{tx.transactionCode}</p>
@@ -3004,23 +3006,14 @@ function AdminDashboardContent() {
                           <td className="px-4 py-3.5">
                             <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
                               tx.type === 'DEPOSIT' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
-                              tx.type === 'ORDER_REFUND' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' :
-                              tx.type === 'ORDER_PAYMENT' ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20' :
                               'bg-amber-500/10 text-amber-400 border border-amber-500/20'
                             }`}>
-                              {tx.type === 'DEPOSIT' ? 'NẠP TIỀN TỰ ĐỘNG' :
-                               tx.type === 'ORDER_PAYMENT' ? 'THANH TOÁN ĐƠN' :
-                               tx.type === 'ORDER_REFUND' ? 'HOÀN PHÍ HỦY ĐƠN' :
-                               tx.type === 'ADMIN_ADJUST' ? 'ADMIN ĐIỀU CHỈNH' : tx.type}
+                              {tx.type === 'DEPOSIT' ? 'NẠP TIỀN TỰ ĐỘNG' : 'ADMIN ĐIỀU CHỈNH'}
                             </span>
                             <p className="text-[10px] text-slate-500 mt-0.5">{tx.note || tx.paymentMethod || 'VietQR / MoMo'}</p>
                           </td>
                           <td className="px-4 py-3.5 text-right font-mono">
-                            {tx.type === 'ORDER_PAYMENT' ? (
-                              <p className="font-extrabold text-sm text-rose-400">-{tx.amount.toLocaleString('vi-VN')}đ</p>
-                            ) : (
-                              <p className="font-extrabold text-sm text-emerald-400">+{tx.amount.toLocaleString('vi-VN')}đ</p>
-                            )}
+                            <p className="font-extrabold text-sm text-emerald-400">+{tx.amount.toLocaleString('vi-VN')}đ</p>
                             {tx.bonusAmount > 0 && (
                               <p className="text-[10px] text-orange-400 font-bold">+{tx.bonusAmount.toLocaleString('vi-VN')}đ KM</p>
                             )}
