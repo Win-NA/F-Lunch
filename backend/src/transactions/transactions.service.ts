@@ -63,32 +63,51 @@ export class TransactionsService {
     }
 
     const cleanMemo = memoContent.toUpperCase().replace(/\s+/g, '');
+    const users = await this.prisma.user.findMany();
 
-    // 1. Tìm theo mã giao dịch PENDING cụ thể
-    let pendingTx = await this.prisma.transaction.findFirst({
-      where: {
-        type: TransactionType.DEPOSIT,
-        status: TransactionStatus.PENDING,
-        amount: amount,
-      },
-      include: { user: true },
-      orderBy: { createdAt: 'desc' },
+    // 1. Ưu tiên tìm chính xác Sinh viên dựa trên MSSV, Tên hoặc Email trong Nội dung chuyển khoản (Memo)
+    let matchedUser = users.find(u => {
+      const mssvClean = u.mssv ? u.mssv.trim().toUpperCase() : '';
+      const mssvMatch = mssvClean.length >= 3 && cleanMemo.includes(mssvClean);
+
+      const nameClean = u.fullName ? u.fullName.toUpperCase().replace(/\s+/g, '') : '';
+      const nameMatch = nameClean.length >= 3 && cleanMemo.includes(nameClean);
+
+      const emailPrefix = u.email ? u.email.split('@')[0].toUpperCase() : '';
+      const emailMatch = emailPrefix.length >= 3 && cleanMemo.includes(emailPrefix);
+
+      return mssvMatch || nameMatch || emailMatch;
     });
 
-    // 2. Nếu không tìm thấy GD PENDING khớp số tiền chính xác, tìm theo MSSV/Email/Tên trong memo
-    let targetUserId = pendingTx?.userId;
+    let targetUserId = matchedUser?.id;
+    let pendingTx = null;
 
-    if (!targetUserId) {
-      const users = await this.prisma.user.findMany();
-      const matchedUser = users.find(u => {
-        const mssvMatch = u.mssv && cleanMemo.includes(u.mssv.toUpperCase());
-        const nameMatch = u.fullName && cleanMemo.includes(u.fullName.toUpperCase().replace(/\s+/g, ''));
-        const emailMatch = u.email && cleanMemo.includes(u.email.split('@')[0].toUpperCase());
-        return mssvMatch || nameMatch || emailMatch;
+    if (targetUserId) {
+      // Tìm giao dịch PENDING của chính sinh viên này (nếu có)
+      pendingTx = await this.prisma.transaction.findFirst({
+        where: {
+          userId: targetUserId,
+          type: TransactionType.DEPOSIT,
+          status: TransactionStatus.PENDING,
+          amount: amount,
+        },
+        orderBy: { createdAt: 'desc' },
+      });
+    } else {
+      // 2. Nếu chưa khớp user trực tiếp, tìm theo mã giao dịch PENDING
+      const pendingTxs = await this.prisma.transaction.findMany({
+        where: {
+          type: TransactionType.DEPOSIT,
+          status: TransactionStatus.PENDING,
+          amount: amount,
+        },
+        include: { user: true },
+        orderBy: { createdAt: 'desc' },
       });
 
-      if (matchedUser) {
-        targetUserId = matchedUser.id;
+      pendingTx = pendingTxs.find(tx => cleanMemo.includes(tx.transactionCode.replace(/-/g, '')));
+      if (pendingTx) {
+        targetUserId = pendingTx.userId;
       }
     }
 
