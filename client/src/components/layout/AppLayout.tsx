@@ -215,14 +215,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           </Link>
 
           <div className="flex items-center gap-2">
-            {/* Mobile Wallet Button */}
-            <button
-              onClick={() => setIsWalletOpen(true)}
-              className="flex items-center gap-1.5 bg-orange-600/10 border border-orange-500/20 px-2.5 py-1 rounded-xl text-orange-400 hover:bg-orange-600/20 transition-all cursor-pointer"
-            >
-              <Wallet size={14} />
-              <span className="text-xs font-extrabold font-mono">{totalBal.toLocaleString('vi-VN')}đ</span>
-            </button>
+            {/* Mobile Wallet Button (Only for STUDENT) */}
+            {user.role === 'STUDENT' && (
+              <button
+                onClick={() => setIsWalletOpen(true)}
+                className="flex items-center gap-1.5 bg-orange-600/10 border border-orange-500/20 px-2.5 py-1 rounded-xl text-orange-400 hover:bg-orange-600/20 transition-all cursor-pointer"
+              >
+                <Wallet size={14} />
+                <span className="text-xs font-extrabold font-mono">{totalBal.toLocaleString('vi-VN')}đ</span>
+              </button>
+            )}
 
             <Link
               href="/profile"

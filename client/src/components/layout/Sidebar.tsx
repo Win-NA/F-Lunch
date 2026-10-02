@@ -71,26 +71,28 @@ export default function Sidebar({ onOpenWallet }: { onOpenWallet?: () => void })
           </div>
         </Link>
 
-        {/* Wallet Balance Card */}
-        <div 
-          onClick={onOpenWallet}
-          className="bg-slate-900 border border-slate-800 hover:border-orange-500/40 p-3 rounded-2xl flex items-center justify-between text-left transition-all mb-4 cursor-pointer group shadow-md"
-        >
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-orange-600/10 text-orange-500 border border-orange-500/20 flex items-center justify-center group-hover:scale-105 transition-transform">
-              <Wallet size={16} />
+        {/* Wallet Balance Card (Only for STUDENT) */}
+        {role === 'STUDENT' && (
+          <div 
+            onClick={onOpenWallet}
+            className="bg-slate-900 border border-slate-800 hover:border-orange-500/40 p-3 rounded-2xl flex items-center justify-between text-left transition-all mb-4 cursor-pointer group shadow-md"
+          >
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-orange-600/10 text-orange-500 border border-orange-500/20 flex items-center justify-center group-hover:scale-105 transition-transform">
+                <Wallet size={16} />
+              </div>
+              <div>
+                <p className="text-[10px] text-slate-400 font-semibold uppercase">Ví F-Lunch</p>
+                <p className="text-xs font-extrabold text-white font-mono">
+                  {totalBalance.toLocaleString('vi-VN')} đ
+                </p>
+              </div>
             </div>
-            <div>
-              <p className="text-[10px] text-slate-400 font-semibold uppercase">Ví F-Lunch</p>
-              <p className="text-xs font-extrabold text-white font-mono">
-                {totalBalance.toLocaleString('vi-VN')} đ
-              </p>
-            </div>
+            <span className="text-[10px] font-bold px-2 py-1 rounded-lg bg-orange-600 text-white shadow-sm shadow-orange-600/20 hover:bg-orange-500 transition-colors">
+              Nạp
+            </span>
           </div>
-          <span className="text-[10px] font-bold px-2 py-1 rounded-lg bg-orange-600 text-white shadow-sm shadow-orange-600/20 hover:bg-orange-500 transition-colors">
-            Nạp
-          </span>
-        </div>
+        )}
 
         <nav className="space-y-1.5">
           {menuItems.map((item) => {
