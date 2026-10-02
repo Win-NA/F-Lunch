@@ -1,6 +1,6 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { RequestStatus, NotificationType } from '@prisma/client';
+import { RequestStatus, NotificationType, TransactionType, TransactionStatus } from '@prisma/client';
 
 @Injectable()
 export class ReceiversService {
@@ -266,39 +266,67 @@ export class ReceiversService {
     }
 
     if (request.status !== RequestStatus.ACCEPTED && request.status !== RequestStatus.RECEIVED) {
-      throw new BadRequestException('Chỉ có thể hủy nhận đơn khi đơn đang ở trạng thái Đã tiếp nhận hoặc Đã lấy đơn');
+      throw new BadRequestException('Chỉ có thể hủy từ chối đơn khi đơn đang ở trạng thái Đã tiếp nhận hoặc Đã lấy đơn');
     }
 
-    const updated = await this.prisma.receivingRequest.update({
-      where: { id: requestId },
-      data: {
-        receiverId: null,
-        status: RequestStatus.PENDING,
-      },
-    });
+    const feeToRefund = request.serviceFee || 5000;
+    const receiverName = request.receiver?.fullName || 'Người nhận hộ';
 
-    // Notify student
-    await this.prisma.notification.create({
-      data: {
-        userId: request.studentId,
-        requestId,
-        title: 'Đơn hàng đã trở lại danh sách chờ 🔄',
-        message: `Người nhận hộ ${request.receiver?.fullName || ''} đã hủy nhận đơn do sự cố. Đơn hàng của bạn đã quay lại danh sách chờ để người nhận hộ khác tiếp nhận!`,
-        type: NotificationType.WARNING,
-      },
-    });
+    return await this.prisma.$transaction(async (tx) => {
+      // 1. Update status to CANCELLED
+      const updated = await tx.receivingRequest.update({
+        where: { id: requestId },
+        data: {
+          status: RequestStatus.CANCELLED,
+        },
+      });
 
-    // Notify receiver
-    await this.prisma.notification.create({
-      data: {
-        userId: receiverId,
-        requestId,
-        title: 'Hủy nhận đơn thành công',
-        message: `Bạn đã hủy nhận đơn hàng ${request.foodPlatform} (#${request.orderCode || request.id.slice(0, 8)}).`,
-        type: NotificationType.SYSTEM,
-      },
-    });
+      // 2. Refund 5,000đ to student realBalance
+      await tx.user.update({
+        where: { id: request.studentId },
+        data: {
+          realBalance: { increment: feeToRefund },
+        },
+      });
 
-    return updated;
+      // 3. Log refund transaction for student
+      const transactionCode = `FL-REF-${Date.now().toString().slice(-6)}${Math.floor(1000 + Math.random() * 9000)}`;
+      await tx.transaction.create({
+        data: {
+          userId: request.studentId,
+          requestId,
+          amount: feeToRefund,
+          type: TransactionType.ORDER_REFUND,
+          status: TransactionStatus.APPROVED,
+          paymentMethod: 'SYSTEM',
+          transactionCode,
+          note: `Hoàn phí dịch vụ 5.000đ do người nhận hộ ${receiverName} từ chối/hủy đơn`,
+        },
+      });
+
+      // 4. Send notification to student
+      await tx.notification.create({
+        data: {
+          userId: request.studentId,
+          requestId,
+          title: 'Đơn nhận hộ đã bị từ chối / hủy ❌',
+          message: `Người nhận hộ ${receiverName} đã từ chối nhận đơn ${request.foodPlatform} của bạn. Đơn hàng đã chuyển sang trạng thái ĐÃ HỦY và phí 5.000đ đã được hoàn lại vào Ví chính!`,
+          type: NotificationType.WARNING,
+        },
+      });
+
+      // 5. Send notification to receiver
+      await tx.notification.create({
+        data: {
+          userId: receiverId,
+          requestId,
+          title: 'Đã từ chối đơn hàng thành công 🚫',
+          message: `Bạn đã từ chối nhận đơn hàng ${request.foodPlatform} (#${request.orderCode || request.id.slice(0, 8)}). Phí dịch vụ 5.000đ đã được hoàn lại cho sinh viên.`,
+          type: NotificationType.SYSTEM,
+        },
+      });
+
+      return updated;
+    });
   }
 }

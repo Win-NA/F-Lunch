@@ -122,16 +122,16 @@ export default function ReceiverDashboard() {
 
   const handleCancelAssignment = async () => {
     if (!activeTask) return;
-    if (!confirm('Bạn có chắc chắn muốn hủy nhận đơn hàng này không? Đơn sẽ quay trở lại danh sách chờ cho người nhận hộ khác.')) {
+    if (!confirm('Bạn có chắc chắn muốn từ chối / hủy nhận đơn hàng này không? Đơn hàng sẽ bị HỦY và 5.000đ phí dịch vụ sẽ được hoàn lại cho sinh viên.')) {
       return;
     }
     setBtnLoading(true);
     try {
       await api.post(`/receivers/cancel/${activeTask.id}`);
-      toast.success('Đã hủy nhận đơn thành công. Đơn hàng đã về lại danh sách chờ.');
+      toast.success('Đã từ chối nhận đơn thành công. Đơn hàng đã bị hủy và hoàn tiền lại cho sinh viên.');
       fetchData();
     } catch (err: any) {
-      const msg = err.response?.data?.message || 'Không thể hủy nhận đơn';
+      const msg = err.response?.data?.message || 'Không thể từ chối nhận đơn';
       toast.error(msg);
     } finally {
       setBtnLoading(false);
