@@ -3004,14 +3004,23 @@ function AdminDashboardContent() {
                           <td className="px-4 py-3.5">
                             <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
                               tx.type === 'DEPOSIT' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
-                              'bg-orange-500/10 text-orange-400 border border-orange-500/20'
+                              tx.type === 'ORDER_REFUND' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' :
+                              tx.type === 'ORDER_PAYMENT' ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20' :
+                              'bg-amber-500/10 text-amber-400 border border-amber-500/20'
                             }`}>
-                              {tx.type === 'DEPOSIT' ? 'NẠP TIỀN TỰ ĐỘNG' : tx.type === 'ADMIN_ADJUST' ? 'ADMIN ĐIỀU CHỈNH' : tx.type}
+                              {tx.type === 'DEPOSIT' ? 'NẠP TIỀN TỰ ĐỘNG' :
+                               tx.type === 'ORDER_PAYMENT' ? 'THANH TOÁN ĐƠN' :
+                               tx.type === 'ORDER_REFUND' ? 'HOÀN PHÍ HỦY ĐƠN' :
+                               tx.type === 'ADMIN_ADJUST' ? 'ADMIN ĐIỀU CHỈNH' : tx.type}
                             </span>
                             <p className="text-[10px] text-slate-500 mt-0.5">{tx.note || tx.paymentMethod || 'VietQR / MoMo'}</p>
                           </td>
                           <td className="px-4 py-3.5 text-right font-mono">
-                            <p className="font-extrabold text-sm text-emerald-400">+{tx.amount.toLocaleString('vi-VN')}đ</p>
+                            {tx.type === 'ORDER_PAYMENT' ? (
+                              <p className="font-extrabold text-sm text-rose-400">-{tx.amount.toLocaleString('vi-VN')}đ</p>
+                            ) : (
+                              <p className="font-extrabold text-sm text-emerald-400">+{tx.amount.toLocaleString('vi-VN')}đ</p>
+                            )}
                             {tx.bonusAmount > 0 && (
                               <p className="text-[10px] text-orange-400 font-bold">+{tx.bonusAmount.toLocaleString('vi-VN')}đ KM</p>
                             )}
