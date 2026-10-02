@@ -120,24 +120,6 @@ export default function ReceiverDashboard() {
     }
   };
 
-  const handleCancelAssignment = async () => {
-    if (!activeTask) return;
-    if (!confirm('Bạn có chắc chắn muốn từ chối / hủy nhận đơn hàng này không? Đơn hàng sẽ bị HỦY và 5.000đ phí dịch vụ sẽ được hoàn lại cho sinh viên.')) {
-      return;
-    }
-    setBtnLoading(true);
-    try {
-      await api.post(`/receivers/cancel/${activeTask.id}`);
-      toast.success('Đã từ chối nhận đơn thành công. Đơn hàng đã bị hủy và hoàn tiền lại cho sinh viên.');
-      fetchData();
-    } catch (err: any) {
-      const msg = err.response?.data?.message || 'Không thể từ chối nhận đơn';
-      toast.error(msg);
-    } finally {
-      setBtnLoading(false);
-    }
-  };
-
   const getStatusLabel = (status: string) => {
     if (status === 'ACCEPTED') return 'Đang đợi shipper';
     if (status === 'RECEIVED') return 'Đã lấy đơn';
@@ -288,16 +270,6 @@ export default function ReceiverDashboard() {
                       className="flex-1 bg-green-600 hover:bg-green-500 text-white font-bold text-xs py-3.5 rounded-xl transition-colors cursor-pointer flex items-center justify-center gap-2"
                     >
                       Xác thực bàn giao và hoàn thành <ArrowRight size={14} />
-                    </button>
-                  )}
-
-                  {['ACCEPTED', 'RECEIVED'].includes(activeTask.status) && (
-                    <button
-                      onClick={handleCancelAssignment}
-                      disabled={btnLoading}
-                      className="px-4 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 font-bold text-xs py-3.5 rounded-xl transition-colors cursor-pointer flex items-center justify-center gap-1.5"
-                    >
-                      <X size={14} /> Hủy nhận đơn
                     </button>
                   )}
                 </div>

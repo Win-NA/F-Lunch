@@ -265,6 +265,23 @@ export default function StudentDashboard() {
     }
   };
 
+  const handleCancelRequestFromDashboard = async (e: React.MouseEvent, requestId: string) => {
+    e.stopPropagation();
+    if (!confirm('Bạn có chắc chắn muốn hủy yêu cầu nhận hộ này không? Phí dịch vụ 5.000đ sẽ được hoàn lại vào ví của bạn.')) return;
+    try {
+      await api.post(`/requests/${requestId}/cancel`);
+      toast.success('Hủy yêu cầu nhận hộ thành công, đã hoàn tiền phí dịch vụ vào ví!');
+      fetchRequests();
+      try {
+        const profileRes = await api.get('/users/profile');
+        useAuthStore.getState().updateUser(profileRes.data);
+      } catch (profileErr) {}
+    } catch (err: any) {
+      const msg = err.response?.data?.message || 'Không thể hủy yêu cầu';
+      toast.error(msg);
+    }
+  };
+
   const activeRequests = requests.filter(r =>
     ['PENDING', 'ACCEPTED', 'RECEIVED', 'READY_FOR_PICKUP'].includes(r.status)
   );
@@ -577,6 +594,16 @@ export default function StudentDashboard() {
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0">
                       {getStatusBadge(req.status)}
+                      {req.status === 'PENDING' && (
+                        <button
+                          type="button"
+                          onClick={(e) => handleCancelRequestFromDashboard(e, req.id)}
+                          className="px-2.5 py-1 text-[10px] font-bold rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 transition-colors cursor-pointer"
+                          title="Hủy đơn nhận hộ này và hoàn tiền 5.000đ"
+                        >
+                          Hủy đơn
+                        </button>
+                      )}
                       <ChevronRight className="text-slate-600" size={14} />
                     </div>
                   </div>
