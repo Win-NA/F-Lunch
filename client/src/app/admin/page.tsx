@@ -288,11 +288,14 @@ function AdminDashboardContent() {
 
     setAdjustLoading(true);
     try {
+      const executorInfo = currentUser?.fullName ? ` (bởi Admin ${currentUser.fullName})` : '';
+      const baseNote = adjustNote || (amountNum > 0 ? 'Admin cộng tiền vào ví' : 'Admin trừ tiền khỏi ví');
+
       await api.post('/transactions/admin/adjust', {
         targetUserId: adjustModalUser.id,
         amount: amountNum,
         balanceType: adjustBalanceType,
-        note: adjustNote || (amountNum > 0 ? 'Admin cộng tiền vào ví' : 'Admin trừ tiền khỏi ví'),
+        note: `${baseNote}${executorInfo}`,
       });
 
       toast.success(`Đã ${amountNum > 0 ? 'cộng' : 'trừ'} ${Math.abs(amountNum).toLocaleString('vi-VN')}đ cho ${adjustModalUser.fullName}`);
@@ -1287,11 +1290,20 @@ function AdminDashboardContent() {
                   (r.receiver?.email && r.receiver.email.toLowerCase() === userTxModal.email?.toLowerCase())
                 );
 
-                // Admin Operations Log
-                const adminActions = adminTransactions.filter(t => 
-                  t.type === 'ADMIN_ADJUST' || 
-                  (t.note && t.note.toLowerCase().includes(userTxModal.fullName.toLowerCase()))
-                );
+                // Admin Operations Log (Strictly for actions performed by or related to THIS specific admin)
+                const adminActions = adminTransactions.filter(t => {
+                  const isTargetUser = t.userId === userTxModal.id || 
+                                       t.user?.id === userTxModal.id || 
+                                       (t.user?.email && t.user.email.toLowerCase() === userTxModal.email.toLowerCase());
+                  
+                  const isActorInNote = t.note && (
+                    t.note.toLowerCase().includes(userTxModal.fullName.toLowerCase()) ||
+                    t.note.toLowerCase().includes(userTxModal.email.toLowerCase()) ||
+                    (userTxModal.mssv && t.note.toLowerCase().includes(userTxModal.mssv.toLowerCase()))
+                  );
+
+                  return isTargetUser || isActorInNote;
+                });
 
                 if (targetRole === 'RECEIVER') {
                   const completedCount = receiverReqs.filter(r => r.status === 'COMPLETED').length;
