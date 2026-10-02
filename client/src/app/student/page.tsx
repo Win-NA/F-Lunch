@@ -184,8 +184,14 @@ export default function StudentDashboard() {
       const nextHour = (new Date().getHours() + 1) % 24;
       setPickupHour(nextHour.toString().padStart(2, '0'));
       setPickupMinute('00');
-      // Tải lại dữ liệu
+      // Tải lại dữ liệu và làm mới số dư ví
       fetchRequests();
+      try {
+        const profileRes = await api.get('/users/profile');
+        useAuthStore.getState().updateUser(profileRes.data);
+      } catch (profileErr) {
+        // Ignore silent error
+      }
     } catch (err: any) {
       const msg = err.response?.data?.message || 'Không thể gửi yêu cầu';
       toast.error(msg);
@@ -381,6 +387,18 @@ export default function StudentDashboard() {
                   </div>
                 )}
               </div>
+            </div>
+
+            <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 text-[10px] space-y-1.5">
+              <div className="flex justify-between items-center text-slate-300">
+                <span className="flex items-center gap-1 font-medium">
+                  <Wallet size={12} className="text-orange-500" /> Phí nhận hộ:
+                </span>
+                <span className="font-mono font-black text-orange-400 text-xs">5.000 đ</span>
+              </div>
+              <p className="text-[9.5px] text-slate-400 leading-normal border-t border-slate-900 pt-1.5">
+                💡 <span className="text-orange-400 font-semibold">Ưu tiên trừ Ví Khuyến Mãi trước</span>. Trường hợp số dư Ví KM không đủ 5.000đ, phần còn thiếu sẽ tự động trừ vào Ví Chính.
+              </p>
             </div>
 
             <button

@@ -122,6 +122,7 @@ function AdminDashboardContent() {
 
   // Balance Adjust Modal State
   const [adjustModalUser, setAdjustModalUser] = useState<UserItem | null>(null);
+  const [adjustAction, setAdjustAction] = useState<'ADD' | 'SUBTRACT'>('ADD');
   const [adjustAmount, setAdjustAmount] = useState<string>('');
   const [adjustBalanceType, setAdjustBalanceType] = useState<'REAL' | 'BONUS'>('REAL');
   const [adjustNote, setAdjustNote] = useState<string>('');
@@ -160,6 +161,13 @@ function AdminDashboardContent() {
     setShowRevenueModal(true);
   };
 
+  const openAdjustModal = (targetUser: UserItem, defaultAction: 'ADD' | 'SUBTRACT' = 'ADD') => {
+    setAdjustModalUser(targetUser);
+    setAdjustAction(defaultAction);
+    setAdjustAmount('');
+    setAdjustNote('');
+  };
+
   const fetchData = async () => {
     try {
       const [statsRes, usersRes, requestsRes, feedbacksRes, txRes] = await Promise.all([
@@ -182,61 +190,17 @@ function AdminDashboardContent() {
     }
   };
 
-  const handleApproveTx = async (txId: string) => {
-    setBtnLoading(txId);
-    try {
-      await api.post(`/transactions/admin/${txId}/approve`);
-      toast.success('Đã duyệt giao dịch và cập nhật số dư!');
-      fetchData();
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Không thể duyệt giao dịch');
-    } finally {
-      setBtnLoading(null);
-    }
-  };
-
-  const handleRejectTx = async (txId: string) => {
-    const reason = prompt('Nhập lý do từ chối giao dịch này:');
-    if (reason === null) return;
-    setBtnLoading(txId);
-    try {
-      await api.post(`/transactions/admin/${txId}/reject`, { reason });
-      toast.success('Đã từ chối giao dịch thành công');
-      fetchData();
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Không thể từ chối giao dịch');
-    } finally {
-      setBtnLoading(null);
-    }
-  };
-
-  const handleSimulateBankWebhook = async () => {
-    const memo = prompt('Nhập nội dung chuyển khoản ngân hàng (VD: FLUNCH SE123456 hoặc tên sinh viên):');
-    if (!memo) return;
-    const amountStr = prompt('Nhập số tiền ngân hàng nhận được (VD: 50000):', '50000');
-    if (!amountStr) return;
-    const amount = Number(amountStr);
-    if (isNaN(amount) || amount <= 0) {
-      toast.error('Số tiền không hợp lệ');
-      return;
-    }
-
-    try {
-      const res = await api.post('/transactions/admin/simulate-bank-webhook', { memo, amount });
-      toast.success(res.data.message || 'Đã giả lập Ngân hàng báo tiền về thành công!');
-      fetchData();
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Giả lập thất bại');
-    }
-  };
-
   const handleAdjustSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!adjustModalUser || !adjustAmount) return;
-    const amountNum = Number(adjustAmount);
+    let amountNum = Math.abs(Number(adjustAmount));
     if (isNaN(amountNum) || amountNum === 0) {
       toast.error('Số tiền điều chỉnh không hợp lệ');
       return;
+    }
+
+    if (adjustAction === 'SUBTRACT') {
+      amountNum = -amountNum;
     }
 
     setAdjustLoading(true);
@@ -245,10 +209,10 @@ function AdminDashboardContent() {
         targetUserId: adjustModalUser.id,
         amount: amountNum,
         balanceType: adjustBalanceType,
-        note: adjustNote || 'Admin điều chỉnh số dư',
+        note: adjustNote || (amountNum > 0 ? 'Admin cộng tiền vào ví' : 'Admin trừ tiền khỏi ví'),
       });
 
-      toast.success(`Đã điều chỉnh ${amountNum > 0 ? '+' : ''}${amountNum.toLocaleString()}đ cho ${adjustModalUser.fullName}`);
+      toast.success(`Đã ${amountNum > 0 ? 'cộng' : 'trừ'} ${Math.abs(amountNum).toLocaleString('vi-VN')}đ cho ${adjustModalUser.fullName}`);
       setAdjustModalUser(null);
       setAdjustAmount('');
       setAdjustNote('');
@@ -463,6 +427,14 @@ function AdminDashboardContent() {
 
     // Financial Metrics from Transactions
     const depositTxs = adminTransactions.filter(t => t.type === 'DEPOSIT' && t.status === 'APPROVED');
+
+    const todayDeposits = depositTxs.filter(t => isDateInTimeframe(t.createdAt, 'TODAY'));
+    const monthDeposits = depositTxs.filter(t => isDateInTimeframe(t.createdAt, 'MONTH'));
+    const yearDeposits = depositTxs.filter(t => isDateInTimeframe(t.createdAt, 'YEAR'));
+
+    const todayDepositSum = todayDeposits.reduce((sum, t) => sum + (t.amount || 0), 0);
+    const monthDepositSum = monthDeposits.reduce((sum, t) => sum + (t.amount || 0), 0);
+    const yearDepositSum = yearDeposits.reduce((sum, t) => sum + (t.amount || 0), 0);
     const totalDeposited = depositTxs.reduce((sum, t) => sum + (t.amount || 0), 0);
     const totalBonusGiven = depositTxs.reduce((sum, t) => sum + (t.bonusAmount || 0), 0);
     const totalFeesCollected = completedReqs * 5000;
@@ -532,7 +504,14 @@ function AdminDashboardContent() {
 
     return {
       fulfillRate,
+      todayDepositSum,
+      todayDepositCount: todayDeposits.length,
+      monthDepositSum,
+      monthDepositCount: monthDeposits.length,
+      yearDepositSum,
+      yearDepositCount: yearDeposits.length,
       totalDeposited,
+      totalDepositCount: depositTxs.length,
       totalBonusGiven,
       totalFeesCollected,
       topDepositors,
@@ -1049,7 +1028,7 @@ function AdminDashboardContent() {
             <p className="absolute bottom-6 text-slate-400 text-xs font-medium">Chạm vào vùng trống hoặc nút X để đóng</p>
           </div>
         )}
-        {/* ADMIN ADJUST BALANCE MODAL */}
+        {/* ADMIN ADJUST BALANCE MODAL (+ CỘNG TIỀN HOẶC - TRỪ TIỀN) */}
         {adjustModalUser && (
           <div className="fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-4 overflow-y-auto">
             <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl shadow-2xl max-w-md w-full space-y-4 relative my-auto">
@@ -1063,18 +1042,40 @@ function AdminDashboardContent() {
               <div className="border-b border-slate-800 pb-3">
                 <h3 className="text-base font-extrabold text-white flex items-center gap-2">
                   <DollarSign className="text-orange-500" size={18} />
-                  Điều Chỉnh Số Dư Thành Viên
+                  Điều Chỉnh Số Dư Ví Thành Viên
                 </h3>
                 <p className="text-xs text-slate-400 mt-1 font-semibold">
                   Thành viên: <span className="text-white">{adjustModalUser.fullName}</span> ({adjustModalUser.email})
                 </p>
                 <div className="flex gap-3 text-xs mt-2 text-slate-400 font-mono">
-                  <span>Ví chính: <strong className="text-emerald-400">{(adjustModalUser.realBalance || 0).toLocaleString()}đ</strong></span>
-                  <span>Ví KM: <strong className="text-orange-400">{(adjustModalUser.bonusBalance || 0).toLocaleString()}đ</strong></span>
+                  <span>Ví nạp chính: <strong className="text-emerald-400">{(adjustModalUser.realBalance || 0).toLocaleString()}đ</strong></span>
+                  <span>Ví Khuyến mãi: <strong className="text-orange-400">{(adjustModalUser.bonusBalance || 0).toLocaleString()}đ</strong></span>
                 </div>
               </div>
 
               <form onSubmit={handleAdjustSubmit} className="space-y-4">
+                {/* Action Toggle: + Cộng tiền vs - Trừ tiền */}
+                <div className="flex bg-slate-955 p-1 rounded-xl border border-slate-800 gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setAdjustAction('ADD')}
+                    className={`flex-1 py-2 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                      adjustAction === 'ADD' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    + Cộng Tiền Vào Ví
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAdjustAction('SUBTRACT')}
+                    className={`flex-1 py-2 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                      adjustAction === 'SUBTRACT' ? 'bg-red-600 text-white shadow' : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    - Trừ Tiền Khỏi Ví
+                  </button>
+                </div>
+
                 <div>
                   <label className="block text-[11px] font-semibold uppercase text-slate-400 mb-1">
                     Loại ví điều chỉnh *
@@ -1082,38 +1083,37 @@ function AdminDashboardContent() {
                   <select
                     value={adjustBalanceType}
                     onChange={(e) => setAdjustBalanceType(e.target.value as 'REAL' | 'BONUS')}
-                    className="w-full bg-slate-955 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-orange-500 cursor-pointer"
+                    className="w-full bg-slate-955 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-orange-500 cursor-pointer font-bold"
                   >
-                    <option value="REAL">Ví chính (Có thể rút & dùng làm phí)</option>
-                    <option value="BONUS">Ví Khuyến mãi (Chỉ dùng làm phí đơn hàng)</option>
+                    <option value="REAL">Ví Nạp Chính (Ví dùng thanh toán phí)</option>
+                    <option value="BONUS">Ví Khuyến Mãi (Ví tặng thêm)</option>
                   </select>
                 </div>
 
                 <div>
                   <label className="block text-[11px] font-semibold uppercase text-slate-400 mb-1">
-                    Số tiền điều chỉnh (VNĐ) *
+                    Số tiền (VNĐ) *
                   </label>
                   <input
                     type="number"
                     value={adjustAmount}
                     onChange={(e) => setAdjustAmount(e.target.value)}
-                    placeholder="Nhập số dương (+) để cộng, số âm (-) để trừ. VD: 50000 hoặc -10000"
-                    className="w-full bg-slate-955 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-orange-500 font-mono"
+                    placeholder="Nhập số tiền (Ví dụ: 20000)..."
+                    className="w-full bg-slate-955 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-orange-500 font-mono font-bold"
+                    min={1000}
+                    step={1000}
                   />
-                  <p className="text-[10px] text-slate-500 mt-1">
-                    Nhập số dương (VD: 50000) để cộng tiền, số âm (VD: -20000) để trừ tiền khỏi ví.
-                  </p>
                 </div>
 
                 <div>
                   <label className="block text-[11px] font-semibold uppercase text-slate-400 mb-1">
-                    Ghi chú điều chỉnh
+                    Lý do / Ghi chú
                   </label>
                   <input
                     type="text"
                     value={adjustNote}
                     onChange={(e) => setAdjustNote(e.target.value)}
-                    placeholder="Lý do điều chỉnh (VD: Thưởng sự kiện, Xử lý khiếu nại...)"
+                    placeholder="Lý do điều chỉnh (Ví dụ: Thưởng sự kiện, Nạp bổ sung...)"
                     className="w-full bg-slate-955 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-orange-500"
                   />
                 </div>
@@ -1129,9 +1129,11 @@ function AdminDashboardContent() {
                   <button
                     type="submit"
                     disabled={adjustLoading}
-                    className="flex-1 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-500 text-white font-bold text-xs transition-all shadow-md shadow-orange-600/20 cursor-pointer"
+                    className={`flex-1 py-2.5 rounded-xl text-white font-bold text-xs transition-all shadow-md cursor-pointer ${
+                      adjustAction === 'ADD' ? 'bg-emerald-600 hover:bg-emerald-500' : 'bg-red-600 hover:bg-red-500'
+                    }`}
                   >
-                    {adjustLoading ? 'Đang lưu...' : 'Xác nhận điều chỉnh'}
+                    {adjustLoading ? 'Đang lưu...' : adjustAction === 'ADD' ? 'Xác Nhận Cộng Tiền' : 'Xác Nhận Trừ Tiền'}
                   </button>
                 </div>
               </form>
@@ -1282,6 +1284,65 @@ function AdminDashboardContent() {
                 {getTimeframeLabel(tf)}
               </button>
             ))}
+          </div>
+        </div>
+
+        {/* CEO DEPOSIT REVENUE DASHBOARD (BÁO CÁO TIỀN NẠP HÀNG NGÀY & HÀNG THÁNG) */}
+        <div className="bg-slate-900/80 border border-emerald-500/30 p-5 sm:p-6 rounded-3xl shadow-2xl space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+            <div>
+              <h2 className="text-base font-extrabold text-white flex items-center gap-2">
+                <DollarSign className="text-emerald-400" size={22} />
+                Báo Cáo Dòng Tiền Nạp Vào Ví (CEO Executive Deposit Dashboard)
+              </h2>
+              <p className="text-xs text-slate-400 mt-0.5">Theo dõi chi tiết số tiền sinh viên nạp vào ví theo ngày, tháng & tổng tích lũy</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Today Deposit */}
+            <div className="p-4.5 rounded-2xl bg-slate-955 border border-emerald-500/40 shadow-lg">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Tiền Nạp Hôm Nay</span>
+              <p className="text-2xl font-black text-emerald-400 mt-1">
+                {ceoAnalytics.todayDepositSum.toLocaleString('vi-VN')} VNĐ
+              </p>
+              <p className="text-xs text-slate-400 mt-1 font-semibold">
+                {ceoAnalytics.todayDepositCount} lượt nạp hôm nay
+              </p>
+            </div>
+
+            {/* Month Deposit */}
+            <div className="p-4.5 rounded-2xl bg-slate-955 border border-blue-500/40 shadow-lg">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Tiền Nạp Tháng Này</span>
+              <p className="text-2xl font-black text-blue-400 mt-1">
+                {ceoAnalytics.monthDepositSum.toLocaleString('vi-VN')} VNĐ
+              </p>
+              <p className="text-xs text-slate-400 mt-1 font-semibold">
+                {ceoAnalytics.monthDepositCount} lượt nạp tháng này
+              </p>
+            </div>
+
+            {/* All-time Deposit */}
+            <div className="p-4.5 rounded-2xl bg-slate-955 border border-purple-500/40 shadow-lg">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Tổng Tiền Nạp Tích Lũy</span>
+              <p className="text-2xl font-black text-purple-400 mt-1">
+                {ceoAnalytics.totalDeposited.toLocaleString('vi-VN')} VNĐ
+              </p>
+              <p className="text-xs text-slate-400 mt-1 font-semibold">
+                {ceoAnalytics.totalDepositCount} tổng lượt nạp
+              </p>
+            </div>
+
+            {/* Total Bonus */}
+            <div className="p-4.5 rounded-2xl bg-slate-955 border border-orange-500/40 shadow-lg">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Khuyến Mãi Đã Trao (+KM)</span>
+              <p className="text-2xl font-black text-orange-400 mt-1">
+                {ceoAnalytics.totalBonusGiven.toLocaleString('vi-VN')} VNĐ
+              </p>
+              <p className="text-xs text-slate-400 mt-1 font-semibold">
+                Thưởng nạp khuyến mãi
+              </p>
+            </div>
           </div>
         </div>
 
@@ -1715,7 +1776,7 @@ function AdminDashboardContent() {
             </div>
           </div>
 
-          {/* 5. VÍ & NẠP/RÚT CARD */}
+          {/* 5. VÍ & QUẢN LÝ TIỀN CARD */}
           <div
             onClick={() => setActiveCard(activeCard === 'TRANSACTIONS' ? 'ALL' : 'TRANSACTIONS')}
             className={`relative p-4 rounded-2xl border backdrop-blur-xl transition-all duration-200 cursor-pointer select-none active:scale-95 hover:scale-[1.02] ${
@@ -1734,14 +1795,14 @@ function AdminDashboardContent() {
                 </span>
               ) : (
                 <span className="text-[9px] text-slate-500 font-semibold group-hover:text-orange-400 flex items-center gap-0.5">
-                  Nạp / Rút <ChevronRight size={10} />
+                  Lịch Sử & ±Tiền <ChevronRight size={10} />
                 </span>
               )}
             </div>
             <div className="mt-3">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Yêu Cầu Nạp / Rút</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Quản Lý Tiền Thành Viên</p>
               <p className="text-xl font-extrabold text-white mt-0.5">
-                {adminTransactions.filter(t => t.status === 'PENDING').length} chờ duyệt
+                {adminTransactions.length} giao dịch nạp
               </p>
             </div>
           </div>
@@ -2292,14 +2353,21 @@ function AdminDashboardContent() {
                               className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 border border-blue-500/20 transition-all cursor-pointer whitespace-nowrap"
                               title="Xem chi tiết lịch sử nạp tiền & giao dịch của thành viên"
                             >
-                              Lịch sử Nạp
+                              📋 Lịch Sử
                             </button>
                             <button
-                              onClick={() => setAdjustModalUser(u)}
-                              className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-orange-500/10 text-orange-400 hover:bg-orange-500/20 border border-orange-500/20 transition-all cursor-pointer whitespace-nowrap"
-                              title="Chỉnh sửa số dư tài khoản ví"
+                              onClick={() => openAdjustModal(u, 'ADD')}
+                              className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/20 transition-all cursor-pointer whitespace-nowrap"
+                              title="Cộng tiền vào ví thành viên"
                             >
-                              Ví & ±Tiền
+                              + Cộng Tiền
+                            </button>
+                            <button
+                              onClick={() => openAdjustModal(u, 'SUBTRACT')}
+                              className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20 transition-all cursor-pointer whitespace-nowrap"
+                              title="Trừ tiền khỏi ví thành viên"
+                            >
+                              - Trừ Tiền
                             </button>
                             {isSelf ? (
                               <span className="text-[10px] text-slate-500 font-semibold italic whitespace-nowrap">
@@ -2309,9 +2377,9 @@ function AdminDashboardContent() {
                               <button
                                 onClick={() => handleToggleStatus(u.id, u.status)}
                                 disabled={btnLoading === u.id}
-                                className={`px-3 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer whitespace-nowrap ${
+                                className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer whitespace-nowrap ${
                                   u.status === 'ACTIVE'
-                                    ? 'bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20'
+                                    ? 'bg-slate-800 text-slate-400 hover:text-red-400 hover:bg-red-500/10 border border-slate-700'
                                     : 'bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/20'
                                 }`}
                               >
@@ -2394,35 +2462,41 @@ function AdminDashboardContent() {
                         </span>
                       </div>
                       <div className="p-2 bg-slate-900 rounded-xl border border-slate-850">
-                        <span className="text-slate-500 font-semibold block text-[9px] uppercase">Ví / Thu nhập</span>
+                        <span className="text-slate-500 font-semibold block text-[9px] uppercase">Ví chính / KM</span>
                         <span className="font-extrabold text-emerald-400 font-mono">
                           {((u.realBalance || 0) + (u.bonusBalance || 0)).toLocaleString()} VNĐ
                         </span>
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between pt-1 border-t border-slate-850 text-xs">
-                      <div className="flex items-center gap-1.5">
+                    <div className="flex flex-wrap items-center justify-between gap-1.5 pt-1 border-t border-slate-850 text-xs">
+                      <div className="flex items-center gap-1">
                         <button
                           onClick={() => setUserTxModal(u)}
-                          className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20"
+                          className="px-2 py-1 rounded-lg text-[10px] font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20"
                         >
-                          Lịch sử Nạp
+                          📋 Lịch sử
                         </button>
                         <button
-                          onClick={() => setAdjustModalUser(u)}
-                          className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-orange-500/10 text-orange-400 border border-orange-500/20"
+                          onClick={() => openAdjustModal(u, 'ADD')}
+                          className="px-2 py-1 rounded-lg text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
                         >
-                          Ví & ±Tiền
+                          + Cộng
+                        </button>
+                        <button
+                          onClick={() => openAdjustModal(u, 'SUBTRACT')}
+                          className="px-2 py-1 rounded-lg text-[10px] font-bold bg-red-500/10 text-red-400 border border-red-500/20"
+                        >
+                          - Trừ
                         </button>
                       </div>
                       {!isSelf && (
                         <button
                           onClick={() => handleToggleStatus(u.id, u.status)}
                           disabled={btnLoading === u.id}
-                          className={`px-3 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
+                          className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
                             u.status === 'ACTIVE'
-                              ? 'bg-red-500/10 text-red-400 border border-red-500/20'
+                              ? 'bg-slate-800 text-slate-400 hover:text-red-400 border border-slate-700'
                               : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
                           }`}
                         >
@@ -2438,73 +2512,244 @@ function AdminDashboardContent() {
         </div>
       )}
 
-      {/* SECTION 3.5: QUẢN LÝ GIAO DỊCH NẠP / RÚT TIỀN (TRANSACTIONS) */}
+      {/* SECTION 3.5: BẢNG QUẢN LÝ TIỀN SINH VIÊN & LỊCH SỬ GIAO DỊCH */}
       {(activeCard === 'ALL' || activeCard === 'TRANSACTIONS') && (
-        <div className="bg-slate-900/60 backdrop-blur-xl border border-slate-800 p-5 rounded-3xl shadow-xl space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
-            <div>
-              <h2 className="text-md font-bold text-white flex items-center gap-2">
-                <DollarSign className="text-orange-500" size={18} />
-                Quản Lý Duyệt Nạp Tiền & Rút Tiền Thành Viên ({adminTransactions.length})
-              </h2>
-              <p className="text-[11px] text-slate-400 mt-0.5">Đối soát thông tin chuyển khoản VietinBank / MoMo và phê duyệt tiền nạp/rút cho người dùng</p>
-            </div>
+        <div className="bg-slate-900/60 backdrop-blur-xl border border-slate-800 p-5 sm:p-6 rounded-3xl shadow-xl space-y-6">
+          {/* PART 1: BẢNG QUẢN LÝ VÍ SINH VIÊN */}
+          <div className="space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+              <div>
+                <h2 className="text-md sm:text-lg font-extrabold text-white flex items-center gap-2">
+                  <DollarSign className="text-orange-500" size={20} />
+                  Quản Lý Ví & Số Dư Sinh Viên ({users.filter(u => u.role === 'STUDENT').length})
+                </h2>
+                <p className="text-[11px] sm:text-xs text-slate-400 mt-0.5">
+                  Danh sách tất cả sinh viên trong hệ thống (kể cả chưa có giao dịch). Admin có thể cộng/trừ tiền hoặc xem lịch sử ví cho từng sinh viên.
+                </p>
+              </div>
 
-            <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
-              <button
-                onClick={handleSimulateBankWebhook}
-                className="px-3 py-1.5 rounded-xl bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 border border-purple-500/30 font-bold text-xs shadow transition-all cursor-pointer flex items-center gap-1.5"
-                title="Giả lập ngân hàng nhận được tiền để kiểm tra tính năng tự động cộng số dư ví"
-              >
-                Giả Lập Ngân Hàng Báo Tiền Về 🚀
-              </button>
-              <div className="flex items-center gap-1 bg-slate-955 p-1 rounded-xl border border-slate-800">
-                <button
-                  onClick={() => setTxStatusFilter('PENDING')}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                    txStatusFilter === 'PENDING' ? 'bg-amber-600 text-white shadow' : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  Chờ duyệt ({adminTransactions.filter(t => t.status === 'PENDING').length})
-                </button>
-                <button
-                  onClick={() => setTxStatusFilter('ALL')}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                    txStatusFilter === 'ALL' ? 'bg-orange-600 text-white shadow' : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  Tất cả ({adminTransactions.length})
-                </button>
+              {/* Quick Search */}
+              <div className="relative shrink-0">
+                <Search size={14} className="absolute left-3 top-2.5 text-slate-500" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Tìm theo tên, email, MSSV..."
+                  className="bg-slate-955 border border-slate-800 rounded-xl pl-8 pr-3 py-1.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-orange-500 w-full sm:w-64"
+                />
               </div>
             </div>
-          </div>
 
-          <div className="overflow-hidden border border-slate-800 rounded-2xl bg-slate-955/50">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs text-slate-350 min-w-[700px]">
+            {/* Desktop Table: Student Members Wallet */}
+            <div className="hidden md:block overflow-hidden border border-slate-800 rounded-2xl bg-slate-955/50">
+              <table className="w-full text-left text-xs text-slate-350 min-w-[750px]">
                 <thead className="text-[10px] text-slate-400 uppercase border-b border-slate-800 bg-slate-900/80">
                   <tr>
-                    <th className="px-4 py-3.5 font-bold">Mã GD / Thời gian</th>
-                    <th className="px-4 py-3.5 font-bold">Thành viên</th>
-                    <th className="px-4 py-3.5 font-bold">Loại / Phương thức</th>
-                    <th className="px-4 py-3.5 font-bold text-right">Số tiền / KM</th>
-                    <th className="px-4 py-3.5 font-bold">Trạng thái</th>
-                    <th className="px-4 py-3.5 font-bold text-right">Hành động duyệt</th>
+                    <th className="px-4 py-3.5 font-bold">Sinh viên / Email / MSSV</th>
+                    <th className="px-4 py-3.5 font-bold">Vai trò</th>
+                    <th className="px-4 py-3.5 font-bold text-right">Ví nạp chính</th>
+                    <th className="px-4 py-3.5 font-bold text-right">Ví Khuyến mãi</th>
+                    <th className="px-4 py-3.5 font-bold text-right">Tổng số dư</th>
+                    <th className="px-4 py-3.5 font-bold text-right">Thao tác ví</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-850">
-                  {adminTransactions
-                    .filter(t => txStatusFilter === 'ALL' || t.status === txStatusFilter)
+                  {users
+                    .filter(u => u.role === 'STUDENT')
+                    .filter(u => {
+                      const q = searchQuery.toLowerCase().trim();
+                      return !q || 
+                        u.fullName.toLowerCase().includes(q) || 
+                        u.email.toLowerCase().includes(q) || 
+                        (u.mssv && u.mssv.toLowerCase().includes(q));
+                    })
                     .length === 0 ? (
                     <tr>
                       <td colSpan={6} className="text-center py-8 text-slate-500 text-xs">
-                        Không có giao dịch nào ở mục này.
+                        Không tìm thấy sinh viên nào phù hợp.
                       </td>
                     </tr>
                   ) : (
-                    adminTransactions
-                      .filter(t => txStatusFilter === 'ALL' || t.status === txStatusFilter)
-                      .map((tx: any) => (
+                    users
+                      .filter(u => u.role === 'STUDENT')
+                      .filter(u => {
+                        const q = searchQuery.toLowerCase().trim();
+                        return !q || 
+                          u.fullName.toLowerCase().includes(q) || 
+                          u.email.toLowerCase().includes(q) || 
+                          (u.mssv && u.mssv.toLowerCase().includes(q));
+                      })
+                      .map((u) => {
+                        const realBal = u.realBalance || 0;
+                        const bonusBal = u.bonusBalance || 0;
+                        const totalBal = realBal + bonusBal;
+
+                        return (
+                          <tr key={u.id} className="hover:bg-slate-800/20 transition-colors">
+                            <td className="px-4 py-3.5">
+                              <p className="font-bold text-white text-xs">{u.fullName}</p>
+                              <p className="text-[10px] text-slate-400">{u.email} {u.mssv ? `• MSSV: ${u.mssv}` : ''}</p>
+                            </td>
+                            <td className="px-4 py-3.5">
+                              <span className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-orange-500/20 text-orange-400 border border-orange-500/30">
+                                {getRoleLabel(u.role)}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3.5 text-right font-mono font-bold text-emerald-400">
+                              {realBal.toLocaleString('vi-VN')} đ
+                            </td>
+                            <td className="px-4 py-3.5 text-right font-mono font-bold text-orange-400">
+                              {bonusBal.toLocaleString('vi-VN')} đ
+                            </td>
+                            <td className="px-4 py-3.5 text-right font-mono font-black text-white text-sm">
+                              {totalBal.toLocaleString('vi-VN')} đ
+                            </td>
+                            <td className="px-4 py-3.5 text-right">
+                              <div className="flex items-center justify-end gap-1.5">
+                                <button
+                                  onClick={() => openAdjustModal(u, 'ADD')}
+                                  className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 transition-all cursor-pointer whitespace-nowrap"
+                                  title="Cộng tiền vào ví"
+                                >
+                                  + Cộng Tiền
+                                </button>
+                                <button
+                                  onClick={() => openAdjustModal(u, 'SUBTRACT')}
+                                  className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 transition-all cursor-pointer whitespace-nowrap"
+                                  title="Trừ tiền khỏi ví"
+                                >
+                                  - Trừ Tiền
+                                </button>
+                                <button
+                                  onClick={() => setUserTxModal(u)}
+                                  className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/20 transition-all cursor-pointer whitespace-nowrap"
+                                  title="Xem lịch sử nạp tiền"
+                                >
+                                  📋 Lịch Sử
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Native Cards: Student Members Wallet */}
+            <div className="md:hidden space-y-3">
+              {users
+                .filter(u => u.role === 'STUDENT')
+                .filter(u => {
+                  const q = searchQuery.toLowerCase().trim();
+                  return !q || 
+                    u.fullName.toLowerCase().includes(q) || 
+                    u.email.toLowerCase().includes(q) || 
+                    (u.mssv && u.mssv.toLowerCase().includes(q));
+                })
+                .length === 0 ? (
+                <div className="text-center py-8 text-slate-500 text-xs bg-slate-955 border border-slate-800 rounded-2xl">
+                  Không tìm thấy sinh viên nào phù hợp.
+                </div>
+              ) : (
+                users
+                  .filter(u => u.role === 'STUDENT')
+                  .filter(u => {
+                    const q = searchQuery.toLowerCase().trim();
+                    return !q || 
+                      u.fullName.toLowerCase().includes(q) || 
+                      u.email.toLowerCase().includes(q) || 
+                      (u.mssv && u.mssv.toLowerCase().includes(q));
+                  })
+                  .map((u) => {
+                    const realBal = u.realBalance || 0;
+                    const bonusBal = u.bonusBalance || 0;
+                    const totalBal = realBal + bonusBal;
+
+                    return (
+                      <div key={u.id} className="p-4 bg-slate-955 border border-slate-800 rounded-2xl space-y-3 shadow-sm">
+                        <div className="flex items-center justify-between border-b border-slate-850 pb-2">
+                          <div>
+                            <p className="font-extrabold text-xs text-white">{u.fullName}</p>
+                            <p className="text-[10px] text-slate-400">{u.email} {u.mssv ? `• ${u.mssv}` : ''}</p>
+                          </div>
+                          <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-orange-500/20 text-orange-400 border border-orange-500/30">
+                            {getRoleLabel(u.role)}
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2 text-center text-[10px]">
+                          <div className="p-2 bg-slate-900 rounded-xl border border-slate-850">
+                            <span className="text-slate-500 font-semibold block text-[9px] uppercase">Ví chính</span>
+                            <span className="font-extrabold text-emerald-400 font-mono">{realBal.toLocaleString()}đ</span>
+                          </div>
+                          <div className="p-2 bg-slate-900 rounded-xl border border-slate-850">
+                            <span className="text-slate-500 font-semibold block text-[9px] uppercase">Ví KM</span>
+                            <span className="font-extrabold text-orange-400 font-mono">{bonusBal.toLocaleString()}đ</span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between pt-1 border-t border-slate-850">
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => openAdjustModal(u, 'ADD')}
+                              className="px-2 py-1 rounded-lg text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                            >
+                              + Cộng
+                            </button>
+                            <button
+                              onClick={() => openAdjustModal(u, 'SUBTRACT')}
+                              className="px-2 py-1 rounded-lg text-[10px] font-bold bg-red-500/10 text-red-400 border border-red-500/20"
+                            >
+                              - Trừ
+                            </button>
+                            <button
+                              onClick={() => setUserTxModal(u)}
+                              className="px-2 py-1 rounded-lg text-[10px] font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20"
+                            >
+                              📋 Lịch sử
+                            </button>
+                          </div>
+                          <span className="text-xs font-black text-white font-mono">
+                            {totalBal.toLocaleString()}đ
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })
+              )}
+            </div>
+          </div>
+
+          {/* PART 2: NHẬT KÝ NẠP TIỀN TỰ ĐỘNG (SYSTEM AUDIT LOG) */}
+          <div className="space-y-3 pt-4 border-t border-slate-800">
+            <h3 className="text-sm font-extrabold text-white flex items-center gap-2">
+              <FileText size={16} className="text-orange-500" />
+              Nhật Ký Nạp Tiền & Giao Dịch Hệ Thống ({adminTransactions.length})
+            </h3>
+            <div className="overflow-hidden border border-slate-800 rounded-2xl bg-slate-955/50">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs text-slate-350 min-w-[650px]">
+                  <thead className="text-[10px] text-slate-400 uppercase border-b border-slate-800 bg-slate-900/80">
+                    <tr>
+                      <th className="px-4 py-3.5 font-bold">Mã GD / Thời gian</th>
+                      <th className="px-4 py-3.5 font-bold">Thành viên nạp</th>
+                      <th className="px-4 py-3.5 font-bold">Loại / Phương thức</th>
+                      <th className="px-4 py-3.5 font-bold text-right">Số tiền nạp / KM</th>
+                      <th className="px-4 py-3.5 font-bold text-right">Trạng thái</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-850">
+                    {adminTransactions.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="text-center py-8 text-slate-500 text-xs">
+                          Chưa có giao dịch nạp tiền nào được ghi nhận.
+                        </td>
+                      </tr>
+                    ) : (
+                      adminTransactions.map((tx: any) => (
                         <tr key={tx.id} className="hover:bg-slate-800/20 transition-colors">
                           <td className="px-4 py-3.5 font-mono">
                             <p className="font-bold text-white text-xs">{tx.transactionCode}</p>
@@ -2517,58 +2762,29 @@ function AdminDashboardContent() {
                           <td className="px-4 py-3.5">
                             <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
                               tx.type === 'DEPOSIT' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
-                              tx.type === 'WITHDRAW' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' :
                               'bg-orange-500/10 text-orange-400 border border-orange-500/20'
                             }`}>
-                              {tx.type === 'DEPOSIT' ? 'NẠP TIỀN' : tx.type === 'WITHDRAW' ? 'RÚT TIỀN' : tx.type}
+                              {tx.type === 'DEPOSIT' ? 'NẠP TIỀN TỰ ĐỘNG' : tx.type === 'ADMIN_ADJUST' ? 'ADMIN ĐIỀU CHỈNH' : tx.type}
                             </span>
-                            <p className="text-[10px] text-slate-500 mt-0.5">{tx.paymentMethod || tx.bankName || 'Hệ thống'}</p>
-                            {tx.type === 'WITHDRAW' && tx.accountNumber && (
-                              <p className="text-[9px] text-amber-400 font-mono">STK: {tx.accountNumber} ({tx.accountName})</p>
-                            )}
+                            <p className="text-[10px] text-slate-500 mt-0.5">{tx.note || tx.paymentMethod || 'VietQR / MoMo'}</p>
                           </td>
                           <td className="px-4 py-3.5 text-right font-mono">
-                            <p className="font-extrabold text-sm text-white">{tx.amount.toLocaleString()}đ</p>
+                            <p className="font-extrabold text-sm text-emerald-400">+{tx.amount.toLocaleString('vi-VN')}đ</p>
                             {tx.bonusAmount > 0 && (
-                              <p className="text-[10px] text-orange-400 font-bold">+{tx.bonusAmount.toLocaleString()}đ KM</p>
+                              <p className="text-[10px] text-orange-400 font-bold">+{tx.bonusAmount.toLocaleString('vi-VN')}đ KM</p>
                             )}
-                          </td>
-                          <td className="px-4 py-3.5">
-                            <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${
-                              tx.status === 'APPROVED' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
-                              tx.status === 'PENDING' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20 animate-pulse' :
-                              'bg-red-500/10 text-red-400 border border-red-500/20'
-                            }`}>
-                              {tx.status === 'APPROVED' ? 'Đã duyệt' : tx.status === 'PENDING' ? 'Chờ duyệt' : 'Từ chối'}
-                            </span>
                           </td>
                           <td className="px-4 py-3.5 text-right">
-                            {tx.status === 'PENDING' ? (
-                              <div className="flex items-center justify-end gap-1.5">
-                                <button
-                                  onClick={() => handleApproveTx(tx.id)}
-                                  disabled={btnLoading === tx.id}
-                                  className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[10px] shadow-sm transition-all cursor-pointer"
-                                >
-                                  Duyệt
-                                </button>
-                                <button
-                                  onClick={() => handleRejectTx(tx.id)}
-                                  disabled={btnLoading === tx.id}
-                                  className="px-2.5 py-1 rounded-lg bg-red-600/20 text-red-400 hover:bg-red-600/40 border border-red-500/30 font-bold text-[10px] transition-all cursor-pointer"
-                                >
-                                  Từ chối
-                                </button>
-                              </div>
-                            ) : (
-                              <span className="text-[10px] text-slate-500 italic">Đã hoàn tất</span>
-                            )}
+                            <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                              Thành công
+                            </span>
                           </td>
                         </tr>
                       ))
-                  )}
-                </tbody>
-              </table>
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         </div>
