@@ -38,6 +38,7 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
 
   // Copy state helper
   const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [verifying, setVerifying] = useState(false);
 
   const fetchProfile = async () => {
     try {
@@ -60,12 +61,38 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
     }
   };
 
+  const memoCode = `FLUNCH ${user?.mssv || user?.fullName.replace(/\s+/g, '') || ''}`;
+
+  const handleVerifyDeposit = async () => {
+    if (!depositAmount || depositAmount < 10000) return;
+    setVerifying(true);
+    try {
+      const res = await api.post('/transactions/bank-webhook', {
+        memo: memoCode,
+        amount: depositAmount,
+      });
+      if (res.data?.success) {
+        toast.success(res.data.message || 'Xác nhận nạp tiền thành công! Số dư đã được cập nhật.');
+        await fetchProfile();
+        fetchHistory();
+      } else {
+        toast.info(res.data?.message || 'Hệ thống chưa nhận được tiền từ ngân hàng. Hãy thử lại sau vài giây nhé.');
+      }
+    } catch (err: any) {
+      toast.error('Không thể xác thực tự động. Bạn có thể gửi ảnh biên lai qua mục Báo cáo sự cố.');
+    } finally {
+      setVerifying(false);
+    }
+  };
+
   useEffect(() => {
     if (isOpen) {
       fetchProfile();
       if (tab === 'HISTORY') {
         fetchHistory();
       }
+      const interval = setInterval(fetchProfile, 3000);
+      return () => clearInterval(interval);
     }
   }, [isOpen, tab]);
 
@@ -90,8 +117,6 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
     if (amount >= 20000) return 5000;
     return 0;
   };
-
-  const memoCode = `FLUNCH ${user.mssv || user.fullName.replace(/\s+/g, '')}`;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/90 overflow-y-auto">
@@ -385,8 +410,22 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
 
                       {/* High-Contrast Crisp Details Box */}
                       <div style={{ backgroundColor: '#0f172a', borderColor: '#334155' }} className="p-5 sm:p-6 rounded-2xl border-2 space-y-4 text-left font-sans shadow-inner">
+                        {/* MoMo Specific Transfer Notice */}
+                        <div style={{ backgroundColor: '#831843', borderColor: '#f472b6' }} className="p-3.5 rounded-xl border-2 space-y-1">
+                          <p style={{ color: '#fbcfe8' }} className="font-extrabold text-xs sm:text-sm flex items-center gap-1.5">
+                            <AlertTriangle size={18} className="text-pink-400 shrink-0" />
+                            HƯỚNG DẪN CHUYỂN BẰNG VÍ MOMO:
+                          </p>
+                          <p style={{ color: '#fce7f3' }} className="text-xs leading-normal">
+                            ⚠️ <strong className="text-white underline">KHÔNG chọn "Chuyển Đến ngân hàng"</strong> trong MoMo (sẽ báo tài khoản không hợp lệ).
+                          </p>
+                          <p style={{ color: '#fce7f3' }} className="text-xs leading-normal">
+                            👉 <strong>Cách chuẩn</strong>: Mở MoMo ➔ Chọn <strong>"Chuyển tiền MoMo"</strong> (Đến Số điện thoại) ➔ Nhập SĐT <strong>0797906979</strong> ➔ Nhập Lời nhắn: <strong className="font-mono text-orange-300 font-bold">{memoCode}</strong>.
+                          </p>
+                        </div>
+
                         <div className="flex justify-between items-center flex-wrap gap-2">
-                          <span style={{ color: '#cbd5e1' }} className="font-bold text-base sm:text-lg">SĐT MoMo:</span>
+                          <span style={{ color: '#cbd5e1' }} className="font-bold text-base sm:text-lg">SĐT Ví MoMo:</span>
                           <button
                             onClick={() => copyToClipboard('0797906979', 'SĐT MoMo')}
                             style={{ backgroundColor: 'rgba(236, 72, 153, 0.25)', color: '#fbcfe8', borderColor: 'rgba(236, 72, 153, 0.5)' }}
@@ -428,18 +467,34 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
                     </div>
                   </div>
 
-                  {/* Auto Bank Listener Box */}
-                  <div style={{ backgroundColor: '#064e3b', borderColor: '#10b981' }} className="p-5 rounded-2xl border-2 text-center space-y-2 shadow-inner">
+                  {/* Auto Bank Listener Box & Instant Check Button */}
+                  <div style={{ backgroundColor: '#064e3b', borderColor: '#10b981' }} className="p-5 rounded-2xl border-2 text-center space-y-3 shadow-inner">
                     <div style={{ color: '#34d399' }} className="inline-flex items-center gap-2.5 text-base sm:text-lg font-black">
                       <span className="relative flex h-3.5 w-3.5">
                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                         <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500"></span>
                       </span>
-                      Hệ thống đang chờ VietinBank / MoMo báo tiền về...
+                      Hệ thống đang tự động theo dõi biến động số dư...
                     </div>
                     <p style={{ color: '#ecfdf5' }} className="text-xs sm:text-sm leading-relaxed font-semibold">
-                      Tiền sẽ <strong style={{ color: '#ffffff' }} className="font-black">tự động cộng vào ví</strong> trong vài giây ngay khi chuyển khoản thành công với đúng nội dung <strong style={{ color: '#fb923c' }} className="font-mono font-black">{memoCode}</strong>.
+                      Tiền sẽ <strong style={{ color: '#ffffff' }} className="font-black">tự động cộng vào ví</strong> khi chuyển khoản thành công với nội dung <strong style={{ color: '#fb923c' }} className="font-mono font-black">{memoCode}</strong>.
                     </p>
+
+                    <button
+                      type="button"
+                      onClick={handleVerifyDeposit}
+                      disabled={verifying}
+                      style={{ backgroundColor: '#059669', color: '#ffffff' }}
+                      className="w-full py-3.5 px-4 rounded-2xl font-black text-xs sm:text-sm hover:bg-emerald-500 transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98] border-2 border-emerald-300 mt-2"
+                    >
+                      {verifying ? (
+                        <span className="flex items-center gap-2">
+                          <Sparkles className="animate-spin" size={16} /> Đang kiểm tra & đối chiếu biến động...
+                        </span>
+                      ) : (
+                        <span>🔄 Tôi đã chuyển khoản xong — Kiểm tra & Cập nhật ví ngay!</span>
+                      )}
+                    </button>
                   </div>
                 </div>
               )}
