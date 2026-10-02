@@ -26,7 +26,7 @@ export class ReceiversService {
       where: {
         receiverId,
         status: {
-          in: [RequestStatus.ACCEPTED, RequestStatus.RECEIVED, RequestStatus.READY_FOR_PICKUP],
+          in: [RequestStatus.ACCEPTED, RequestStatus.RECEIVED],
         },
       },
       include: {
@@ -47,13 +47,15 @@ export class ReceiversService {
     });
 
     if (!receiver || receiver.status !== 'ACTIVE') {
-      throw new BadRequestException('Suspended or invalid receiver profile');
+      throw new BadRequestException('Tài khoản nhận hộ đang bị tạm khóa hoặc không hợp lệ');
     }
 
-    // Check if receiver has active assignment
+    // Check if receiver has active assignment currently in transit (ACCEPTED, RECEIVED)
     const active = await this.findActiveAssignment(receiverId);
     if (active) {
-      throw new BadRequestException('You already have an active assignment');
+      throw new BadRequestException(
+        `Bạn đang đi lấy đơn hàng #${active.orderCode || active.id.slice(0, 8)}. Vui lòng giao đồ về tủ sảnh và bấm "Đã cất vào tủ" trước khi nhận đơn mới!`
+      );
     }
 
     const request = await this.prisma.receivingRequest.findUnique({

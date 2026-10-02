@@ -269,6 +269,10 @@ export default function StudentDashboard() {
     ['PENDING', 'ACCEPTED', 'RECEIVED', 'READY_FOR_PICKUP'].includes(r.status)
   );
 
+  const hasActiveUnstoredRequest = requests.some(r =>
+    ['PENDING', 'ACCEPTED', 'RECEIVED'].includes(r.status)
+  );
+
   const pastRequests = requests.filter(r =>
     ['COMPLETED', 'CANCELLED'].includes(r.status)
   );
@@ -309,6 +313,18 @@ export default function StudentDashboard() {
             <Plus className="text-orange-500" size={18} />
             Tạo yêu cầu mới
           </h2>
+
+          {hasActiveUnstoredRequest && (
+            <div className="bg-amber-500/10 border border-amber-500/30 text-amber-300 p-3 rounded-2xl text-xs mb-4 flex items-start gap-2.5">
+              <AlertCircle className="shrink-0 text-amber-400 mt-0.5" size={16} />
+              <div>
+                <p className="font-bold text-amber-200 text-xs">Đang có đơn chưa cất vào tủ</p>
+                <p className="text-[10.5px] text-amber-300/80 mt-0.5 leading-relaxed">
+                  Bạn cần chờ người nhận hộ xác nhận <strong>"Đã cất vào tủ"</strong> đơn hiện tại trước khi có thể tạo đơn nhận hộ mới.
+                </p>
+              </div>
+            </div>
+          )}
 
           <form onSubmit={handleCreateRequest} className="space-y-4">
             <div>
@@ -501,14 +517,20 @@ export default function StudentDashboard() {
 
             <button
               type="submit"
-              disabled={formLoading || paymentStatus === 'UNPAID'}
+              disabled={formLoading || paymentStatus === 'UNPAID' || hasActiveUnstoredRequest}
               className={`w-full font-semibold text-xs py-3 rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 mt-2 ${
-                paymentStatus === 'UNPAID'
+                paymentStatus === 'UNPAID' || hasActiveUnstoredRequest
                   ? 'bg-slate-800 text-slate-500 border border-slate-700 cursor-not-allowed shadow-none'
                   : 'bg-orange-600 hover:bg-orange-500 disabled:bg-orange-850 text-white shadow-orange-600/25 cursor-pointer active:scale-[0.99]'
               }`}
             >
-              {formLoading ? 'Đang gửi...' : paymentStatus === 'UNPAID' ? 'Không thể gửi đơn Tiền mặt (COD)' : 'Gửi yêu cầu nhận hộ'}
+              {formLoading
+                ? 'Đang gửi...'
+                : hasActiveUnstoredRequest
+                ? 'Đang có đơn chưa cất vào tủ'
+                : paymentStatus === 'UNPAID'
+                ? 'Không thể gửi đơn Tiền mặt (COD)'
+                : 'Gửi yêu cầu nhận hộ'}
             </button>
           </form>
         </div>

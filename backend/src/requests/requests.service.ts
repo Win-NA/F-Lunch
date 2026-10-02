@@ -27,19 +27,46 @@ export class RequestsService {
       );
     }
 
-    // Check duplicate active requests
-    if (dto.orderCode) {
-      const existing = await this.prisma.receivingRequest.findFirst({
+    // Rule 1: Check if student currently has an active request not yet stored in locker
+    const activeStudentRequest = await this.prisma.receivingRequest.findFirst({
+      where: {
+        studentId,
+        status: {
+          in: [RequestStatus.PENDING, RequestStatus.ACCEPTED, RequestStatus.RECEIVED],
+        },
+      },
+    });
+    if (activeStudentRequest) {
+      throw new BadRequestException(
+        'Bạn đang có 1 đơn nhận hộ chưa được cất vào tủ sảnh. Vui lòng chờ người nhận hộ cất đồ vào tủ (trạng thái "Đã về tủ") trước khi đăng đơn mới!'
+      );
+    }
+
+    // Rule 2: Check single-use order image URL to prevent duplicate/fake orders
+    if (dto.imageUrl && dto.imageUrl.trim() !== '') {
+      const existingImage = await this.prisma.receivingRequest.findFirst({
         where: {
-          studentId,
-          orderCode: dto.orderCode,
-          status: {
-            in: ['PENDING', 'ACCEPTED', 'RECEIVED', 'READY_FOR_PICKUP'],
-          },
+          imageUrl: dto.imageUrl.trim(),
         },
       });
-      if (existing) {
-        throw new BadRequestException('You already have an active request for this order code');
+      if (existingImage) {
+        throw new BadRequestException(
+          'Ảnh đơn hàng này đã được sử dụng từ trước! Mỗi ảnh chụp đơn hàng chỉ được sử dụng duy nhất 1 lần để tránh tạo đơn ảo.'
+        );
+      }
+    }
+
+    // Check duplicate order code
+    if (dto.orderCode && dto.orderCode.trim() !== '') {
+      const existingCode = await this.prisma.receivingRequest.findFirst({
+        where: {
+          orderCode: dto.orderCode.trim(),
+        },
+      });
+      if (existingCode) {
+        throw new BadRequestException(
+          `Mã đơn hàng "${dto.orderCode}" đã từng được đăng trên hệ thống từ trước!`
+        );
       }
     }
 
