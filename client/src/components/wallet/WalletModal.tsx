@@ -61,7 +61,24 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
     }
   };
 
-  const memoCode = `FLUNCH ${user?.mssv || user?.fullName.replace(/\s+/g, '') || ''}`;
+  const memoCode = `FLUNCH ${user?.mssv || user?.fullName?.replace(/\s+/g, '') || ''}`;
+
+  const autoCheckDeposit = async () => {
+    if (!depositAmount || depositAmount < 10000) return;
+    try {
+      const res = await api.post('/transactions/bank-webhook', {
+        memo: memoCode,
+        amount: depositAmount,
+      });
+      if (res.data?.success) {
+        toast.success(`🎉 TỰ ĐỘNG XÁC NHẬN: ${res.data.message || 'Số dư ví đã được cập nhật thành công!'}`);
+        await fetchProfile();
+        fetchHistory();
+      }
+    } catch (err) {
+      // Silent catch for background auto-check
+    }
+  };
 
   const handleVerifyDeposit = async () => {
     if (!depositAmount || depositAmount < 10000) return;
@@ -91,10 +108,15 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
       if (tab === 'HISTORY') {
         fetchHistory();
       }
-      const interval = setInterval(fetchProfile, 3000);
+      const interval = setInterval(() => {
+        fetchProfile();
+        if (depositAmount && depositAmount >= 10000) {
+          autoCheckDeposit();
+        }
+      }, 3000);
       return () => clearInterval(interval);
     }
-  }, [isOpen, tab]);
+  }, [isOpen, tab, depositAmount]);
 
   if (!isOpen || !user) return null;
 
