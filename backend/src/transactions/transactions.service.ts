@@ -115,11 +115,32 @@ export class TransactionsService {
     });
   }
 
-  // XÁC NHẬN VÀ CỘNG TIỀN VÍ KHI SINH VIÊN BẤM "TÔI ĐÃ CHUYỂN KHOẢN"
-  async verifyPendingDeposit(userId: string) {
+  // KIỂM TRA TRẠNG THÁI NẠP TIỀN TỪ NGÂN HÀNG (LẮNG NGHE WEBHOOK BANCKING THỰC TẾ)
+  async autoCheckDeposit(userId: string) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
 
+    // 1. Kiểm tra xem có giao dịch NẠP TIỀN vừa được WEBHOOK NGÂN HÀNG xác nhận APPROVED trong vòng 2 phút gần đây không
+    const recentApprovedTx = await this.prisma.transaction.findFirst({
+      where: {
+        userId,
+        type: TransactionType.DEPOSIT,
+        status: TransactionStatus.APPROVED,
+        updatedAt: { gte: new Date(Date.now() - 2 * 60 * 1000) },
+      },
+      orderBy: { updatedAt: 'desc' },
+    });
+
+    if (recentApprovedTx) {
+      return {
+        success: true,
+        message: `Ngân hàng đã báo có! Đã tự động cộng ${recentApprovedTx.amount.toLocaleString('vi-VN')}đ vào ví.`,
+        user,
+        transaction: recentApprovedTx,
+      };
+    }
+
+    // 2. Nếu vẫn đang PENDING (Chưa nhận được Webhook từ Ngân hàng / Casso / SePay)
     const pendingTx = await this.prisma.transaction.findFirst({
       where: {
         userId,
@@ -129,49 +150,19 @@ export class TransactionsService {
       orderBy: { createdAt: 'desc' },
     });
 
-    if (!pendingTx) {
-      return {
-        success: false,
-        message: 'Chưa có yêu cầu nạp tiền nào đang chờ.',
-      };
-    }
+    return {
+      success: false,
+      status: pendingTx ? 'PENDING' : 'NONE',
+      message: pendingTx 
+        ? 'Đang chờ hệ thống Ngân hàng (VietinBank / VietQR / MoMo) gửi Webhook biến động số dư...' 
+        : 'Chưa có yêu cầu nạp tiền nào.',
+      transaction: pendingTx || null,
+    };
+  }
 
-    const bonusAmount = pendingTx.bonusAmount || this.calculateBonus(pendingTx.amount);
-
-    return await this.prisma.$transaction(async (tx) => {
-      const updatedUser = await tx.user.update({
-        where: { id: userId },
-        data: {
-          realBalance: { increment: pendingTx.amount },
-          bonusBalance: { increment: bonusAmount },
-        },
-      });
-
-      const updatedTx = await tx.transaction.update({
-        where: { id: pendingTx.id },
-        data: {
-          status: TransactionStatus.APPROVED,
-          note: `Nạp tiền thành công (Xác nhận chuyển khoản VietinBank / MoMo)`,
-        },
-      });
-
-      const bonusText = bonusAmount > 0 ? ` (+${bonusAmount.toLocaleString('vi-VN')}đ KM)` : '';
-      await tx.notification.create({
-        data: {
-          userId,
-          title: 'Nạp tiền thành công! 🎉',
-          message: `Tài khoản vừa được cộng ${pendingTx.amount.toLocaleString('vi-VN')}đ${bonusText}. Mã GD: ${pendingTx.transactionCode}`,
-          type: NotificationType.SUCCESS,
-        },
-      });
-
-      return {
-        success: true,
-        message: `Xác nhận nạp tiền thành công! Đã cộng ${pendingTx.amount.toLocaleString('vi-VN')}đ${bonusText} vào ví của bạn.`,
-        user: updatedUser,
-        transaction: updatedTx,
-      };
-    });
+  // XÁC NHẬN VÀ CỘNG TIỀN VÍ
+  async verifyPendingDeposit(userId: string) {
+    return this.autoCheckDeposit(userId);
   }
 
   // TỰ ĐỘNG XỬ LÝ KHI NGÂN HÀNG BÁO TIỀN VỀ (CASSO / SEPAY / VIETQR WEBHOOK)

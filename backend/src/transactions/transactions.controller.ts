@@ -18,6 +18,11 @@ export class TransactionsController {
     return this.transactionsService.createDeposit(req.user.id, dto);
   }
 
+  @Post('auto-check-deposit')
+  async autoCheckDeposit(@Request() req: any) {
+    return this.transactionsService.autoCheckDeposit(req.user.id);
+  }
+
   @Post('verify-deposit')
   async verifyDeposit(@Request() req: any) {
     return this.transactionsService.verifyPendingDeposit(req.user.id);
@@ -83,14 +88,14 @@ export class TransactionsController {
   @UseGuards(RolesGuard)
   @Roles(UserRole.ADMIN)
   async approveTransaction(@Param('id') id: string) {
-    return this.transactionsService.approveTransaction(id);
+    throw new BadRequestException('Hệ thống nạp tiền đã tự động hóa 100% qua Ngân hàng / Webhook. Admin không cần và không thể duyệt thủ công.');
   }
 
   @Post('admin/:id/reject')
   @UseGuards(RolesGuard)
   @Roles(UserRole.ADMIN)
   async rejectTransaction(@Param('id') id: string, @Body('reason') reason?: string) {
-    return this.transactionsService.rejectTransaction(id, reason);
+    throw new BadRequestException('Hệ thống nạp tiền đã tự động hóa 100% qua Ngân hàng / Webhook. Admin không cần và không thể từ chối thủ công.');
   }
 
   @Post('admin/adjust')

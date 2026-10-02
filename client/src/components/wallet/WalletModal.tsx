@@ -113,10 +113,23 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
       if (tab === 'HISTORY') {
         fetchHistory();
       }
-      const interval = setInterval(fetchProfile, 2500);
+      const interval = setInterval(async () => {
+        if (depositAmount && depositAmount >= 10000) {
+          try {
+            const res = await api.post('/transactions/auto-check-deposit');
+            if (res.data?.success) {
+              fetchProfile();
+              fetchHistory();
+            }
+          } catch (e) {
+            // silent catch
+          }
+        }
+        fetchProfile();
+      }, 2000);
       return () => clearInterval(interval);
     }
-  }, [isOpen, tab]);
+  }, [isOpen, tab, depositAmount]);
 
   if (!isOpen || !user) return null;
 
@@ -532,21 +545,18 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
                     </div>
                   )}
 
-                  {/* Clean Footer Note & Manual Refresh Option */}
-                  <div style={{ backgroundColor: '#1e293b', borderColor: '#334155' }} className="p-5 rounded-2xl border-2 text-center space-y-3 shadow-md">
-                    <p style={{ color: '#cbd5e1' }} className="text-xs sm:text-sm font-medium">
-                      💡 Số dư ví sẽ tự động cập nhật ngay khi ngân hàng xác nhận giao dịch.
+                  {/* Live Silent Auto-Check Status Indicator */}
+                  <div style={{ backgroundColor: '#0f172a', borderColor: '#334155' }} className="p-4.5 rounded-2xl border-2 text-center space-y-2 shadow-md">
+                    <div style={{ color: '#34d399' }} className="inline-flex items-center gap-2.5 text-xs sm:text-sm font-extrabold">
+                      <span className="relative flex h-3 w-3">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                      </span>
+                      Hệ thống tự động kiểm tra biến động số dư ngân hàng...
+                    </div>
+                    <p style={{ color: '#cbd5e1' }} className="text-xs font-medium leading-relaxed">
+                      Chuyển khoản thành công tiền sẽ <strong style={{ color: '#ffffff' }} className="font-extrabold underline">tự động nhảy trực tiếp vào số dư ví</strong> ngay tức thì (Không cần bấm nút xác nhận hay chờ Admin duyệt).
                     </p>
-                    <button
-                      type="button"
-                      onClick={handleManualCheck}
-                      disabled={checking}
-                      style={{ backgroundColor: '#ea580c', color: '#ffffff' }}
-                      className="w-full sm:w-auto px-6 py-3 rounded-xl font-extrabold text-xs sm:text-sm inline-flex items-center justify-center gap-2 hover:bg-orange-600 transition-all cursor-pointer shadow active:scale-95"
-                    >
-                      <RefreshCw size={16} className={checking ? 'animate-spin' : ''} />
-                      {checking ? 'Đang kiểm tra giao dịch...' : 'Tôi đã chuyển khoản - Kiểm tra số dư'}
-                    </button>
                   </div>
 
                   {/* Red Warning Banner */}
