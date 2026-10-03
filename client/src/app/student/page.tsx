@@ -308,7 +308,7 @@ export default function StudentDashboard() {
 
     setFormLoading(true);
     try {
-      await api.post('/requests', {
+      const res = await api.post('/requests', {
         foodPlatform,
         orderCode: extractedOrderCode || undefined,
         pickupLocation,
@@ -326,6 +326,7 @@ export default function StudentDashboard() {
       const nextHour = (new Date().getHours() + 1) % 24;
       setPickupHour(nextHour.toString().padStart(2, '0'));
       setPickupMinute('00');
+      
       // Tải lại dữ liệu và làm mới số dư ví
       fetchRequests();
       try {
@@ -333,6 +334,11 @@ export default function StudentDashboard() {
         useAuthStore.getState().updateUser(profileRes.data);
       } catch (profileErr) {
         // Ignore silent error
+      }
+
+      // Điều hướng ngay tới trang chi tiết của đơn vừa tạo
+      if (res.data && res.data.id) {
+        router.push(`/student/request/${res.data.id}`);
       }
     } catch (err: any) {
       const msg = err.response?.data?.message || 'Không thể gửi yêu cầu';
@@ -409,17 +415,17 @@ export default function StudentDashboard() {
           </h2>
 
           {hasActiveUnstoredRequest ? (
-            <div className="bg-amber-500/20 border-2 border-amber-500/60 text-amber-100 p-4 rounded-2xl space-y-2 shadow-sm animate-fadeIn">
-              <div className="flex items-center gap-2 font-black text-amber-300 text-xs">
+            <div className="bg-amber-500/10 border-2 border-amber-500/40 p-4 rounded-2xl space-y-2 shadow-sm animate-fadeIn">
+              <div className="flex items-center gap-2 font-black text-amber-400 text-xs">
                 <AlertCircle className="shrink-0 text-amber-400" size={18} />
                 <span>CHƯA ĐỦ ĐIỀU KIỆN TẠO ĐƠN MỚI</span>
               </div>
-              <p className="text-[11.5px] font-extrabold text-amber-100 leading-relaxed">
-                Bạn đang có 1 đơn nhận hộ chưa cất vào tủ sảnh. Vui lòng chờ người nhận hộ xác nhận <strong>"Đã đến điểm tập kết"</strong> đơn hiện tại trước khi có thể tạo đơn nhận hộ mới nhé!
+              <p className="text-[11.5px] font-bold text-slate-200 leading-relaxed">
+                Bạn đang có 1 đơn nhận hộ chưa cất vào tủ sảnh. Vui lòng chờ người nhận hộ xác nhận <strong className="text-amber-400 font-extrabold">&ldquo;Đã đến điểm tập kết&rdquo;</strong> đơn hiện tại trước khi có thể tạo đơn nhận hộ mới nhé!
               </p>
-              <div className="pt-2 border-t border-amber-500/30 flex items-center justify-between text-[10px] text-amber-300 font-bold">
-                <span>Trạng thái: Đơn đang xử lý</span>
-                <span className="text-orange-400 underline">Theo dõi danh sách ở bên phải 👉</span>
+              <div className="pt-2 border-t border-amber-500/20 flex items-center justify-between text-[10px] text-slate-300 font-medium">
+                <span>Trạng thái: Đơn đang trong quá trình xử lý</span>
+                <span className="text-orange-400 font-bold underline">Xem danh sách ở bên dưới 👇</span>
               </div>
             </div>
           ) : (
