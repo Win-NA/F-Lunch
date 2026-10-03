@@ -140,7 +140,6 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
   // Cancel selected amount before confirming
   const handleCancelSelection = () => {
     setSelectedAmount(null);
-    toast.info('Đã hủy số tiền đã chọn.');
   };
 
   // Cancel active transaction code
