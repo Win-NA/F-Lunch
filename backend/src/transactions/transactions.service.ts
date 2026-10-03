@@ -35,9 +35,43 @@ export class TransactionsService {
     return `FL-${prefix}-${timestamp}${random}`;
   }
 
+  private async expireOldPendingDeposits() {
+    try {
+      const fifteenMinsAgo = new Date(Date.now() - 15 * 60 * 1000);
+      await this.prisma.transaction.updateMany({
+        where: {
+          type: TransactionType.DEPOSIT,
+          status: TransactionStatus.PENDING,
+          createdAt: { lt: fifteenMinsAgo },
+        },
+        data: {
+          status: TransactionStatus.REJECTED,
+          note: 'Tự động hủy do quá hạn 15 phút không chuyển khoản',
+        },
+      });
+    } catch (e) {
+      // silent catch
+    }
+  }
+
   async createDeposit(userId: string, dto: DepositDto) {
+    await this.expireOldPendingDeposits();
+
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
+
+    // Hủy các mã PENDING nạp tiền cũ của user này để chỉ giữ 1 mã QR mới nhất
+    await this.prisma.transaction.updateMany({
+      where: {
+        userId,
+        type: TransactionType.DEPOSIT,
+        status: TransactionStatus.PENDING,
+      },
+      data: {
+        status: TransactionStatus.REJECTED,
+        note: 'Hủy do sinh viên tạo mã QR nạp tiền mới',
+      },
+    });
 
     const bonusAmount = this.calculateBonus(dto.amount);
     const transactionCode = this.generateCode('DEP');
@@ -49,13 +83,12 @@ export class TransactionsService {
         bonusAmount,
         type: TransactionType.DEPOSIT,
         status: TransactionStatus.PENDING,
-        paymentMethod: dto.paymentMethod,
+        paymentMethod: PaymentMethod.BANK_TRANSFER,
         transactionCode,
-        note: dto.note || `Chờ ngân hàng VietinBank / MoMo xác nhận chuyển khoản (${dto.paymentMethod})`,
+        note: dto.note || `Chờ ngân hàng VietinBank (VietQR) xác nhận chuyển khoản (Hạn 15 phút)`,
       },
     });
 
-    // DO NOT create notification here to prevent notification feed spam
     return transaction;
   }
 
@@ -117,6 +150,8 @@ export class TransactionsService {
 
   // KIỂM TRA TRẠNG THÁI NẠP TIỀN TỪ NGÂN HÀNG (LẮNG NGHE WEBHOOK BANCKING THỰC TẾ)
   async autoCheckDeposit(userId: string) {
+    await this.expireOldPendingDeposits();
+
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
 

@@ -31,8 +31,8 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
 
   // Deposit Form State
   const [depositAmount, setDepositAmount] = useState<number | null>(null);
-  const [paymentMethod, setPaymentMethod] = useState<'BANK_TRANSFER' | 'MOMO'>('BANK_TRANSFER');
-  const [momoMode, setMomoMode] = useState<'MOMO_APP' | 'BANK_APP'>('MOMO_APP');
+  const paymentMethod = 'BANK_TRANSFER';
+  const [timeLeft, setTimeLeft] = useState<number>(900); // 15 mins = 900 seconds
 
   // History State
   const [transactions, setTransactions] = useState<any[]>([]);
@@ -95,17 +95,39 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
 
   const memoCode = `SEVQR FLUNCH ${user?.mssv || user?.fullName?.replace(/\s+/g, '') || ''}`.trim();
 
-  // Automatically register a pending deposit in background when user selects amount
+  // Reset 15-min countdown timer when amount changes
   useEffect(() => {
     if (depositAmount && depositAmount >= 10000) {
+      setTimeLeft(900);
       api.post('/transactions/deposit', {
         amount: depositAmount,
-        paymentMethod,
+        paymentMethod: 'BANK_TRANSFER',
       }).catch(() => {
         // silent catch
       });
     }
-  }, [depositAmount, paymentMethod]);
+  }, [depositAmount]);
+
+  // 15-minute countdown tick
+  useEffect(() => {
+    if (!depositAmount || depositAmount < 10000) return;
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [depositAmount]);
+
+  const formatCountdown = (secs: number) => {
+    const m = Math.floor(secs / 60).toString().padStart(2, '0');
+    const s = (secs % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
+  };
 
   useEffect(() => {
     if (isOpen) {
@@ -114,7 +136,7 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
         fetchHistory();
       }
       const interval = setInterval(async () => {
-        if (depositAmount && depositAmount >= 10000) {
+        if (depositAmount && depositAmount >= 10000 && timeLeft > 0) {
           try {
             const res = await api.post('/transactions/auto-check-deposit');
             if (res.data?.success) {
@@ -129,7 +151,7 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
       }, 2000);
       return () => clearInterval(interval);
     }
-  }, [isOpen, tab, depositAmount]);
+  }, [isOpen, tab, depositAmount, timeLeft]);
 
   if (!isOpen || !user) return null;
 
@@ -330,6 +352,7 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
               )}
 
               {/* Payment Section (Hidden until amount >= 10000) */}
+              {/* Payment Section (Hidden until amount >= 10000) */}
               {!depositAmount || depositAmount < 10000 ? (
                 <div style={{ backgroundColor: '#1e293b', borderColor: '#334155' }} className="p-7 sm:p-10 rounded-3xl border-2 text-center space-y-4">
                   <div style={{ backgroundColor: 'rgba(249, 115, 22, 0.2)', color: '#f97316' }} className="w-16 h-16 rounded-2xl border-2 border-orange-500/40 flex items-center justify-center mx-auto mb-2 shadow-lg">
@@ -342,222 +365,108 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
                 </div>
               ) : (
                 <div className="space-y-6 pt-1">
-                  {/* Step 2: Payment Method */}
-                  <div className="space-y-3">
-                    <label style={{ color: '#fb923c' }} className="block text-xs sm:text-sm font-black uppercase tracking-widest">
-                      2. Chọn phương thức thanh toán
-                    </label>
-                    <div className="grid grid-cols-2 gap-3.5">
-                      <button
-                        type="button"
-                        onClick={() => setPaymentMethod('BANK_TRANSFER')}
-                        style={{
-                          backgroundColor: paymentMethod === 'BANK_TRANSFER' ? 'rgba(59, 130, 246, 0.25)' : '#1e293b',
-                          borderColor: paymentMethod === 'BANK_TRANSFER' ? '#3b82f6' : '#334155',
-                          color: paymentMethod === 'BANK_TRANSFER' ? '#93c5fd' : '#cbd5e1',
-                        }}
-                        className="p-4 sm:p-5 rounded-2xl border-2 flex items-center justify-center gap-3 text-sm sm:text-lg font-black transition-all cursor-pointer shadow-md"
-                      >
-                        <Building2 size={24} /> VietinBank (VietQR)
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setPaymentMethod('MOMO')}
-                        style={{
-                          backgroundColor: paymentMethod === 'MOMO' ? 'rgba(236, 72, 153, 0.25)' : '#1e293b',
-                          borderColor: paymentMethod === 'MOMO' ? '#ec4899' : '#334155',
-                          color: paymentMethod === 'MOMO' ? '#fbcfe8' : '#cbd5e1',
-                        }}
-                        className="p-4 sm:p-5 rounded-2xl border-2 flex items-center justify-center gap-3 text-sm sm:text-lg font-black transition-all cursor-pointer shadow-md"
-                      >
-                        <QrCode size={24} /> Ví MoMo (Mã QR)
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Payment Info Card with MUCH LARGER QR CODE & BIG CRISP TYPOGRAPHY */}
-                  {paymentMethod === 'BANK_TRANSFER' ? (
-                    <div style={{ backgroundColor: '#1e293b', borderColor: '#334155' }} className="border-2 rounded-3xl p-5 sm:p-7 text-center space-y-6 shadow-2xl">
-                      <div style={{ color: '#ffffff' }} className="flex items-center justify-center gap-2 text-base sm:text-xl font-black">
-                        <span>Quét mã VietQR VietinBank</span>
+                  {/* Payment Card - App Ngân Hàng VietQR */}
+                  <div style={{ backgroundColor: '#1e293b', borderColor: '#334155' }} className="border-2 rounded-3xl p-5 sm:p-7 text-center space-y-6 shadow-2xl">
+                    <div style={{ color: '#ffffff' }} className="flex flex-col sm:flex-row items-center justify-between gap-3 border-b-2 border-slate-700/60 pb-4">
+                      <div className="flex items-center gap-2 text-base sm:text-xl font-black">
+                        <Building2 size={24} style={{ color: '#3b82f6' }} />
+                        <span>Quét mã VietQR (App Ngân Hàng)</span>
                         <span style={{ color: '#34d399' }} className="font-mono text-lg sm:text-2xl">({depositAmount.toLocaleString('vi-VN')}đ)</span>
                       </div>
 
-                      {/* HUGE CRISP QR CODE CONTAINER */}
-                      <div className="w-72 h-72 sm:w-96 sm:h-96 bg-white p-4 rounded-3xl mx-auto shadow-2xl overflow-hidden flex items-center justify-center border-4 border-slate-600">
-                        <img 
-                          src={`https://vietqr.app/img?bank=VietinBank&acc=106875040898&template=compact&amount=${depositAmount}&des=${encodeURIComponent(memoCode)}&showinfo=true&holder=LE%20DO%20NHAT%20ANH&store=F-Lunch`} 
-                          alt="VietinBank VietQR" 
-                          className="w-full h-full object-contain" 
-                        />
-                      </div>
-
-                      {/* High-Contrast Crisp Details Box */}
-                      <div style={{ backgroundColor: '#0f172a', borderColor: '#334155' }} className="text-left p-5 sm:p-6 rounded-2xl border-2 space-y-4 font-sans shadow-inner">
-                        <div className="flex justify-between items-center flex-wrap gap-2">
-                          <span style={{ color: '#cbd5e1' }} className="font-bold text-base sm:text-lg">Ngân hàng:</span>
-                          <span style={{ color: '#ffffff' }} className="font-black text-lg sm:text-xl">VietinBank</span>
+                      {/* 15-Minute Countdown Badge */}
+                      {timeLeft > 0 ? (
+                        <div style={{ backgroundColor: 'rgba(245, 158, 11, 0.2)', color: '#fcd34d', borderColor: 'rgba(245, 158, 11, 0.5)' }} className="px-3.5 py-1.5 rounded-full border-2 text-xs sm:text-sm font-black font-mono flex items-center gap-1.5 shadow">
+                          <span>⏱️ Hạn thanh toán:</span>
+                          <span className="text-amber-300 font-extrabold text-sm sm:text-base">{formatCountdown(timeLeft)}</span>
                         </div>
-                        
-                        <div className="flex justify-between items-center flex-wrap gap-2">
-                          <span style={{ color: '#cbd5e1' }} className="font-bold text-base sm:text-lg">Số tài khoản:</span>
-                          <button
-                            onClick={() => copyToClipboard('106875040898', 'STK')}
-                            style={{ backgroundColor: 'rgba(245, 158, 11, 0.2)', color: '#fcd34d', borderColor: 'rgba(245, 158, 11, 0.5)' }}
-                            className="font-black font-mono text-lg sm:text-xl hover:bg-amber-500/30 flex items-center gap-2 cursor-pointer px-4 py-2 rounded-xl border-2 transition-all shadow-md"
-                          >
-                            106875040898 {copiedField === 'STK' ? <Check size={20} style={{ color: '#34d399' }} /> : <Copy size={20} />}
-                          </button>
+                      ) : (
+                        <div style={{ backgroundColor: 'rgba(239, 68, 68, 0.2)', color: '#fca5a5', borderColor: 'rgba(239, 68, 68, 0.5)' }} className="px-3.5 py-1.5 rounded-full border-2 text-xs sm:text-sm font-black flex items-center gap-1.5">
+                          <span>⚠️ Đã hết hạn</span>
                         </div>
-
-                        <div className="flex justify-between items-center flex-wrap gap-2">
-                          <span style={{ color: '#cbd5e1' }} className="font-bold text-base sm:text-lg">Chủ tài khoản:</span>
-                          <span style={{ color: '#ffffff' }} className="font-black text-lg sm:text-xl uppercase tracking-wider">LÊ ĐỖ NHẬT ANH</span>
-                        </div>
-
-                        <div style={{ borderColor: '#334155' }} className="flex justify-between items-center flex-wrap gap-2 pt-3 border-t-2">
-                          <span style={{ color: '#fb923c' }} className="font-black text-base sm:text-lg">Nội dung CK (BẮT BUỘC):</span>
-                          <button
-                            onClick={() => copyToClipboard(memoCode, 'Nội dung')}
-                            style={{ backgroundColor: 'rgba(249, 115, 22, 0.25)', color: '#fdba74', borderColor: 'rgba(249, 115, 22, 0.6)' }}
-                            className="font-black font-mono text-lg sm:text-xl hover:bg-orange-500/40 flex items-center gap-2 cursor-pointer px-4 py-2.5 rounded-xl border-2 transition-all shadow-lg"
-                          >
-                            {memoCode} {copiedField === 'Nội dung' ? <Check size={20} style={{ color: '#34d399' }} /> : <Copy size={20} />}
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div style={{ backgroundColor: '#1e293b', borderColor: '#334155' }} className="border-2 rounded-3xl p-5 sm:p-7 text-center space-y-6 shadow-2xl">
-                      <div style={{ color: '#ffffff' }} className="flex items-center justify-center gap-2 text-base sm:text-xl font-black">
-                        <span>Chuyển tiền Ví MoMo</span>
-                        <span style={{ color: '#f472b6' }} className="font-mono text-lg sm:text-2xl">({depositAmount.toLocaleString('vi-VN')}đ)</span>
-                      </div>
-
-                      {/* MoMo Mode Switcher Tabs */}
-                      <div style={{ backgroundColor: '#0f172a', borderColor: '#334155' }} className="flex border-2 p-1 rounded-2xl gap-1">
-                        <button
-                          type="button"
-                          onClick={() => setMomoMode('MOMO_APP')}
-                          style={{
-                            backgroundColor: momoMode === 'MOMO_APP' ? '#be185d' : 'transparent',
-                            color: momoMode === 'MOMO_APP' ? '#ffffff' : '#cbd5e1',
-                          }}
-                          className="flex-1 py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer"
-                        >
-                          📱 Dùng App MoMo Quét
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setMomoMode('BANK_APP')}
-                          style={{
-                            backgroundColor: momoMode === 'BANK_APP' ? '#be185d' : 'transparent',
-                            color: momoMode === 'BANK_APP' ? '#ffffff' : '#cbd5e1',
-                          }}
-                          className="flex-1 py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer"
-                        >
-                          🏦 Dùng App Ngân Hàng Quét (VietQR)
-                        </button>
-                      </div>
-
-                      {/* CRISP QR CODE CONTAINER */}
-                      <div className="w-72 h-72 sm:w-96 sm:h-96 bg-white p-4 rounded-3xl mx-auto shadow-2xl overflow-hidden flex items-center justify-center border-4 border-slate-600 relative">
-                        <img 
-                          src={
-                            momoMode === 'MOMO_APP'
-                              ? `https://api.qrserver.com/v1/create-qr-code/?size=350x350&data=${encodeURIComponent(`https://nhantien.momo.vn/0797906979/${depositAmount}`)}`
-                              : `https://img.vietqr.io/image/momo-0797906979-compact.png?amount=${depositAmount}&addInfo=${encodeURIComponent(memoCode)}&accountName=LE%20DO%20NHAT%20ANH`
-                          } 
-                          alt="MoMo QR" 
-                          className="w-full h-full object-contain" 
-                        />
-                      </div>
-
-                      {/* Direct Open MoMo App Button for Mobile users when in MOMO_APP mode */}
-                      {momoMode === 'MOMO_APP' && (
-                        <a
-                          href={`https://nhantien.momo.vn/0797906979/${depositAmount}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          style={{ backgroundColor: '#ec4899', color: '#ffffff' }}
-                          className="w-full py-3.5 px-4 rounded-2xl font-black text-sm sm:text-base flex items-center justify-center gap-2 hover:bg-pink-600 transition-all shadow-lg cursor-pointer"
-                        >
-                          <Sparkles size={20} /> Bấm vào đây để mở App MoMo chuyển tiền ngay
-                        </a>
                       )}
+                    </div>
 
-                      {/* High-Contrast Crisp Details Box */}
-                      <div style={{ backgroundColor: '#0f172a', borderColor: '#334155' }} className="p-5 sm:p-6 rounded-2xl border-2 space-y-4 text-left font-sans shadow-inner">
-                        {/* MoMo Specific Transfer Notice */}
-                        <div style={{ backgroundColor: '#831843', borderColor: '#f472b6' }} className="p-3.5 rounded-xl border-2 space-y-1">
-                          <p style={{ color: '#fbcfe8' }} className="font-extrabold text-xs sm:text-sm flex items-center gap-1.5">
-                            <AlertTriangle size={18} className="text-pink-400 shrink-0" />
-                            {momoMode === 'MOMO_APP' ? 'HƯỚNG DẪN DÙNG APP MOMO:' : 'HƯỚNG DẪN DÙNG APP NGÂN HÀNG:'}
-                          </p>
-                          {momoMode === 'MOMO_APP' ? (
-                            <>
-                              <p style={{ color: '#fce7f3' }} className="text-xs leading-normal">
-                                👉 Mở App MoMo quét mã QR trên HOẶC chọn <strong>"Chuyển tiền MoMo"</strong> (Chuyển đến SĐT <strong>0797906979</strong>).
-                              </p>
-                              <p style={{ color: '#fce7f3' }} className="text-xs leading-normal">
-                                ⚠️ Nhớ dán lời nhắn: <strong className="font-mono text-orange-300 font-bold">{memoCode}</strong> khi chuyển tiền.
-                              </p>
-                            </>
-                          ) : (
-                            <>
-                              <p style={{ color: '#fce7f3' }} className="text-xs leading-normal">
-                                👉 Dùng App Ngân hàng (MB, VCB, ACB...) quét mã VietQR NAPAS MoMo ở trên.
-                              </p>
-                              <p style={{ color: '#fce7f3' }} className="text-xs leading-normal">
-                                ⚠️ <strong>KHÔNG dùng App MoMo quét mã VietQR này</strong> vì MoMo sẽ hiểu nhầm là chuyển khoản ngân hàng và báo lỗi số tài khoản.
-                              </p>
-                            </>
-                          )}
+                    {/* QR Code Container or Expired Notice */}
+                    {timeLeft > 0 ? (
+                      <div className="space-y-6">
+                        <div className="w-72 h-72 sm:w-96 sm:h-96 bg-white p-4 rounded-3xl mx-auto shadow-2xl overflow-hidden flex items-center justify-center border-4 border-slate-600">
+                          <img 
+                            src={`https://vietqr.app/img?bank=VietinBank&acc=106875040898&template=compact&amount=${depositAmount}&des=${encodeURIComponent(memoCode)}&showinfo=true&holder=LE%20DO%20NHAT%20ANH&store=F-Lunch`} 
+                            alt="VietinBank VietQR" 
+                            className="w-full h-full object-contain" 
+                          />
                         </div>
 
-                        <div className="flex justify-between items-center flex-wrap gap-2">
-                          <span style={{ color: '#cbd5e1' }} className="font-bold text-base sm:text-lg">SĐT Ví MoMo:</span>
-                          <button
-                            onClick={() => copyToClipboard('0797906979', 'SĐT MoMo')}
-                            style={{ backgroundColor: 'rgba(236, 72, 153, 0.25)', color: '#fbcfe8', borderColor: 'rgba(236, 72, 153, 0.5)' }}
-                            className="font-black font-mono text-lg sm:text-xl hover:bg-pink-500/35 flex items-center gap-2 cursor-pointer px-4 py-2 rounded-xl border-2 transition-all shadow-md"
-                          >
-                            0797906979 {copiedField === 'SĐT MoMo' ? <Check size={20} style={{ color: '#34d399' }} /> : <Copy size={20} />}
-                          </button>
-                        </div>
+                        {/* High-Contrast Crisp Details Box */}
+                        <div style={{ backgroundColor: '#0f172a', borderColor: '#334155' }} className="text-left p-5 sm:p-6 rounded-2xl border-2 space-y-4 font-sans shadow-inner">
+                          <div className="flex justify-between items-center flex-wrap gap-2">
+                            <span style={{ color: '#cbd5e1' }} className="font-bold text-base sm:text-lg">Ngân hàng nhận:</span>
+                            <span style={{ color: '#ffffff' }} className="font-black text-lg sm:text-xl">VietinBank</span>
+                          </div>
+                          
+                          <div className="flex justify-between items-center flex-wrap gap-2">
+                            <span style={{ color: '#cbd5e1' }} className="font-bold text-base sm:text-lg">Số tài khoản:</span>
+                            <button
+                              onClick={() => copyToClipboard('106875040898', 'STK')}
+                              style={{ backgroundColor: 'rgba(245, 158, 11, 0.2)', color: '#fcd34d', borderColor: 'rgba(245, 158, 11, 0.5)' }}
+                              className="font-black font-mono text-lg sm:text-xl hover:bg-amber-500/30 flex items-center gap-2 cursor-pointer px-4 py-2 rounded-xl border-2 transition-all shadow-md"
+                            >
+                              106875040898 {copiedField === 'STK' ? <Check size={20} style={{ color: '#34d399' }} /> : <Copy size={20} />}
+                            </button>
+                          </div>
 
-                        <div className="flex justify-between items-center flex-wrap gap-2">
-                          <span style={{ color: '#cbd5e1' }} className="font-bold text-base sm:text-lg">Chủ tài khoản:</span>
-                          <span style={{ color: '#ffffff' }} className="font-black text-lg sm:text-xl">Lê Đỗ Nhật Anh</span>
-                        </div>
+                          <div className="flex justify-between items-center flex-wrap gap-2">
+                            <span style={{ color: '#cbd5e1' }} className="font-bold text-base sm:text-lg">Chủ tài khoản:</span>
+                            <span style={{ color: '#ffffff' }} className="font-black text-lg sm:text-xl uppercase tracking-wider">LÊ ĐỖ NHẬT ANH</span>
+                          </div>
 
-                        <div style={{ borderColor: '#334155' }} className="flex justify-between items-center flex-wrap gap-2 pt-3 border-t-2">
-                          <span style={{ color: '#f472b6' }} className="font-black text-base sm:text-lg">Lời nhắn / Nội dung:</span>
-                          <button
-                            onClick={() => copyToClipboard(memoCode, 'Nội dung')}
-                            style={{ backgroundColor: 'rgba(236, 72, 153, 0.25)', color: '#fbcfe8', borderColor: 'rgba(236, 72, 153, 0.6)' }}
-                            className="font-black font-mono text-lg sm:text-xl hover:bg-pink-500/40 flex items-center gap-2 cursor-pointer px-4 py-2.5 rounded-xl border-2 transition-all shadow-lg"
-                          >
-                            {memoCode} {copiedField === 'Nội dung' ? <Check size={20} style={{ color: '#34d399' }} /> : <Copy size={20} />}
-                          </button>
+                          <div style={{ borderColor: '#334155' }} className="flex justify-between items-center flex-wrap gap-2 pt-3 border-t-2">
+                            <span style={{ color: '#fb923c' }} className="font-black text-base sm:text-lg">Nội dung CK (BẮT BUỘC):</span>
+                            <button
+                              onClick={() => copyToClipboard(memoCode, 'Nội dung')}
+                              style={{ backgroundColor: 'rgba(249, 115, 22, 0.25)', color: '#fdba74', borderColor: 'rgba(249, 115, 22, 0.6)' }}
+                              className="font-black font-mono text-lg sm:text-xl hover:bg-orange-500/40 flex items-center gap-2 cursor-pointer px-4 py-2.5 rounded-xl border-2 transition-all shadow-lg"
+                            >
+                              {memoCode} {copiedField === 'Nội dung' ? <Check size={20} style={{ color: '#34d399' }} /> : <Copy size={20} />}
+                            </button>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  )}
+                    ) : (
+                      <div style={{ backgroundColor: 'rgba(239, 68, 68, 0.15)', borderColor: 'rgba(239, 68, 68, 0.4)' }} className="p-8 rounded-3xl border-2 space-y-4 text-center">
+                        <AlertTriangle size={48} className="text-red-400 mx-auto" />
+                        <h4 className="text-xl font-black text-white">Mã QR đã hết hạn thanh toán (Quá 15 phút)</h4>
+                        <p className="text-sm text-slate-300 max-w-md mx-auto leading-relaxed">
+                          Mã QR giao dịch cũ đã bị hủy tự động để đảm bảo an toàn. Vui lòng bấm bên dưới để tạo lại mã QR nạp tiền mới.
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => setDepositAmount(null)}
+                          style={{ backgroundColor: '#ea580c', color: '#ffffff' }}
+                          className="px-6 py-3.5 rounded-2xl font-black text-base hover:bg-orange-600 transition-all shadow-lg cursor-pointer inline-flex items-center gap-2"
+                        >
+                          <RefreshCw size={20} /> Tạo lại mã QR mới
+                        </button>
+                      </div>
+                    )}
+                  </div>
 
                   {/* Live Silent Auto-Check Status Indicator */}
-                  <div style={{ backgroundColor: '#0f172a', borderColor: '#334155' }} className="p-4.5 rounded-2xl border-2 text-center space-y-2 shadow-md">
-                    <div style={{ color: '#34d399' }} className="inline-flex items-center gap-2.5 text-xs sm:text-sm font-extrabold">
-                      <span className="relative flex h-3 w-3">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
-                      </span>
-                      Hệ thống tự động kiểm tra biến động số dư ngân hàng...
+                  {timeLeft > 0 && (
+                    <div style={{ backgroundColor: '#0f172a', borderColor: '#334155' }} className="p-4.5 rounded-2xl border-2 text-center space-y-2 shadow-md">
+                      <div style={{ color: '#34d399' }} className="inline-flex items-center gap-2.5 text-xs sm:text-sm font-extrabold">
+                        <span className="relative flex h-3 w-3">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                        </span>
+                        Hệ thống tự động kiểm tra biến động số dư ngân hàng...
+                      </div>
+                      <p style={{ color: '#cbd5e1' }} className="text-xs font-medium leading-relaxed">
+                        Chuyển khoản thành công tiền sẽ <strong style={{ color: '#ffffff' }} className="font-extrabold underline">tự động nhảy trực tiếp vào số dư ví</strong> ngay tức thì (Không cần bấm nút xác nhận hay chờ Admin duyệt).
+                      </p>
                     </div>
-                    <p style={{ color: '#cbd5e1' }} className="text-xs font-medium leading-relaxed">
-                      Chuyển khoản thành công tiền sẽ <strong style={{ color: '#ffffff' }} className="font-extrabold underline">tự động nhảy trực tiếp vào số dư ví</strong> ngay tức thì (Không cần bấm nút xác nhận hay chờ Admin duyệt).
-                    </p>
-                  </div>
+                  )}
 
                   {/* Red Warning Banner */}
                   <div style={{ backgroundColor: '#450a0a', borderColor: '#dc2626' }} className="p-5 rounded-2xl border-2 flex items-start gap-3.5 text-sm sm:text-base shadow-xl">
