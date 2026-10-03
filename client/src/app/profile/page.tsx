@@ -43,8 +43,10 @@ export default function ProfilePage() {
       setPhoneNumber(res.data.phoneNumber || '');
       setMssv(res.data.mssv || '');
       setAvatar(res.data.avatar || null);
-    } catch (err) {
-      toast.error('Không thể tải thông tin hồ sơ');
+    } catch (err: any) {
+      if (err.response && err.response.status !== 401 && err.response.status !== 403 && useAuthStore.getState().accessToken) {
+        toast.error('Không thể tải thông tin hồ sơ');
+      }
     } finally {
       setLoading(false);
     }

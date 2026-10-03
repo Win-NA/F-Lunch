@@ -24,6 +24,11 @@ export class TransactionsController {
     return this.transactionsService.autoCheckDeposit(req.user.id);
   }
 
+  @Post('cancel-deposit')
+  async cancelDeposit(@Request() req: any) {
+    return this.transactionsService.cancelPendingDeposit(req.user.id);
+  }
+
   @Post('verify-deposit')
   async verifyDeposit(@Request() req: any) {
     return this.transactionsService.verifyPendingDeposit(req.user.id);

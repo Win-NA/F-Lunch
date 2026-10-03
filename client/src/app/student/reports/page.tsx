@@ -49,8 +49,10 @@ export default function StudentReportsPage() {
     try {
       const res = await api.get('/reports/my-reports');
       setReports(res.data);
-    } catch (err) {
-      toast.error('Không thể tải lịch sử báo cáo sự cố');
+    } catch (err: any) {
+      if (err.response && err.response.status !== 401 && err.response.status !== 403 && useAuthStore.getState().accessToken) {
+        toast.error('Không thể tải lịch sử báo cáo sự cố');
+      }
     } finally {
       setLoading(false);
     }

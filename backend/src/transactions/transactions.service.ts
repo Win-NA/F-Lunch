@@ -369,7 +369,29 @@ export class TransactionsService {
     });
   }
 
+  async cancelPendingDeposit(userId: string) {
+    await this.expireOldPendingDeposits();
+    const updated = await this.prisma.transaction.updateMany({
+      where: {
+        userId,
+        type: TransactionType.DEPOSIT,
+        status: TransactionStatus.PENDING,
+      },
+      data: {
+        status: TransactionStatus.REJECTED,
+        note: 'Hủy giao dịch nạp tiền theo yêu cầu sinh viên',
+      },
+    });
+
+    return {
+      success: true,
+      message: 'Đã hủy mã giao dịch nạp tiền.',
+      count: updated.count,
+    };
+  }
+
   async getMyTransactions(userId: string) {
+    await this.expireOldPendingDeposits();
     return this.prisma.transaction.findMany({
       where: { userId },
       orderBy: { createdAt: 'desc' },
@@ -386,6 +408,7 @@ export class TransactionsService {
   }
 
   async getAdminTransactions(status?: TransactionStatus, type?: TransactionType) {
+    await this.expireOldPendingDeposits();
     const where: any = {};
     if (status) where.status = status;
     if (type) where.type = type;

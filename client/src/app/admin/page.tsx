@@ -258,7 +258,9 @@ function AdminDashboardContent() {
       setAdminTransactions(txRes.data || []);
       setAdminReports(reportsRes.data || []);
     } catch (err: any) {
-      toast.error('Không thể tải dữ liệu quản trị viên');
+      if (err.response && err.response.status !== 401 && err.response.status !== 403 && useAuthStore.getState().accessToken) {
+        toast.error('Không thể tải dữ liệu quản trị viên');
+      }
     } finally {
       setLoading(false);
     }

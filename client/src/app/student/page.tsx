@@ -188,11 +188,14 @@ export default function StudentDashboard() {
   };
 
   const fetchRequests = async () => {
+    if (!useAuthStore.getState().accessToken) return;
     try {
       const res = await api.get('/requests');
       setRequests(res.data);
     } catch (err: any) {
-      toast.error('Không thể tải danh sách yêu cầu');
+      if (err.response && err.response.status !== 401 && err.response.status !== 403 && useAuthStore.getState().accessToken) {
+        toast.error('Không thể tải danh sách yêu cầu');
+      }
     } finally {
       setLoading(false);
     }

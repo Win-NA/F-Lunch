@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname, useSearchParams } from 'next/navigation';
+import { usePathname, useSearchParams, useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth.store';
 import { api } from '@/lib/api';
+import { toast } from 'sonner';
 import { 
   Home, 
   Bell, 
@@ -21,8 +22,15 @@ import {
 export default function Sidebar({ onOpenWallet }: { onOpenWallet?: () => void }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const router = useRouter();
   const { user, logout, updateUser } = useAuthStore();
   const [unreadCount, setUnreadCount] = useState<number>(0);
+
+  const handleLogout = () => {
+    logout();
+    toast.success('Đăng xuất thành công');
+    router.replace('/login');
+  };
 
   const fetchSyncData = async () => {
     try {
@@ -187,7 +195,7 @@ export default function Sidebar({ onOpenWallet }: { onOpenWallet?: () => void })
           </div>
         </div>
         <button
-          onClick={logout}
+          onClick={handleLogout}
           className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors font-medium text-sm text-left cursor-pointer"
         >
           <LogOut size={18} />

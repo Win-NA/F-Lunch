@@ -31,7 +31,9 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
   const [tab, setTab] = useState<'DEPOSIT' | 'HISTORY'>('DEPOSIT');
 
   // Deposit Form State
+  const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
   const [depositAmount, setDepositAmount] = useState<number | null>(null);
+  const [isSubmittingDeposit, setIsSubmittingDeposit] = useState(false);
   const paymentMethod = 'BANK_TRANSFER';
   const [timeLeft, setTimeLeft] = useState<number>(900); // 15 mins = 900 seconds
 
@@ -111,18 +113,83 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
 
   const memoCode = `SEVQR FLUNCH ${user?.mssv || user?.fullName?.replace(/\s+/g, '') || ''}`.trim();
 
-  // Reset 15-min countdown timer when amount changes
-  useEffect(() => {
-    if (depositAmount && depositAmount >= 10000) {
-      setTimeLeft(900);
-      api.post('/transactions/deposit', {
-        amount: depositAmount,
-        paymentMethod: 'BANK_TRANSFER',
-      }).catch(() => {
-        // silent catch
-      });
+  // Confirm deposit amount to generate QR code
+  const handleConfirmDeposit = async () => {
+    if (!selectedAmount || selectedAmount < 10000) {
+      toast.error('Vui lòng chọn hoặc nhập số tiền nạp tối thiểu 10.000đ');
+      return;
     }
-  }, [depositAmount]);
+
+    setIsSubmittingDeposit(true);
+    try {
+      await api.post('/transactions/deposit', {
+        amount: selectedAmount,
+        paymentMethod: 'BANK_TRANSFER',
+      });
+      setDepositAmount(selectedAmount);
+      setTimeLeft(900);
+      toast.success(`Đã khởi tạo mã QR nạp ${selectedAmount.toLocaleString('vi-VN')}đ!`);
+      fetchHistory(true);
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Không thể tạo mã QR nạp tiền. Vui lòng thử lại.');
+    } finally {
+      setIsSubmittingDeposit(false);
+    }
+  };
+
+  // Cancel selected amount before confirming
+  const handleCancelSelection = () => {
+    setSelectedAmount(null);
+    toast.info('Đã hủy số tiền đã chọn.');
+  };
+
+  // Cancel active transaction code
+  const handleCancelActiveDeposit = async () => {
+    try {
+      await api.post('/transactions/cancel-deposit');
+      setDepositAmount(null);
+      setSelectedAmount(null);
+      setTimeLeft(0);
+      toast.success('Đã hủy mã giao dịch này.');
+      fetchHistory(true);
+    } catch (err: any) {
+      toast.error('Không thể hủy mã giao dịch. Vui lòng thử lại.');
+    }
+  };
+
+  // Check active pending deposit on mount/open
+  const checkActivePendingDeposit = async () => {
+    try {
+      const res = await api.post('/transactions/auto-check-deposit');
+      if (res.data?.transaction && res.data.transaction.status === 'PENDING') {
+        const tx = res.data.transaction;
+        const createdAtTime = new Date(tx.createdAt).getTime();
+        const elapsedSecs = Math.floor((Date.now() - createdAtTime) / 1000);
+        const remainingSecs = 900 - elapsedSecs;
+
+        if (remainingSecs > 0) {
+          setSelectedAmount(tx.amount);
+          setDepositAmount(tx.amount);
+          setTimeLeft(remainingSecs);
+        } else {
+          await api.post('/transactions/cancel-deposit');
+          setDepositAmount(null);
+          setSelectedAmount(null);
+          setTimeLeft(0);
+        }
+      }
+    } catch (e) {
+      // silent
+    }
+  };
+
+  // Auto-expire in backend when countdown reaches 0
+  useEffect(() => {
+    if (timeLeft === 0 && depositAmount) {
+      api.post('/transactions/cancel-deposit').catch(() => {});
+      fetchHistory(true);
+    }
+  }, [timeLeft, depositAmount]);
 
   // 15-minute countdown tick
   useEffect(() => {
@@ -149,6 +216,7 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
   useEffect(() => {
     if (isOpen) {
       fetchProfile();
+      checkActivePendingDeposit();
       if (tab === 'HISTORY') {
         fetchHistory(false);
       }
@@ -334,12 +402,12 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
                     { amount: 200000, label: '200.000đ', bonus: 40000 },
                     { amount: 500000, label: '500.000đ', bonus: 100000 },
                   ].map((item) => {
-                    const isSelected = depositAmount === item.amount;
+                    const isSelected = selectedAmount === item.amount;
                     return (
                       <button
                         key={item.amount}
                         type="button"
-                        onClick={() => setDepositAmount(item.amount)}
+                        onClick={() => setSelectedAmount(item.amount)}
                         style={{
                           backgroundColor: isSelected ? '#c2410c' : '#1e293b',
                           borderColor: isSelected ? '#f97316' : '#334155',
@@ -364,20 +432,57 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
                     Hoặc nhập số tiền tùy chọn (đ):
                   </label>
                   <input
-                    type="number"
-                    value={depositAmount || ''}
-                    onChange={(e) => setDepositAmount(Number(e.target.value))}
-                    placeholder="Nhập số tiền nạp tùy ý (VD: 30000)..."
+                    type="text"
+                    inputMode="numeric"
+                    value={selectedAmount ? selectedAmount.toLocaleString('vi-VN') : ''}
+                    onChange={(e) => {
+                      const rawDigits = e.target.value.replace(/[^0-9]/g, '');
+                      if (!rawDigits) {
+                        setSelectedAmount(null);
+                      } else {
+                        const parsed = parseInt(rawDigits, 10);
+                        setSelectedAmount(parsed > 10000000 ? 10000000 : parsed);
+                      }
+                    }}
+                    placeholder="Nhập số tiền nạp tùy ý (VD: 30.000)..."
                     style={{ backgroundColor: '#0f172a', borderColor: '#334155', color: '#ffffff' }}
                     className="w-full rounded-2xl px-5 py-4 text-lg sm:text-xl font-mono font-black focus:border-orange-500 focus:outline-none transition-colors border-2 placeholder:font-sans placeholder:text-sm sm:placeholder:text-base placeholder:font-normal"
-                    min={10000}
-                    step={5000}
                   />
                 </div>
+
+                {/* Action Buttons: Confirm & Cancel selected amount */}
+                {selectedAmount && selectedAmount > 0 && (
+                  <div className="flex items-center gap-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={handleConfirmDeposit}
+                      disabled={isSubmittingDeposit || selectedAmount < 10000}
+                      style={{
+                        backgroundColor: (selectedAmount >= 10000 && !isSubmittingDeposit) ? '#ea580c' : '#475569',
+                        color: '#ffffff',
+                      }}
+                      className="flex-1 py-3.5 px-5 rounded-2xl font-black text-base sm:text-lg flex items-center justify-center gap-2 shadow-lg transition-all cursor-pointer hover:opacity-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <Check size={22} />
+                      {isSubmittingDeposit
+                        ? 'Đang tạo mã QR...'
+                        : `Xác nhận nạp ${selectedAmount.toLocaleString('vi-VN')}đ`}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleCancelSelection}
+                      disabled={isSubmittingDeposit}
+                      style={{ backgroundColor: '#1e293b', borderColor: '#475569', color: '#cbd5e1' }}
+                      className="py-3.5 px-5 rounded-2xl font-bold text-base border-2 hover:bg-slate-700 hover:text-white transition-all cursor-pointer flex items-center gap-1.5"
+                    >
+                      <X size={20} /> Hủy
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* Bonus Highlight */}
-              {depositAmount && depositAmount >= 10000 && getBonusAmount(depositAmount) > 0 && (
+              {selectedAmount && selectedAmount >= 10000 && getBonusAmount(selectedAmount) > 0 && (
                 <div 
                   style={{ backgroundColor: 'rgba(249, 115, 22, 0.2)', borderColor: 'rgba(249, 115, 22, 0.5)' }} 
                   className="p-4.5 rounded-2xl border-2 flex items-center justify-between text-sm sm:text-base shadow-lg"
@@ -386,13 +491,12 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
                     <Sparkles size={20} style={{ color: '#f97316' }} /> Ưu đãi đợt này:
                   </span>
                   <span style={{ color: '#fb923c' }} className="font-black font-mono text-lg sm:text-xl">
-                    +{getBonusAmount(depositAmount).toLocaleString('vi-VN')} đ KM
+                    +{getBonusAmount(selectedAmount).toLocaleString('vi-VN')} đ KM
                   </span>
                 </div>
               )}
 
-              {/* Payment Section (Hidden until amount >= 10000) */}
-              {/* Payment Section (Hidden until amount >= 10000) */}
+              {/* Payment Section (Hidden until confirmed depositAmount >= 10000) */}
               {!depositAmount || depositAmount < 10000 ? (
                 <div style={{ backgroundColor: '#1e293b', borderColor: '#334155' }} className="p-7 sm:p-10 rounded-3xl border-2 text-center space-y-4">
                   <div style={{ backgroundColor: 'rgba(249, 115, 22, 0.2)', color: '#f97316' }} className="w-16 h-16 rounded-2xl border-2 border-orange-500/40 flex items-center justify-center mx-auto mb-2 shadow-lg">
@@ -400,31 +504,60 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
                   </div>
                   <h4 style={{ color: '#ffffff' }} className="text-lg sm:text-xl font-black">Vui lòng chọn hoặc nhập số tiền nạp</h4>
                   <p style={{ color: '#cbd5e1' }} className="text-sm sm:text-base max-w-md mx-auto leading-relaxed font-medium">
-                    Bấm chọn một trong các mức tiền gợi ý ở Bước 1 hoặc tự gõ số tiền (tối thiểu 10.000đ) để hệ thống tạo mã QR thanh toán tự động.
+                    Bấm chọn một trong các mức tiền gợi ý ở Bước 1 hoặc tự gõ số tiền (tối thiểu 10.000đ), sau đó ấn nút <strong style={{ color: '#f97316' }}>"Xác nhận"</strong> để hệ thống tạo mã QR thanh toán.
                   </p>
                 </div>
               ) : (
                 <div className="space-y-6 pt-1">
                   {/* Payment Card - App Ngân Hàng VietQR */}
                   <div style={{ backgroundColor: '#1e293b', borderColor: '#334155' }} className="border-2 rounded-3xl p-5 sm:p-7 text-center space-y-6 shadow-2xl">
-                    <div style={{ color: '#ffffff' }} className="flex flex-col sm:flex-row items-center justify-between gap-3 border-b-2 border-slate-700/60 pb-4">
-                      <div className="flex items-center gap-2 text-base sm:text-xl font-black">
-                        <Building2 size={24} style={{ color: '#3b82f6' }} />
-                        <span>Quét mã VietQR (App Ngân Hàng)</span>
-                        <span style={{ color: '#34d399' }} className="font-mono text-lg sm:text-2xl">({depositAmount.toLocaleString('vi-VN')}đ)</span>
+                    <div className="border-b-2 border-slate-700/60 pb-4 space-y-3 sm:space-y-0 sm:flex sm:items-center sm:justify-between text-left">
+                      {/* Title & Amount */}
+                      <div className="flex items-center gap-2.5 flex-wrap">
+                        <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center shrink-0">
+                          <Building2 size={22} className="text-blue-400" />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h4 style={{ color: '#ffffff' }} className="font-black text-base sm:text-lg leading-tight">
+                              Quét mã VietQR
+                            </h4>
+                            <span style={{ color: '#34d399' }} className="font-mono font-black text-base sm:text-lg px-2.5 py-0.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30">
+                              {depositAmount.toLocaleString('vi-VN')}đ
+                            </span>
+                          </div>
+                        </div>
                       </div>
 
-                      {/* 15-Minute Countdown Badge */}
-                      {timeLeft > 0 ? (
-                        <div style={{ backgroundColor: 'rgba(245, 158, 11, 0.2)', color: '#fcd34d', borderColor: 'rgba(245, 158, 11, 0.5)' }} className="px-3.5 py-1.5 rounded-full border-2 text-xs sm:text-sm font-black font-mono flex items-center gap-1.5 shadow">
-                          <span>⏱️ Hạn thanh toán:</span>
-                          <span className="text-amber-300 font-extrabold text-sm sm:text-base">{formatCountdown(timeLeft)}</span>
-                        </div>
-                      ) : (
-                        <div style={{ backgroundColor: 'rgba(239, 68, 68, 0.2)', color: '#fca5a5', borderColor: 'rgba(239, 68, 68, 0.5)' }} className="px-3.5 py-1.5 rounded-full border-2 text-xs sm:text-sm font-black flex items-center gap-1.5">
-                          <span>⚠️ Đã hết hạn</span>
-                        </div>
-                      )}
+                      {/* 15-Minute Countdown Badge (Without Clock Icon) */}
+                      <div className="shrink-0 flex items-center">
+                        {timeLeft > 0 ? (
+                          <div 
+                            style={{ 
+                              backgroundColor: 'rgba(245, 158, 11, 0.15)', 
+                              color: '#fbbf24', 
+                              borderColor: 'rgba(245, 158, 11, 0.4)' 
+                            }} 
+                            className="px-3.5 py-2 rounded-2xl border-2 text-xs sm:text-sm font-extrabold flex items-center gap-2 whitespace-nowrap shadow-md w-full sm:w-auto justify-center"
+                          >
+                            <span style={{ color: '#fef08a' }} className="font-bold">Hạn thanh toán:</span>
+                            <span className="font-mono font-black text-amber-300 text-sm sm:text-base px-2 py-0.5 rounded-lg bg-amber-500/20 border border-amber-400/30 whitespace-nowrap tracking-wider">
+                              {formatCountdown(timeLeft)}
+                            </span>
+                          </div>
+                        ) : (
+                          <div 
+                            style={{ 
+                              backgroundColor: 'rgba(239, 68, 68, 0.15)', 
+                              color: '#fca5a5', 
+                              borderColor: 'rgba(239, 68, 68, 0.4)' 
+                            }} 
+                            className="px-3.5 py-2 rounded-2xl border-2 text-xs sm:text-sm font-black flex items-center gap-1.5 whitespace-nowrap w-full sm:w-auto justify-center"
+                          >
+                            <span>⚠️ Đã hết hạn</span>
+                          </div>
+                        )}
+                      </div>
                     </div>
 
                     {/* QR Code Container or Expired Notice */}
@@ -462,13 +595,28 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
                           </div>
 
                           <div style={{ borderColor: '#334155' }} className="flex justify-between items-center flex-wrap gap-2 pt-3 border-t-2">
-                            <span style={{ color: '#fb923c' }} className="font-black text-base sm:text-lg">Nội dung CK (BẮT BUỘC):</span>
+                            <div>
+                              <span style={{ color: '#fb923c' }} className="font-black text-base sm:text-lg block">Nội dung CK:</span>
+                              <span style={{ color: '#f87171' }} className="text-xs font-black uppercase tracking-wider block">(BẮT BUỘC)</span>
+                            </div>
                             <button
                               onClick={() => copyToClipboard(memoCode, 'Nội dung')}
                               style={{ backgroundColor: 'rgba(249, 115, 22, 0.25)', color: '#fdba74', borderColor: 'rgba(249, 115, 22, 0.6)' }}
-                              className="font-black font-mono text-lg sm:text-xl hover:bg-orange-500/40 flex items-center gap-2 cursor-pointer px-4 py-2.5 rounded-xl border-2 transition-all shadow-lg"
+                              className="font-black font-mono text-base sm:text-xl hover:bg-orange-500/40 flex items-center gap-2 cursor-pointer px-4 py-2.5 rounded-xl border-2 transition-all shadow-lg shrink-0"
                             >
                               {memoCode} {copiedField === 'Nội dung' ? <Check size={20} style={{ color: '#34d399' }} /> : <Copy size={20} />}
+                            </button>
+                          </div>
+
+                          {/* Cancel Active Transaction Line */}
+                          <div style={{ borderColor: '#334155' }} className="pt-3 border-t-2 text-center">
+                            <button
+                              type="button"
+                              onClick={handleCancelActiveDeposit}
+                              style={{ backgroundColor: 'rgba(239, 68, 68, 0.15)', color: '#fca5a5', borderColor: 'rgba(239, 68, 68, 0.4)' }}
+                              className="w-full py-3 px-4 rounded-xl border-2 font-black text-sm sm:text-base hover:bg-red-500/25 hover:text-white transition-all cursor-pointer inline-flex items-center justify-center gap-2 shadow"
+                            >
+                              <X size={20} className="text-red-400" /> Hủy mã giao dịch này
                             </button>
                           </div>
                         </div>
@@ -482,7 +630,7 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
                         </p>
                         <button
                           type="button"
-                          onClick={() => setDepositAmount(null)}
+                          onClick={handleCancelActiveDeposit}
                           style={{ backgroundColor: '#ea580c', color: '#ffffff' }}
                           className="px-6 py-3.5 rounded-2xl font-black text-base hover:bg-orange-600 transition-all shadow-lg cursor-pointer inline-flex items-center gap-2"
                         >
@@ -580,7 +728,7 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
                       : isPending
                       ? 'rgba(245, 158, 11, 0.4)'
                       : 'rgba(239, 68, 68, 0.5)';
-                    const statusText = isApproved ? 'Thành công' : isPending ? 'Chờ duyệt' : 'Từ chối';
+                    const statusText = isApproved ? 'Thành công' : isPending ? 'Chờ duyệt' : (tx.type === 'DEPOSIT' ? 'Đã hủy' : 'Từ chối');
 
                     return (
                       <div
