@@ -93,7 +93,7 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
     }
   };
 
-  const memoCode = `FLUNCH ${user?.mssv || user?.fullName?.replace(/\s+/g, '') || ''}`;
+  const memoCode = `SEVQR FLUNCH ${user?.mssv || user?.fullName?.replace(/\s+/g, '') || ''}`.trim();
 
   // Automatically register a pending deposit in background when user selects amount
   useEffect(() => {
@@ -386,7 +386,7 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
                       {/* HUGE CRISP QR CODE CONTAINER */}
                       <div className="w-72 h-72 sm:w-96 sm:h-96 bg-white p-4 rounded-3xl mx-auto shadow-2xl overflow-hidden flex items-center justify-center border-4 border-slate-600">
                         <img 
-                          src={`https://img.vietqr.io/image/vietinbank-106875040898-compact.png?amount=${depositAmount}&addInfo=${encodeURIComponent(memoCode)}&accountName=LE%20DO%20NHAT%20ANH`} 
+                          src={`https://vietqr.app/img?bank=VietinBank&acc=106875040898&template=compact&amount=${depositAmount}&des=${encodeURIComponent(memoCode)}&showinfo=true&holder=LE%20DO%20NHAT%20ANH&store=F-Lunch`} 
                           alt="VietinBank VietQR" 
                           className="w-full h-full object-contain" 
                         />
