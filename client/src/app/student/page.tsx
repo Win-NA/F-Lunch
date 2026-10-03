@@ -408,243 +408,245 @@ export default function StudentDashboard() {
             Tạo yêu cầu mới
           </h2>
 
-          {hasActiveUnstoredRequest && (
-            <div className="bg-amber-500/10 border border-amber-500/30 text-amber-300 p-3 rounded-2xl text-xs mb-4 flex items-start gap-2.5">
-              <AlertCircle className="shrink-0 text-amber-400 mt-0.5" size={16} />
+          {hasActiveUnstoredRequest ? (
+            <div className="bg-amber-500/20 border-2 border-amber-500/60 text-amber-100 p-4 rounded-2xl space-y-2 shadow-sm animate-fadeIn">
+              <div className="flex items-center gap-2 font-black text-amber-300 text-xs">
+                <AlertCircle className="shrink-0 text-amber-400" size={18} />
+                <span>CHƯA ĐỦ ĐIỀU KIỆN TẠO ĐƠN MỚI</span>
+              </div>
+              <p className="text-[11.5px] font-extrabold text-amber-100 leading-relaxed">
+                Bạn đang có 1 đơn nhận hộ chưa cất vào tủ sảnh. Vui lòng chờ người nhận hộ xác nhận <strong>"Đã đến điểm tập kết"</strong> đơn hiện tại trước khi có thể tạo đơn nhận hộ mới nhé!
+              </p>
+              <div className="pt-2 border-t border-amber-500/30 flex items-center justify-between text-[10px] text-amber-300 font-bold">
+                <span>Trạng thái: Đơn đang xử lý</span>
+                <span className="text-orange-400 underline">Theo dõi danh sách ở bên phải 👉</span>
+              </div>
+            </div>
+          ) : (
+            <form onSubmit={handleCreateRequest} className="space-y-4">
               <div>
-                <p className="font-bold text-amber-200 text-xs">Đang có đơn chưa đến điểm tập kết</p>
-                <p className="text-[10.5px] text-amber-300/80 mt-0.5 leading-relaxed">
-                  Bạn cần chờ người nhận hộ xác nhận <strong>"Đã đến điểm tập kết"</strong> đơn hiện tại trước khi có thể tạo đơn nhận hộ mới.
+                <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1.5">
+                  Ứng dụng đặt đồ ăn *
+                </label>
+                <select
+                  value={foodPlatform}
+                  onChange={(e) => setFoodPlatform(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-orange-500"
+                >
+                  <option value="GRABFOOD">GrabFood</option>
+                  <option value="SHOPEEFOOD">ShopeeFood</option>
+                  <option value="BEFOOD">BeFood</option>
+                  <option value="OTHER">Khác</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1.5">
+                  Vị trí Shipper giao tới *
+                </label>
+                <select
+                  value={pickupLocation}
+                  onChange={(e) => setPickupLocation(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-orange-500"
+                >
+                  <option value="Cổng 1 FPT">Cổng 1 FPT</option>
+                  <option value="Cổng 2 FPT">Cổng 2 FPT</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1.5">
+                  Nơi bạn xuống nhận hàng *
+                </label>
+                <div className="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-350 flex items-center gap-2 select-none">
+                  <MapPin size={12} className="text-orange-500 shrink-0" />
+                  <span>Sảnh Trống Đồng (Mặc định cố định)</span>
+                </div>
+              </div>
+
+              <div>
+                <div className="flex justify-between items-center mb-1.5">
+                  <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                    Giờ giao hàng dự kiến *
+                  </label>
+                  <span className="text-[10px] text-orange-500 font-medium">Hôm nay ({getTodayString()})</span>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex items-center gap-2 bg-slate-955 border border-slate-800 rounded-xl px-3 py-2.5">
+                    <select
+                      value={pickupHour}
+                      onChange={(e) => setPickupHour(e.target.value)}
+                      className="flex-1 bg-transparent text-xs text-white focus:outline-none cursor-pointer [color-scheme:dark] h-5"
+                    >
+                      {Array.from({ length: 24 }, (_, i) => {
+                        const h = i.toString().padStart(2, '0');
+                        return <option key={h} value={h} className="bg-slate-950">{h} giờ</option>;
+                      })}
+                    </select>
+                  </div>
+                  <div className="flex items-center gap-2 bg-slate-955 border border-slate-800 rounded-xl px-3 py-2.5">
+                    <select
+                      value={pickupMinute}
+                      onChange={(e) => setPickupMinute(e.target.value)}
+                      className="flex-1 bg-transparent text-xs text-white focus:outline-none cursor-pointer [color-scheme:dark] h-5"
+                    >
+                      {Array.from({ length: 60 }, (_, i) => {
+                        const m = i.toString().padStart(2, '0');
+                        return <option key={m} value={m} className="bg-slate-950">{m} phút</option>;
+                      })}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1.5">
+                  Ghi chú cho F-Lunch / Thông tin thêm
+                </label>
+                <textarea
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  placeholder="Ví dụ: Số điện thoại tài xế, hoặc lưu ý đồ uống có đá/cần bảo quản lạnh"
+                  rows={2}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-orange-500 resize-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1.5 flex justify-between items-center">
+                  <span>Ảnh chụp màn hình đơn hàng *</span>
+                  <span className="text-[9px] text-slate-500 font-normal">Dưới 2MB</span>
+                </label>
+                <div className="flex flex-col gap-2.5">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="block w-full text-xs text-slate-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-[10px] file:font-semibold file:bg-orange-500/10 file:text-orange-500 file:cursor-pointer hover:file:bg-orange-500/20"
+                  />
+
+                  {ocrLoading && (
+                    <div className="text-[10px] text-orange-400 flex items-center gap-1.5 animate-pulse bg-orange-500/5 p-2.5 rounded-xl border border-orange-500/10 justify-center">
+                      <Clock size={12} className="animate-spin shrink-0 text-orange-400" />
+                      <span>Đang tự động quét & AI kiểm duyệt đơn hàng...</span>
+                    </div>
+                  )}
+
+                  {extractedOrderCode && (
+                    <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 p-2.5 rounded-xl text-[10px] flex items-center gap-2">
+                      <span>Mã đơn nhận dạng được: <strong className="text-emerald-400 font-bold">{extractedOrderCode}</strong></span>
+                    </div>
+                  )}
+
+                  {imageBase64 && (
+                    <div className="relative w-full h-24 rounded-xl border border-slate-800 bg-slate-950 overflow-hidden flex items-center justify-center p-2">
+                      <img
+                        src={imageBase64}
+                        alt="Xem trước đơn hàng"
+                        className="max-h-full max-w-full rounded object-contain"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setImageBase64(null);
+                          setExtractedOrderCode(null);
+                          setPaymentStatus('UNKNOWN');
+                          setDetectedPaymentMethod(null);
+                          setIsFoodOrder(true);
+                          setDetectedCategory(null);
+                          setAiReason(null);
+                          setAiPowered(false);
+                        }}
+                        className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-red-500/80 hover:bg-red-500 text-white flex items-center justify-center text-xs active:scale-90 transition-transform cursor-pointer"
+                      >
+                        <X size={10} />
+                      </button>
+                    </div>
+                  )}
+
+                  {/* AI / OCR Warning Alert: Non-Food or COD Payment (RED ALERT) */}
+                  {(!isFoodOrder || paymentStatus === 'UNPAID') && (
+                    <div className="bg-red-500/10 border border-red-500/30 text-red-400 p-2.5 rounded-xl text-[10px] space-y-1">
+                      <div className="flex items-center gap-1.5 font-bold text-red-400">
+                        <AlertCircle size={14} className="shrink-0 text-red-400" />
+                        <span>{!isFoodOrder ? 'Cảnh báo: Đơn hàng không thuộc nhóm Đồ ăn' : 'Phát hiện đơn "Tiền mặt" (COD)'}</span>
+                      </div>
+                      <p className="text-[9.5px] text-red-400/90 leading-normal">
+                        {!isFoodOrder
+                          ? (aiReason || 'F-Lunch hiện chỉ hỗ trợ nhận hộ Đồ ăn & Thức uống. Hệ thống không nhận hộ bưu kiện hoặc hàng hóa khác.')
+                          : 'F-Lunch chỉ nhận hộ các đơn hàng đã thanh toán trước (ShopeePay, GrabPay, MoMo, Thẻ...). Vui lòng chọn đơn đã thanh toán trực tuyến.'}
+                      </p>
+                      {detectedCategory && (
+                        <div className="inline-block mt-0.5 bg-red-500/15 text-red-400 px-2 py-0.5 rounded text-[9px] font-semibold border border-red-500/20">
+                          Mặt hàng phát hiện: {detectedCategory}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* AI Verification Success Banner (GREEN ALERT) */}
+                  {isFoodOrder && paymentStatus === 'PAID' && (
+                    <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 p-2.5 rounded-xl text-[10px] space-y-1">
+                      <div className="flex items-center gap-1.5 font-bold text-emerald-400">
+                        <CheckCircle2 size={14} className="shrink-0 text-emerald-400" />
+                        <span>Xác thực thành công: Đơn hàng ĐÃ THANH TOÁN!</span>
+                      </div>
+                      <p className="text-[9.5px] text-emerald-400/90 leading-normal">
+                        Đơn hàng đồ ăn hợp lệ, đã trả trước qua <strong>{detectedPaymentMethod || 'Ví/Thẻ Trực tuyến'}</strong>.
+                      </p>
+                      {aiPowered && (
+                        <div className="inline-flex items-center gap-1 bg-emerald-500/15 text-emerald-400 px-2 py-0.5 rounded text-[9px] font-medium border border-emerald-500/20 mt-0.5">
+                          🤖 Kiểm duyệt bởi AI Gemini Vision
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Alert: Unknown payment status (RED WARNING ALERT) */}
+                  {paymentStatus === 'UNKNOWN' && imageBase64 && !ocrLoading && isFoodOrder && (
+                    <div className="bg-red-500/10 border border-red-500/30 text-red-400 p-2.5 rounded-xl text-[10px] space-y-1">
+                      <div className="flex items-center gap-1.5 font-bold text-red-400">
+                        <AlertCircle size={14} className="shrink-0 text-red-400" />
+                        <span>Chưa nhận dạng được trạng thái thanh toán</span>
+                      </div>
+                      <p className="text-[9.5px] text-red-400/90 leading-normal">
+                        Hệ thống chưa thể tự động nhận dạng ví thanh toán từ ảnh. Vui lòng đảm bảo đơn hàng của bạn đã được trả trước (ShopeePay, GrabPay, MoMo, Thẻ...) trước khi gửi!
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 text-[10px] space-y-1.5">
+                <div className="flex justify-between items-center text-slate-300">
+                  <span className="flex items-center gap-1 font-medium">
+                    <Wallet size={12} className="text-orange-500" /> Phí nhận hộ:
+                  </span>
+                  <span className="font-mono font-black text-orange-400 text-xs">5.000 đ</span>
+                </div>
+                <p className="text-[9.5px] text-slate-400 leading-normal border-t border-slate-900 pt-1.5">
+                  💡 <span className="text-orange-400 font-semibold">Ưu tiên trừ Ví Khuyến Mãi trước</span>. Trường hợp số dư Ví KM không đủ 5.000đ, phần còn thiếu sẽ tự động trừ vào Ví Chính.
                 </p>
               </div>
-            </div>
-          )}
 
-          <form onSubmit={handleCreateRequest} className="space-y-4">
-            <div>
-              <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1.5">
-                Ứng dụng đặt đồ ăn *
-              </label>
-              <select
-                value={foodPlatform}
-                onChange={(e) => setFoodPlatform(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-orange-500"
+              <button
+                type="submit"
+                disabled={formLoading || !isFoodOrder || paymentStatus === 'UNPAID'}
+                className={`w-full font-extrabold text-xs py-3 rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 mt-2 ${!isFoodOrder || paymentStatus === 'UNPAID'
+                  ? 'bg-slate-800 text-slate-400 border border-slate-700 cursor-not-allowed shadow-none'
+                  : 'bg-orange-600 hover:bg-orange-500 disabled:bg-orange-850 text-white shadow-orange-600/25 cursor-pointer active:scale-[0.99]'
+                  }`}
               >
-                <option value="GRABFOOD">GrabFood</option>
-                <option value="SHOPEEFOOD">ShopeeFood</option>
-                <option value="BEFOOD">BeFood</option>
-                <option value="OTHER">Khác</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1.5">
-                Vị trí Shipper giao tới *
-              </label>
-              <select
-                value={pickupLocation}
-                onChange={(e) => setPickupLocation(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-orange-500"
-              >
-                <option value="Cổng 1 FPT">Cổng 1 FPT</option>
-                <option value="Cổng 2 FPT">Cổng 2 FPT</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1.5">
-                Nơi bạn xuống nhận hàng *
-              </label>
-              <div className="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-350 flex items-center gap-2 select-none">
-                <MapPin size={12} className="text-orange-500 shrink-0" />
-                <span>Sảnh Trống Đồng (Mặc định cố định)</span>
-              </div>
-            </div>
-
-            <div>
-              <div className="flex justify-between items-center mb-1.5">
-                <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-                  Giờ giao hàng dự kiến *
-                </label>
-                <span className="text-[10px] text-orange-500 font-medium">Hôm nay ({getTodayString()})</span>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="flex items-center gap-2 bg-slate-955 border border-slate-800 rounded-xl px-3 py-2.5">
-                  <select
-                    value={pickupHour}
-                    onChange={(e) => setPickupHour(e.target.value)}
-                    className="flex-1 bg-transparent text-xs text-white focus:outline-none cursor-pointer [color-scheme:dark] h-5"
-                  >
-                    {Array.from({ length: 24 }, (_, i) => {
-                      const h = i.toString().padStart(2, '0');
-                      return <option key={h} value={h} className="bg-slate-950">{h} giờ</option>;
-                    })}
-                  </select>
-                </div>
-                <div className="flex items-center gap-2 bg-slate-955 border border-slate-800 rounded-xl px-3 py-2.5">
-                  <select
-                    value={pickupMinute}
-                    onChange={(e) => setPickupMinute(e.target.value)}
-                    className="flex-1 bg-transparent text-xs text-white focus:outline-none cursor-pointer [color-scheme:dark] h-5"
-                  >
-                    {Array.from({ length: 60 }, (_, i) => {
-                      const m = i.toString().padStart(2, '0');
-                      return <option key={m} value={m} className="bg-slate-950">{m} phút</option>;
-                    })}
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1.5">
-                Ghi chú cho F-Lunch / Thông tin thêm
-              </label>
-              <textarea
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                placeholder="Ví dụ: Số điện thoại tài xế, hoặc lưu ý đồ uống có đá/cần bảo quản lạnh"
-                rows={2}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-orange-500 resize-none"
-              />
-            </div>
-
-            <div>
-              <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1.5 flex justify-between items-center">
-                <span>Ảnh chụp màn hình đơn hàng *</span>
-                <span className="text-[9px] text-slate-500 font-normal">Dưới 2MB</span>
-              </label>
-              <div className="flex flex-col gap-2.5">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  className="block w-full text-xs text-slate-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-[10px] file:font-semibold file:bg-orange-500/10 file:text-orange-500 file:cursor-pointer hover:file:bg-orange-500/20"
-                />
-
-                {ocrLoading && (
-                  <div className="text-[10px] text-orange-400 flex items-center gap-1.5 animate-pulse bg-orange-500/5 p-2.5 rounded-xl border border-orange-500/10 justify-center">
-                    <Clock size={12} className="animate-spin shrink-0 text-orange-400" />
-                    <span>Đang tự động quét & AI kiểm duyệt đơn hàng...</span>
-                  </div>
-                )}
-
-                {extractedOrderCode && (
-                  <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 p-2.5 rounded-xl text-[10px] flex items-center gap-2">
-                    <span>Mã đơn nhận dạng được: <strong className="text-emerald-400 font-bold">{extractedOrderCode}</strong></span>
-                  </div>
-                )}
-
-                {imageBase64 && (
-                  <div className="relative w-full h-24 rounded-xl border border-slate-800 bg-slate-950 overflow-hidden flex items-center justify-center p-2">
-                    <img
-                      src={imageBase64}
-                      alt="Xem trước đơn hàng"
-                      className="max-h-full max-w-full rounded object-contain"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setImageBase64(null);
-                        setExtractedOrderCode(null);
-                        setPaymentStatus('UNKNOWN');
-                        setDetectedPaymentMethod(null);
-                        setIsFoodOrder(true);
-                        setDetectedCategory(null);
-                        setAiReason(null);
-                        setAiPowered(false);
-                      }}
-                      className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-red-500/80 hover:bg-red-500 text-white flex items-center justify-center text-xs active:scale-90 transition-transform cursor-pointer"
-                    >
-                      <X size={10} />
-                    </button>
-                  </div>
-                )}
-
-                {/* AI / OCR Warning Alert: Non-Food or COD Payment (RED ALERT) */}
-                {(!isFoodOrder || paymentStatus === 'UNPAID') && (
-                  <div className="bg-red-500/10 border border-red-500/30 text-red-400 p-2.5 rounded-xl text-[10px] space-y-1">
-                    <div className="flex items-center gap-1.5 font-bold text-red-400">
-                      <AlertCircle size={14} className="shrink-0 text-red-400" />
-                      <span>{!isFoodOrder ? 'Cảnh báo: Đơn hàng không thuộc nhóm Đồ ăn' : 'Phát hiện đơn "Tiền mặt" (COD)'}</span>
-                    </div>
-                    <p className="text-[9.5px] text-red-400/90 leading-normal">
-                      {!isFoodOrder
-                        ? (aiReason || 'F-Lunch hiện chỉ hỗ trợ nhận hộ Đồ ăn & Thức uống. Hệ thống không nhận hộ bưu kiện hoặc hàng hóa khác.')
-                        : 'F-Lunch chỉ nhận hộ các đơn hàng đã thanh toán trước (ShopeePay, GrabPay, MoMo, Thẻ...). Vui lòng chọn đơn đã thanh toán trực tuyến.'}
-                    </p>
-                    {detectedCategory && (
-                      <div className="inline-block mt-0.5 bg-red-500/15 text-red-400 px-2 py-0.5 rounded text-[9px] font-semibold border border-red-500/20">
-                        Mặt hàng phát hiện: {detectedCategory}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* AI Verification Success Banner (GREEN ALERT) */}
-                {isFoodOrder && paymentStatus === 'PAID' && (
-                  <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 p-2.5 rounded-xl text-[10px] space-y-1">
-                    <div className="flex items-center gap-1.5 font-bold text-emerald-400">
-                      <CheckCircle2 size={14} className="shrink-0 text-emerald-400" />
-                      <span>Xác thực thành công: Đơn hàng ĐÃ THANH TOÁN!</span>
-                    </div>
-                    <p className="text-[9.5px] text-emerald-400/90 leading-normal">
-                      Đơn hàng đồ ăn hợp lệ, đã trả trước qua <strong>{detectedPaymentMethod || 'Ví/Thẻ Trực tuyến'}</strong>.
-                    </p>
-                    {aiPowered && (
-                      <div className="inline-flex items-center gap-1 bg-emerald-500/15 text-emerald-400 px-2 py-0.5 rounded text-[9px] font-medium border border-emerald-500/20 mt-0.5">
-                        🤖 Kiểm duyệt bởi AI Gemini Vision
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Alert: Unknown payment status (RED WARNING ALERT) */}
-                {paymentStatus === 'UNKNOWN' && imageBase64 && !ocrLoading && isFoodOrder && (
-                  <div className="bg-red-500/10 border border-red-500/30 text-red-400 p-2.5 rounded-xl text-[10px] space-y-1">
-                    <div className="flex items-center gap-1.5 font-bold text-red-400">
-                      <AlertCircle size={14} className="shrink-0 text-red-400" />
-                      <span>Chưa nhận dạng được trạng thái thanh toán</span>
-                    </div>
-                    <p className="text-[9.5px] text-red-400/90 leading-normal">
-                      Hệ thống chưa thể tự động nhận dạng ví thanh toán từ ảnh. Vui lòng đảm bảo đơn hàng của bạn đã được trả trước (ShopeePay, GrabPay, MoMo, Thẻ...) trước khi gửi!
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 text-[10px] space-y-1.5">
-              <div className="flex justify-between items-center text-slate-300">
-                <span className="flex items-center gap-1 font-medium">
-                  <Wallet size={12} className="text-orange-500" /> Phí nhận hộ:
-                </span>
-                <span className="font-mono font-black text-orange-400 text-xs">5.000 đ</span>
-              </div>
-              <p className="text-[9.5px] text-slate-400 leading-normal border-t border-slate-900 pt-1.5">
-                💡 <span className="text-orange-400 font-semibold">Ưu tiên trừ Ví Khuyến Mãi trước</span>. Trường hợp số dư Ví KM không đủ 5.000đ, phần còn thiếu sẽ tự động trừ vào Ví Chính.
-              </p>
-            </div>
-
-            <button
-              type="submit"
-              disabled={formLoading || !isFoodOrder || paymentStatus === 'UNPAID' || hasActiveUnstoredRequest}
-              className={`w-full font-extrabold text-xs py-3 rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 mt-2 ${!isFoodOrder || paymentStatus === 'UNPAID' || hasActiveUnstoredRequest
-                ? 'bg-slate-800 text-slate-400 border border-slate-700 cursor-not-allowed shadow-none'
-                : 'bg-orange-600 hover:bg-orange-500 disabled:bg-orange-850 text-white shadow-orange-600/25 cursor-pointer active:scale-[0.99]'
-                }`}
-            >
-              {formLoading
-                ? 'Đang gửi...'
-                : hasActiveUnstoredRequest
-                  ? 'Đang có đơn chưa đến điểm tập kết'
+                {formLoading
+                  ? 'Đang gửi...'
                   : !isFoodOrder
                     ? 'Không thể gửi đơn KHÔNG PHẢI ĐỒ ĂN'
                     : paymentStatus === 'UNPAID'
                       ? 'Không thể gửi đơn Tiền mặt (COD)'
                       : 'Gửi yêu cầu nhận hộ'}
-            </button>
-          </form>
+              </button>
+            </form>
+          )}
         </div>
 
         {/* Requests List */}
