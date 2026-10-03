@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useAuthStore } from '@/stores/auth.store';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
 import { 
