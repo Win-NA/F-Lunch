@@ -11,6 +11,7 @@ import { FeedbackModule } from './feedback/feedback.module';
 import { AdminModule } from './admin/admin.module';
 import { TransactionsModule } from './transactions/transactions.module';
 import { ReportsModule } from './reports/reports.module';
+import { AiModule } from './ai/ai.module';
 import { ConfigModule } from '@nestjs/config';
 
 @Module({
@@ -26,6 +27,7 @@ import { ConfigModule } from '@nestjs/config';
     AdminModule,
     TransactionsModule,
     ReportsModule,
+    AiModule,
   ],
   controllers: [AppController],
   providers: [AppService],

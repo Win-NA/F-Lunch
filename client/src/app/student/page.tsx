@@ -61,9 +61,13 @@ export default function StudentDashboard() {
   const [ocrLoading, setOcrLoading] = useState(false);
   const [extractedOrderCode, setExtractedOrderCode] = useState<string | null>(null);
 
-  // AI Payment Verification State
+  // AI Verification State
   const [paymentStatus, setPaymentStatus] = useState<'PAID' | 'UNPAID' | 'UNKNOWN'>('UNKNOWN');
   const [detectedPaymentMethod, setDetectedPaymentMethod] = useState<string | null>(null);
+  const [isFoodOrder, setIsFoodOrder] = useState<boolean>(true);
+  const [detectedCategory, setDetectedCategory] = useState<string | null>(null);
+  const [aiReason, setAiReason] = useState<string | null>(null);
+  const [aiPowered, setAiPowered] = useState<boolean>(false);
 
   const extractOrderCode = (text: string): string | null => {
     const lines = text.split('\n');
@@ -92,6 +96,17 @@ export default function StudentDashboard() {
     }
 
     return null;
+  };
+
+  const checkNonFoodKeywords = (text: string): boolean => {
+    const lower = text.toLowerCase();
+    const nonFoodKeywords = [
+      'grabexpress', 'lalamove', 'shopee express', 'spx express', 'ghtk', 'giao hàng nhanh',
+      'áo thun', 'áo sơ mi', 'quần jean', 'quần đùi', 'giày thể thao', 'mỹ phẩm', 'son môi',
+      'điện thoại', 'tai nghe', 'sạc dự phòng', 'ốp lưng', 'văn phòng phẩm', 'sách', 'tủ đồ',
+      'bưu kiện', 'hàng hóa', 'bưu phẩm', 'quần áo'
+    ];
+    return nonFoodKeywords.some((kw) => lower.includes(kw));
   };
 
   const analyzePaymentStatus = (text: string): { status: 'PAID' | 'UNPAID' | 'UNKNOWN'; method: string | null } => {
@@ -139,15 +154,59 @@ export default function StudentDashboard() {
 
   const performOCR = async (base64: string) => {
     setOcrLoading(true);
+    setIsFoodOrder(true);
+    setDetectedCategory(null);
+    setAiReason(null);
+    setAiPowered(false);
+
     try {
+      // Step 1: Attempt Gemini AI Vision via backend
+      try {
+        const aiRes = await api.post('/ai/analyze-order-image', { imageBase64: base64 });
+        const aiData = aiRes.data;
+
+        if (aiData && aiData.aiPowered) {
+          setAiPowered(true);
+          setIsFoodOrder(aiData.isFoodOrder);
+          setDetectedCategory(aiData.detectedCategory || null);
+          setAiReason(aiData.reasonText || null);
+          setPaymentStatus(aiData.paymentStatus || 'UNKNOWN');
+          setDetectedPaymentMethod(aiData.detectedPaymentMethod || null);
+          if (aiData.orderCode) setExtractedOrderCode(aiData.orderCode);
+          if (aiData.foodPlatform) setFoodPlatform(aiData.foodPlatform);
+
+          if (!aiData.isFoodOrder) {
+            toast.error(`CẢNH BÁO AI: ${aiData.reasonText || 'Đơn hàng không phải đồ ăn!'}`);
+          } else if (aiData.paymentStatus === 'UNPAID') {
+            toast.error(`CẢNH BÁO AI: Đơn hàng Tiền mặt (COD). F-Lunch chỉ nhận đơn trả trước!`);
+          } else {
+            toast.success(`AI Vision xác thực: Đơn đồ ăn hợp lệ & đã trả trước!`);
+          }
+          return;
+        }
+      } catch (aiErr) {
+        console.log('AI Service fallback to local OCR');
+      }
+
+      // Step 2: Fallback local Tesseract OCR
       const ret = await Tesseract.recognize(base64, 'eng+vie');
       const text = ret.data.text;
 
       const code = extractOrderCode(text);
       const paymentInfo = analyzePaymentStatus(text);
+      const isNonFood = checkNonFoodKeywords(text);
 
       setPaymentStatus(paymentInfo.status);
       setDetectedPaymentMethod(paymentInfo.method);
+
+      if (isNonFood) {
+        setIsFoodOrder(false);
+        setDetectedCategory('Hàng hóa / Bưu kiện khác (Non-Food)');
+        setAiReason('Ảnh đơn chụp màn hình chứa sản phẩm/bưu kiện không thuộc nhóm Đồ ăn & Thức uống.');
+        toast.error('CẢNH BÁO: Đơn hàng chứa sản phẩm không phải đồ ăn!');
+      } else {
+        setIsFoodOrder(true);
+      }
 
       if (code) {
         setExtractedOrderCode(code);
@@ -155,12 +214,14 @@ export default function StudentDashboard() {
         setExtractedOrderCode(null);
       }
 
-      if (paymentInfo.status === 'PAID') {
-        toast.success(`Đã tự động xác thực: Đơn hàng ĐÃ THANH TOÁN (${paymentInfo.method || 'Online'})!`);
-      } else if (paymentInfo.status === 'UNPAID') {
-        toast.error(`CẢNH BÁO: Đơn hàng ghi nhận 'Tiền mặt' (Chưa thanh toán). F-Lunch chỉ nhận đơn đã trả trước!`);
-      } else {
-        toast.info(code ? `Đã nhận dạng mã đơn: ${code}. Hãy đảm bảo đơn đã thanh toán trực tuyến.` : 'Đã quét xong ảnh đơn hàng.');
+      if (!isNonFood) {
+        if (paymentInfo.status === 'PAID') {
+          toast.success(`Đã tự động xác thực: Đơn hàng ĐÃ THANH TOÁN (${paymentInfo.method || 'Online'})!`);
+        } else if (paymentInfo.status === 'UNPAID') {
+          toast.error(`CẢNH BÁO: Đơn hàng ghi nhận 'Tiền mặt' (Chưa thanh toán). F-Lunch chỉ nhận đơn đã trả trước!`);
+        } else {
+          toast.info(code ? `Đã nhận dạng mã đơn: ${code}. Hãy đảm bảo đơn đã thanh toán trực tuyến.` : 'Đã quét xong ảnh đơn hàng.');
+        }
       }
     } catch (err) {
       console.error('OCR Error:', err);
@@ -452,19 +513,19 @@ export default function StudentDashboard() {
                 />
 
                 {ocrLoading && (
-                  <div className="text-[10px] text-orange-400 flex items-center gap-1.5 animate-pulse bg-orange-500/5 p-2.5 rounded-xl border border-orange-500/10 justify-center">
-                    <Clock size={12} className="animate-spin shrink-0" />
-                    <span>Đang tự động quét tìm mã đơn hàng...</span>
+                  <div className="text-xs font-semibold text-amber-300 bg-amber-500/10 border border-amber-500/30 p-3 rounded-2xl flex items-center justify-center gap-2 shadow-sm animate-pulse">
+                    <Clock size={16} className="animate-spin text-amber-400 shrink-0" />
+                    <span>Đang quét & AI kiểm duyệt đơn hàng...</span>
                   </div>
                 )}
 
                 {extractedOrderCode && (
-                  <div className="bg-emerald-500/5 border border-emerald-500/20 text-emerald-400 p-2.5 rounded-xl text-[10px] flex items-center justify-between">
-                    <span>Mã đơn nhận dạng được: <strong>{extractedOrderCode}</strong></span>
+                  <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 p-2.5 rounded-2xl text-xs flex items-center justify-between shadow-sm">
+                    <span className="font-semibold">Mã đơn nhận dạng được: <strong className="font-black text-emerald-300 text-sm tracking-wide">{extractedOrderCode}</strong></span>
                     <button
                       type="button"
                       onClick={() => setExtractedOrderCode(null)}
-                      className="text-red-400 hover:text-red-300 font-bold cursor-pointer"
+                      className="text-red-400 hover:text-red-300 hover:underline font-bold text-xs cursor-pointer px-2 py-0.5 rounded bg-red-500/10 border border-red-500/20"
                     >
                       Xóa mã
                     </button>
@@ -485,6 +546,10 @@ export default function StudentDashboard() {
                         setExtractedOrderCode(null);
                         setPaymentStatus('UNKNOWN');
                         setDetectedPaymentMethod(null);
+                        setIsFoodOrder(true);
+                        setDetectedCategory(null);
+                        setAiReason(null);
+                        setAiPowered(false);
                       }}
                       className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-red-500/80 hover:bg-red-500 text-white flex items-center justify-center text-xs active:scale-90 transition-transform cursor-pointer"
                     >
@@ -493,34 +558,56 @@ export default function StudentDashboard() {
                   </div>
                 )}
 
-                {/* AI Payment Status Verification Banner */}
-                {paymentStatus === 'PAID' && (
-                  <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 p-2.5 rounded-xl text-[10px] flex items-center gap-2">
-                    <CheckCircle2 size={14} className="shrink-0 text-emerald-400" />
-                    <span>
-                      <strong>Xác thực thành công:</strong> Đơn hàng đã trả trước qua {detectedPaymentMethod || 'Ví/Thẻ Trực tuyến'}.
-                    </span>
-                  </div>
-                )}
-
-                {paymentStatus === 'UNPAID' && (
-                  <div className="bg-red-500/15 border border-red-500/40 text-red-400 p-2.5 rounded-xl text-[10px] space-y-1">
-                    <div className="flex items-center gap-1.5 font-bold text-red-300">
-                      <AlertCircle size={14} className="shrink-0 text-red-400" />
-                      <span>Phát hiện đơn "Tiền mặt" (COD)</span>
+                {/* AI / OCR Warning Alert: Non-Food or COD Payment (RED ALERT) */}
+                {(!isFoodOrder || paymentStatus === 'UNPAID') && (
+                  <div className="bg-red-950/90 border-2 border-red-500 p-3.5 rounded-2xl space-y-1.5 shadow-lg">
+                    <div className="flex items-center gap-2 font-black text-red-200 text-xs">
+                      <AlertCircle size={18} className="shrink-0 text-red-400" />
+                      <span>
+                        {!isFoodOrder ? '❌ CẢNH BÁO: ĐƠN HÀNG KHÔNG PHẢI ĐỒ ĂN' : '❌ PHÁT HIỆN ĐƠN "TIỀN MẶT" (COD)'}
+                      </span>
                     </div>
-                    <p className="text-[9.5px] text-red-300/80 leading-normal">
-                      F-Lunch chỉ nhận hộ các đơn hàng đã thanh toán trước (ShopeePay, GrabPay, MoMo, Thẻ...). Vui lòng hủy đơn này và chọn đơn trả trước!
+                    <p className="text-[11px] font-extrabold text-red-100 leading-snug">
+                      {!isFoodOrder
+                        ? (aiReason || 'F-Lunch CHỈ nhận hộ Đồ ăn / Thức uống. Hệ thống không hỗ trợ nhận hộ bưu kiện, quần áo, thiết bị điện tử hoặc hàng hóa khác.')
+                        : 'F-Lunch CHỈ nhận hộ các đơn hàng đã thanh toán trước (ShopeePay, GrabPay, MoMo, Thẻ...). Vui lòng hủy đơn này và chọn đơn trả trước!'}
                     </p>
+                    {detectedCategory && (
+                      <div className="inline-block mt-1 bg-red-900 text-red-100 px-2.5 py-1 rounded-lg text-[10.5px] font-black border border-red-600">
+                        Phân loại phát hiện: {detectedCategory}
+                      </div>
+                    )}
                   </div>
                 )}
 
-                {paymentStatus === 'UNKNOWN' && imageBase64 && !ocrLoading && (
-                  <div className="bg-blue-500/10 border border-blue-500/20 text-blue-300 p-2.5 rounded-xl text-[10px] flex items-center gap-2">
-                    <Info size={14} className="shrink-0 text-blue-400" />
-                    <span>
+                {/* AI Verification Success Banner (GREEN ALERT) */}
+                {isFoodOrder && paymentStatus === 'PAID' && (
+                  <div className="bg-emerald-950/80 border-2 border-emerald-500 p-3.5 rounded-2xl space-y-1 shadow-sm">
+                    <div className="flex items-center gap-2 font-extrabold text-emerald-200 text-xs">
+                      <CheckCircle2 size={18} className="shrink-0 text-emerald-400" />
+                      <span>ĐƠN HÀNG HỢP LỆ & ĐÃ XÁC THỰC!</span>
+                    </div>
+                    <p className="text-[11.5px] font-bold text-emerald-100 leading-snug">
+                      Đơn hàng đồ ăn hợp lệ, đã trả trước qua <strong>{detectedPaymentMethod || 'Ví / Thẻ trực tuyến'}</strong>.
+                    </p>
+                    {aiPowered && (
+                      <div className="inline-flex items-center gap-1.5 bg-emerald-900 text-emerald-100 px-2.5 py-0.5 rounded-md text-[10px] font-extrabold border border-emerald-600 mt-1">
+                        🤖 Kiểm duyệt bởi AI Gemini Vision
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Info Alert: Unknown payment status (BLUE ALERT) */}
+                {paymentStatus === 'UNKNOWN' && imageBase64 && !ocrLoading && isFoodOrder && (
+                  <div className="bg-blue-950/80 border-2 border-blue-500 p-3 rounded-2xl space-y-1 shadow-sm">
+                    <div className="flex items-center gap-2 font-bold text-blue-200 text-xs">
+                      <Info size={16} className="shrink-0 text-blue-400" />
+                      <span>Đã quét xong ảnh đơn hàng</span>
+                    </div>
+                    <p className="text-[11px] font-semibold text-blue-100 leading-snug">
                       Chưa tự động nhận dạng ví thanh toán từ ảnh. Đảm bảo đơn đã thanh toán trả trước nhé.
-                    </span>
+                    </p>
                   </div>
                 )}
               </div>
@@ -540,9 +627,9 @@ export default function StudentDashboard() {
 
             <button
               type="submit"
-              disabled={formLoading || paymentStatus === 'UNPAID' || hasActiveUnstoredRequest}
-              className={`w-full font-semibold text-xs py-3 rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 mt-2 ${paymentStatus === 'UNPAID' || hasActiveUnstoredRequest
-                ? 'bg-slate-800 text-slate-500 border border-slate-700 cursor-not-allowed shadow-none'
+              disabled={formLoading || !isFoodOrder || paymentStatus === 'UNPAID' || hasActiveUnstoredRequest}
+              className={`w-full font-extrabold text-xs py-3 rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 mt-2 ${!isFoodOrder || paymentStatus === 'UNPAID' || hasActiveUnstoredRequest
+                ? 'bg-slate-800 text-slate-400 border border-slate-700 cursor-not-allowed shadow-none'
                 : 'bg-orange-600 hover:bg-orange-500 disabled:bg-orange-850 text-white shadow-orange-600/25 cursor-pointer active:scale-[0.99]'
                 }`}
             >
@@ -550,9 +637,11 @@ export default function StudentDashboard() {
                 ? 'Đang gửi...'
                 : hasActiveUnstoredRequest
                   ? 'Đang có đơn chưa đến điểm tập kết'
-                  : paymentStatus === 'UNPAID'
-                    ? 'Không thể gửi đơn Tiền mặt (COD)'
-                    : 'Gửi yêu cầu nhận hộ'}
+                  : !isFoodOrder
+                    ? 'Không thể gửi đơn KHÔNG PHẢI ĐỒ ĂN'
+                    : paymentStatus === 'UNPAID'
+                      ? 'Không thể gửi đơn Tiền mặt (COD)'
+                      : 'Gửi yêu cầu nhận hộ'}
             </button>
           </form>
         </div>
