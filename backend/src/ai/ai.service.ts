@@ -111,9 +111,15 @@ Quy tắc BẮT BUỘC:
 
     if (!candidateText) return null;
 
-    // Parse JSON output
-    const cleanJson = candidateText.replace(/```json/g, '').replace(/```/g, '').trim();
-    const parsed = JSON.parse(cleanJson);
+    // Parse JSON output safely
+    let parsed: any;
+    try {
+      const cleanJson = candidateText.replace(/```json/g, '').replace(/```/g, '').trim();
+      parsed = JSON.parse(cleanJson);
+    } catch (parseErr) {
+      this.logger.error('Failed to parse JSON response from Gemini API', candidateText);
+      return null;
+    }
 
     return {
       isFoodOrder: Boolean(parsed.isFoodOrder),
