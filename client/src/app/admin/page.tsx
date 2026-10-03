@@ -145,6 +145,8 @@ function AdminDashboardContent() {
   const [txStatusFilter, setTxStatusFilter] = useState<string>('ALL');
   const [userTxModal, setUserTxModal] = useState<UserItem | null>(null);
   const [userTxTypeFilter, setUserTxTypeFilter] = useState<'ALL' | 'DEPOSIT' | 'ORDER_PAYMENT'>('ALL');
+  const [memberModalSearch, setMemberModalSearch] = useState<string>('');
+  const [auditLogSearch, setAuditLogSearch] = useState<string>('');
 
   // Reports State
   const [adminReports, setAdminReports] = useState<ReportTicketItem[]>([]);
@@ -1478,43 +1480,69 @@ function AdminDashboardContent() {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-1 bg-slate-955 p-1 rounded-xl border border-slate-800 shrink-0 overflow-x-auto">
-                      <button
-                        type="button"
-                        onClick={() => setUserTxTypeFilter('ALL')}
-                        className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
-                          userTxTypeFilter === 'ALL' ? 'bg-orange-600 text-white shadow' : 'text-slate-400 hover:text-white'
-                        }`}
-                      >
-                        Tất cả ({userTxs.length})
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setUserTxTypeFilter('DEPOSIT')}
-                        className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
-                          userTxTypeFilter === 'DEPOSIT' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'
-                        }`}
-                      >
-                        💳 Nạp tiền & KM ({userTxs.filter(t => t.type === 'DEPOSIT' || t.type === 'ADMIN_ADJUST').length})
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setUserTxTypeFilter('ORDER_PAYMENT')}
-                        className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
-                          userTxTypeFilter === 'ORDER_PAYMENT' ? 'bg-rose-600 text-white shadow' : 'text-slate-400 hover:text-white'
-                        }`}
-                      >
-                        🍱 Phí thanh toán đơn ({orderPaymentCount})
-                      </button>
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 shrink-0">
+                      <div className="flex items-center gap-1 bg-slate-955 p-1 rounded-xl border border-slate-800 shrink-0 overflow-x-auto whitespace-nowrap">
+                        <button
+                          type="button"
+                          onClick={() => setUserTxTypeFilter('ALL')}
+                          className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                            userTxTypeFilter === 'ALL' ? 'bg-orange-600 text-white shadow' : 'text-slate-400 hover:text-white'
+                          }`}
+                        >
+                          Tất cả ({userTxs.length})
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setUserTxTypeFilter('DEPOSIT')}
+                          className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                            userTxTypeFilter === 'DEPOSIT' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'
+                          }`}
+                        >
+                          💳 Nạp tiền & KM ({userTxs.filter(t => t.type === 'DEPOSIT' || t.type === 'ADMIN_ADJUST').length})
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setUserTxTypeFilter('ORDER_PAYMENT')}
+                          className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                            userTxTypeFilter === 'ORDER_PAYMENT' ? 'bg-rose-600 text-white shadow' : 'text-slate-400 hover:text-white'
+                          }`}
+                        >
+                          🍱 Phí thanh toán đơn ({orderPaymentCount})
+                        </button>
+                      </div>
+                      <div className="relative min-w-[180px]">
+                        <Search size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
+                        <input
+                          type="text"
+                          value={memberModalSearch}
+                          onChange={(e) => setMemberModalSearch(e.target.value)}
+                          placeholder="Tìm mã, nội dung..."
+                          className="w-full bg-slate-955 border border-slate-800 rounded-xl pl-8 pr-2 py-1 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-orange-500"
+                        />
+                      </div>
                     </div>
 
                     <div className="flex-1 overflow-y-auto space-y-2 pr-1">
-                      {filteredUserTxs.length === 0 ? (
-                        <div className="text-center py-10 text-slate-500 text-xs border border-dashed border-slate-800 rounded-2xl">
-                          Không có lịch sử giao dịch nào phù hợp với bộ lọc này.
-                        </div>
-                      ) : (
-                        filteredUserTxs.map((tx: any) => {
+                      {(() => {
+                        const searchedUserTxs = filteredUserTxs.filter(t => {
+                          if (!memberModalSearch.trim()) return true;
+                          const q = memberModalSearch.toLowerCase();
+                          return (
+                            (t.transactionCode || '').toLowerCase().includes(q) ||
+                            (t.note || '').toLowerCase().includes(q) ||
+                            (t.amount || '').toString().includes(q)
+                          );
+                        });
+
+                        if (searchedUserTxs.length === 0) {
+                          return (
+                            <div className="text-center py-10 text-slate-500 text-xs border border-dashed border-slate-800 rounded-2xl">
+                              Không có lịch sử giao dịch nào phù hợp với tìm kiếm.
+                            </div>
+                          );
+                        }
+
+                        return searchedUserTxs.map((tx: any) => {
                           const isNegative = tx.type === 'ORDER_PAYMENT';
                           return (
                             <div key={tx.id} className="p-3 bg-slate-955 rounded-xl border border-slate-800 flex items-center justify-between text-xs hover:border-slate-700 transition-colors">
@@ -1559,8 +1587,8 @@ function AdminDashboardContent() {
                               </div>
                             </div>
                           );
-                        })
-                      )}
+                        });
+                      })()}
                     </div>
                   </>
                 );
@@ -3224,10 +3252,31 @@ function AdminDashboardContent() {
 
           {/* PART 2: NHẬT KÝ NẠP TIỀN TỰ ĐỘNG (SYSTEM AUDIT LOG) */}
           <div className="space-y-3 pt-4 border-t border-slate-800">
-            <h3 className="text-sm font-extrabold text-white flex items-center gap-2">
-              <FileText size={16} className="text-orange-500" />
-              Nhật Ký Nạp Tiền & Điều Chỉnh Ví ({adminTransactions.filter((tx: any) => tx.type === 'DEPOSIT' || tx.type === 'ADMIN_ADJUST').length})
-            </h3>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <h3 className="text-sm font-extrabold text-white flex items-center gap-2">
+                <FileText size={16} className="text-orange-500" />
+                Nhật Ký Nạp Tiền & Điều Chỉnh Ví ({adminTransactions.filter((tx: any) => tx.type === 'DEPOSIT' || tx.type === 'ADMIN_ADJUST').length})
+              </h3>
+              <div className="relative w-full sm:w-72">
+                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
+                <input
+                  type="text"
+                  value={auditLogSearch}
+                  onChange={(e) => setAuditLogSearch(e.target.value)}
+                  placeholder="Tìm mã GD, tên, email, MSSV..."
+                  className="w-full bg-slate-955 border border-slate-800 rounded-xl pl-9 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-orange-500"
+                />
+                {auditLogSearch && (
+                  <button
+                    onClick={() => setAuditLogSearch('')}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 hover:text-white"
+                  >
+                    Xóa
+                  </button>
+                )}
+              </div>
+            </div>
+
             <div className="overflow-hidden border border-slate-800 rounded-2xl bg-slate-955/50">
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs text-slate-350 min-w-[650px]">
@@ -3241,16 +3290,34 @@ function AdminDashboardContent() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-850">
-                    {adminTransactions.filter((tx: any) => tx.type === 'DEPOSIT' || tx.type === 'ADMIN_ADJUST').length === 0 ? (
-                      <tr>
-                        <td colSpan={5} className="text-center py-8 text-slate-500 text-xs">
-                          Chưa có giao dịch nạp tiền nào được ghi nhận.
-                        </td>
-                      </tr>
-                    ) : (
-                      adminTransactions
-                        .filter((tx: any) => tx.type === 'DEPOSIT' || tx.type === 'ADMIN_ADJUST')
-                        .map((tx: any) => (
+                    {(() => {
+                      const depositTxs = adminTransactions.filter((tx: any) => tx.type === 'DEPOSIT' || tx.type === 'ADMIN_ADJUST');
+                      const filteredTxs = depositTxs.filter((tx: any) => {
+                        if (!auditLogSearch.trim()) return true;
+                        const q = auditLogSearch.toLowerCase();
+                        return (
+                          (tx.transactionCode || '').toLowerCase().includes(q) ||
+                          (tx.user?.fullName || '').toLowerCase().includes(q) ||
+                          (tx.user?.email || '').toLowerCase().includes(q) ||
+                          (tx.user?.mssv || '').toLowerCase().includes(q) ||
+                          (tx.note || tx.description || '').toLowerCase().includes(q) ||
+                          (tx.amount || '').toString().includes(q)
+                        );
+                      });
+
+                      if (filteredTxs.length === 0) {
+                        return (
+                          <tr>
+                            <td colSpan={5} className="text-center py-8 text-slate-500 text-xs">
+                              {auditLogSearch.trim()
+                                ? `Không tìm thấy nhật ký nạp tiền nào khớp với "${auditLogSearch}"`
+                                : 'Chưa có giao dịch nạp tiền nào được ghi nhận.'}
+                            </td>
+                          </tr>
+                        );
+                      }
+
+                      return filteredTxs.map((tx: any) => (
                         <tr key={tx.id} className="hover:bg-slate-800/20 transition-colors">
                           <td className="px-4 py-3.5 font-mono">
                             <p className="font-bold text-white text-xs">{tx.transactionCode}</p>
@@ -3267,7 +3334,7 @@ function AdminDashboardContent() {
                             }`}>
                               {tx.type === 'DEPOSIT' ? 'NẠP TIỀN TỰ ĐỘNG' : 'ADMIN ĐIỀU CHỈNH'}
                             </span>
-                            <p className="text-[10px] text-slate-500 mt-0.5">{tx.note || tx.paymentMethod || 'VietQR / MoMo'}</p>
+                            <p className="text-[10px] text-slate-500 mt-0.5">{tx.note || tx.paymentMethod || 'VietQR / Bank'}</p>
                           </td>
                           <td className="px-4 py-3.5 text-right font-mono">
                             <p className="font-extrabold text-sm text-emerald-400">+{tx.amount.toLocaleString('vi-VN')}đ</p>
@@ -3291,8 +3358,8 @@ function AdminDashboardContent() {
                             )}
                           </td>
                         </tr>
-                      ))
-                    )}
+                      ));
+                    })()}
                   </tbody>
                 </table>
               </div>

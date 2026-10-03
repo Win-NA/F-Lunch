@@ -17,7 +17,8 @@ import {
   Wallet,
   AlertCircle,
   CheckCircle2,
-  Info
+  Info,
+  Search
 } from 'lucide-react';
 
 interface RequestItem {
@@ -41,6 +42,8 @@ export default function StudentDashboard() {
 
   const [requests, setRequests] = useState<RequestItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeSearchQuery, setActiveSearchQuery] = useState('');
+  const [historySearchQuery, setHistorySearchQuery] = useState('');
 
   const totalBal = user ? (user.realBalance || 0) + (user.bonusBalance || 0) : 0;
 
@@ -554,8 +557,30 @@ export default function StudentDashboard() {
         {/* Requests List */}
         <div className="lg:col-span-2 space-y-6">
           {/* Active Requests */}
-          <div className="bg-slate-900/60 backdrop-blur-xl border border-slate-800 p-5 rounded-3xl shadow-xl">
-            <h2 className="text-md font-bold text-white mb-4">Yêu cầu đang hoạt động ({activeRequests.length})</h2>
+          <div className="bg-slate-900/60 backdrop-blur-xl border border-slate-800 p-5 rounded-3xl shadow-xl space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <h2 className="text-md font-bold text-white">Yêu cầu đang hoạt động ({activeRequests.length})</h2>
+              {activeRequests.length > 0 && (
+                <div className="relative w-full sm:w-64">
+                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                  <input
+                    type="text"
+                    value={activeSearchQuery}
+                    onChange={(e) => setActiveSearchQuery(e.target.value)}
+                    placeholder="Tìm mã đơn, ứng dụng, vị trí..."
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-orange-500"
+                  />
+                  {activeSearchQuery && (
+                    <button
+                      onClick={() => setActiveSearchQuery('')}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 hover:text-white"
+                    >
+                      Xóa
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
 
             {loading ? (
               <p className="text-slate-500 text-xs">Đang tải...</p>
@@ -565,93 +590,153 @@ export default function StudentDashboard() {
                 <p className="text-slate-500 text-xs">Không có yêu cầu nào đang hoạt động. Tạo một cái ở bảng bên trái nhé!</p>
               </div>
             ) : (
-              <div className="divide-y divide-slate-800">
-                {activeRequests.map((req) => (
-                  <div
-                    key={req.id}
-                    onClick={() => router.push(`/student/request/${req.id}`)}
-                    className="py-3.5 first:pt-0 last:pb-0 flex items-center justify-between gap-3 hover:bg-slate-800/10 px-2 rounded-xl transition-colors cursor-pointer"
-                  >
-                    <div className="flex items-center gap-3 min-w-0 flex-1">
-                      <div className="w-9 h-9 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-500 shrink-0">
-                        <Pizza size={18} />
-                      </div>
-                      <div className="min-w-0 flex-1 space-y-1">
-                        <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                          <p className="text-xs font-bold text-white truncate max-w-[120px]">{req.foodPlatform}</p>
-                          {req.orderCode && (
-                            <span className="text-[9px] text-slate-400 font-mono bg-slate-950 px-1.5 py-0.5 rounded border border-slate-800 truncate max-w-[140px]" title={req.orderCode}>
-                              Mã: {req.orderCode}
-                            </span>
+              (() => {
+                const filtered = activeRequests.filter((req) => {
+                  if (!activeSearchQuery.trim()) return true;
+                  const q = activeSearchQuery.toLowerCase();
+                  return (
+                    (req.orderCode || '').toLowerCase().includes(q) ||
+                    req.foodPlatform.toLowerCase().includes(q) ||
+                    req.pickupLocation.toLowerCase().includes(q) ||
+                    (req.dropoffLocation || '').toLowerCase().includes(q) ||
+                    (req.receiver?.fullName || '').toLowerCase().includes(q)
+                  );
+                });
+
+                if (filtered.length === 0) {
+                  return <p className="text-xs text-slate-400 text-center py-6">Không tìm thấy yêu cầu nào khớp với "{activeSearchQuery}"</p>;
+                }
+
+                return (
+                  <div className="divide-y divide-slate-800">
+                    {filtered.map((req) => (
+                      <div
+                        key={req.id}
+                        onClick={() => router.push(`/student/request/${req.id}`)}
+                        className="py-3.5 first:pt-0 last:pb-0 flex items-center justify-between gap-3 hover:bg-slate-800/10 px-2 rounded-xl transition-colors cursor-pointer"
+                      >
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                          <div className="w-9 h-9 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-500 shrink-0">
+                            <Pizza size={18} />
+                          </div>
+                          <div className="min-w-0 flex-1 space-y-1">
+                            <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                              <p className="text-xs font-bold text-white truncate max-w-[120px]">{req.foodPlatform}</p>
+                              {req.orderCode && (
+                                <span className="text-[9px] text-slate-400 font-mono bg-slate-950 px-1.5 py-0.5 rounded border border-slate-800 truncate max-w-[140px]" title={req.orderCode}>
+                                  Mã: {req.orderCode}
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-slate-450">
+                              <span className="flex items-center gap-1" title="Vị trí shipper giao → Vị trí bạn nhận"><MapPin size={10} className="shrink-0" /> {req.pickupLocation} → {req.dropoffLocation || 'Sảnh Trống Đồng'}</span>
+                              <span className="flex items-center gap-1"><Clock size={10} className="shrink-0" /> {new Date(req.pickupTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          {getStatusBadge(req.status)}
+                          {req.status === 'PENDING' && (
+                            <button
+                              type="button"
+                              onClick={(e) => handleCancelRequestFromDashboard(e, req.id)}
+                              className="px-2.5 py-1 text-[10px] font-bold rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 transition-colors cursor-pointer"
+                              title="Hủy đơn nhận hộ này và hoàn tiền 5.000đ"
+                            >
+                              Hủy đơn
+                            </button>
                           )}
-                        </div>
-                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-slate-450">
-                          <span className="flex items-center gap-1" title="Vị trí shipper giao → Vị trí bạn nhận"><MapPin size={10} className="shrink-0" /> {req.pickupLocation} → {req.dropoffLocation || 'Sảnh Trống Đồng'}</span>
-                          <span className="flex items-center gap-1"><Clock size={10} className="shrink-0" /> {new Date(req.pickupTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                          <ChevronRight className="text-slate-600" size={14} />
                         </div>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      {getStatusBadge(req.status)}
-                      {req.status === 'PENDING' && (
-                        <button
-                          type="button"
-                          onClick={(e) => handleCancelRequestFromDashboard(e, req.id)}
-                          className="px-2.5 py-1 text-[10px] font-bold rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 transition-colors cursor-pointer"
-                          title="Hủy đơn nhận hộ này và hoàn tiền 5.000đ"
-                        >
-                          Hủy đơn
-                        </button>
-                      )}
-                      <ChevronRight className="text-slate-600" size={14} />
-                    </div>
+                    ))}
                   </div>
-                ))}
-              </div>
+                );
+              })()
             )}
           </div>
 
           {/* History */}
-          <div className="bg-slate-900/60 backdrop-blur-xl border border-slate-800 p-5 rounded-3xl shadow-xl">
-            <h2 className="text-md font-bold text-white mb-4">Lịch sử({pastRequests.length})</h2>
+          <div className="bg-slate-900/60 backdrop-blur-xl border border-slate-800 p-5 rounded-3xl shadow-xl space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <h2 className="text-md font-bold text-white">Lịch sử ({pastRequests.length})</h2>
+              {pastRequests.length > 0 && (
+                <div className="relative w-full sm:w-64">
+                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                  <input
+                    type="text"
+                    value={historySearchQuery}
+                    onChange={(e) => setHistorySearchQuery(e.target.value)}
+                    placeholder="Tìm theo mã đơn, ngày đặt..."
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-orange-500"
+                  />
+                  {historySearchQuery && (
+                    <button
+                      onClick={() => setHistorySearchQuery('')}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 hover:text-white"
+                    >
+                      Xóa
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
 
             {loading ? (
               <p className="text-slate-550 text-xs">Đang tải...</p>
             ) : pastRequests.length === 0 ? (
               <p className="text-[11px] text-slate-500 text-center py-4">Chưa có lịch sử yêu cầu nào.</p>
             ) : (
-              <div className="divide-y divide-slate-800">
-                {pastRequests.map((req) => (
-                  <div
-                    key={req.id}
-                    onClick={() => router.push(`/student/request/${req.id}`)}
-                    className="py-3.5 first:pt-0 last:pb-0 flex items-center justify-between gap-3 hover:bg-slate-800/10 px-2 rounded-xl transition-colors cursor-pointer"
-                  >
-                    <div className="flex items-center gap-3 min-w-0 flex-1">
-                      <div className="w-9 h-9 rounded-xl bg-slate-850 flex items-center justify-center text-slate-400 shrink-0">
-                        <Pizza size={18} />
-                      </div>
-                      <div className="min-w-0 flex-1 space-y-1">
-                        <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                          <p className="text-xs font-bold text-white truncate max-w-[120px]">{req.foodPlatform}</p>
-                          {req.orderCode && (
-                            <span className="text-[9px] text-slate-400 font-mono bg-slate-950 px-1.5 py-0.5 rounded border border-slate-800 truncate max-w-[140px]" title={req.orderCode}>
-                              Mã: {req.orderCode}
-                            </span>
-                          )}
+              (() => {
+                const filtered = pastRequests.filter((req) => {
+                  if (!historySearchQuery.trim()) return true;
+                  const q = historySearchQuery.toLowerCase();
+                  return (
+                    (req.orderCode || '').toLowerCase().includes(q) ||
+                    req.foodPlatform.toLowerCase().includes(q) ||
+                    req.pickupLocation.toLowerCase().includes(q)
+                  );
+                });
+
+                if (filtered.length === 0) {
+                  return <p className="text-xs text-slate-400 text-center py-6">Không tìm thấy yêu cầu lịch sử nào khớp với "{historySearchQuery}"</p>;
+                }
+
+                return (
+                  <div className="divide-y divide-slate-800">
+                    {filtered.map((req) => (
+                      <div
+                        key={req.id}
+                        onClick={() => router.push(`/student/request/${req.id}`)}
+                        className="py-3.5 first:pt-0 last:pb-0 flex items-center justify-between gap-3 hover:bg-slate-800/10 px-2 rounded-xl transition-colors cursor-pointer"
+                      >
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                          <div className="w-9 h-9 rounded-xl bg-slate-850 flex items-center justify-center text-slate-400 shrink-0">
+                            <Pizza size={18} />
+                          </div>
+                          <div className="min-w-0 flex-1 space-y-1">
+                            <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                              <p className="text-xs font-bold text-white truncate max-w-[120px]">{req.foodPlatform}</p>
+                              {req.orderCode && (
+                                <span className="text-[9px] text-slate-400 font-mono bg-slate-950 px-1.5 py-0.5 rounded border border-slate-800 truncate max-w-[140px]" title={req.orderCode}>
+                                  Mã: {req.orderCode}
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-3 text-[10px] text-slate-450">
+                              <span className="flex items-center gap-1"><Calendar size={10} className="shrink-0" /> {new Date(req.pickupTime).toLocaleDateString('vi-VN')}</span>
+                            </div>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-3 text-[10px] text-slate-450">
-                          <span className="flex items-center gap-1"><Calendar size={10} className="shrink-0" /> {new Date(req.pickupTime).toLocaleDateString('vi-VN')}</span>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          {getStatusBadge(req.status)}
+                          <ChevronRight className="text-slate-600" size={14} />
                         </div>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      {getStatusBadge(req.status)}
-                      <ChevronRight className="text-slate-600" size={14} />
-                    </div>
+                    ))}
                   </div>
-                ))}
-              </div>
+                );
+              })()
             )}
           </div>
         </div>

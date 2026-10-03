@@ -16,7 +16,8 @@ import {
   DollarSign,
   X,
   Star,
-  Pizza
+  Pizza,
+  Search
 } from 'lucide-react';
 
 interface RequestItem {
@@ -46,6 +47,8 @@ export default function ReceiverDashboard() {
   const [loading, setLoading] = useState(true);
   const [btnLoading, setBtnLoading] = useState(false);
   const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
+  const [pendingSearchQuery, setPendingSearchQuery] = useState('');
+  const [historySearchQuery, setHistorySearchQuery] = useState('');
 
   // Stats
   const [completedCount, setCompletedCount] = useState(0);
@@ -295,64 +298,127 @@ export default function ReceiverDashboard() {
           </div>
 
           {/* Lịch sử nhận hộ đơn hàng */}
-          <div className="bg-slate-900/60 backdrop-blur-xl border border-slate-800 p-5 rounded-3xl shadow-xl">
-            <h2 className="text-md font-bold text-white mb-4">Lịch sử đơn nhận hộ ({historyRequests.length})</h2>
+          <div className="bg-slate-900/60 backdrop-blur-xl border border-slate-800 p-5 rounded-3xl shadow-xl space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <h2 className="text-md font-bold text-white">Lịch sử đơn nhận hộ ({historyRequests.length})</h2>
+              {historyRequests.length > 0 && (
+                <div className="relative w-full sm:w-64">
+                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                  <input
+                    type="text"
+                    value={historySearchQuery}
+                    onChange={(e) => setHistorySearchQuery(e.target.value)}
+                    placeholder="Tìm sinh viên, mã đơn..."
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-orange-500"
+                  />
+                  {historySearchQuery && (
+                    <button
+                      onClick={() => setHistorySearchQuery('')}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 hover:text-white"
+                    >
+                      Xóa
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
 
             {loading ? (
               <p className="text-slate-500 text-xs">Đang tải...</p>
             ) : historyRequests.length === 0 ? (
               <p className="text-xs text-slate-500 text-center py-4">Chưa hoàn thành đơn nhận hộ nào.</p>
             ) : (
-              <div className="divide-y divide-slate-800 max-h-[350px] overflow-y-auto pr-1">
-                {historyRequests.map((req) => (
-                  <div key={req.id} className="py-3.5 first:pt-0 last:pb-0 flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-3 min-w-0 flex-1">
-                      <div className="w-9 h-9 rounded-xl bg-slate-850 flex items-center justify-center text-slate-400 shrink-0">
-                        <Pizza size={18} />
-                      </div>
-                      <div className="min-w-0 flex-1 space-y-1">
-                        <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                          <p className="text-xs font-bold text-white truncate max-w-[120px]">{req.foodPlatform}</p>
-                          {req.orderCode && (
-                            <span className="text-[9px] text-slate-400 font-mono bg-slate-950 px-1.5 py-0.5 rounded border border-slate-800 truncate max-w-[140px]" title={req.orderCode}>
-                              Mã: {req.orderCode}
-                            </span>
-                          )}
-                        </div>
-                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-slate-450">
-                          <span>Sinh viên: {req.student.fullName}</span>
-                          <span>•</span>
-                          <span>Lấy: {req.pickupLocation} → Giao: {req.dropoffLocation || 'Sảnh Trống Đồng'}</span>
-                        </div>
-                        {/* Hiển thị đánh giá của sinh viên */}
-                        {(req as any).feedback && (
-                          <div className="flex items-center gap-1.5 mt-1.5 text-[9px] text-orange-400 bg-orange-500/5 px-2 py-0.5 rounded border border-orange-500/10 w-fit">
-                            <span className="flex gap-0.5">
-                              {Array.from({ length: (req as any).feedback.rating }).map((_, i) => (
-                                <Star key={i} size={8} className="fill-orange-500 stroke-orange-500" />
-                              ))}
-                            </span>
-                            {(req as any).feedback.comment && (
-                              <span className="text-slate-500 italic">"{(req as any).feedback.comment}"</span>
+              (() => {
+                const filtered = historyRequests.filter((req) => {
+                  if (!historySearchQuery.trim()) return true;
+                  const q = historySearchQuery.toLowerCase();
+                  return (
+                    (req.orderCode || '').toLowerCase().includes(q) ||
+                    req.foodPlatform.toLowerCase().includes(q) ||
+                    req.student.fullName.toLowerCase().includes(q) ||
+                    req.pickupLocation.toLowerCase().includes(q)
+                  );
+                });
+
+                if (filtered.length === 0) {
+                  return <p className="text-xs text-slate-400 text-center py-6">Không tìm thấy đơn nào khớp với "{historySearchQuery}"</p>;
+                }
+
+                return (
+                  <div className="divide-y divide-slate-800 max-h-[350px] overflow-y-auto pr-1">
+                    {filtered.map((req) => (
+                      <div key={req.id} className="py-3.5 first:pt-0 last:pb-0 flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                          <div className="w-9 h-9 rounded-xl bg-slate-850 flex items-center justify-center text-slate-400 shrink-0">
+                            <Pizza size={18} />
+                          </div>
+                          <div className="min-w-0 flex-1 space-y-1">
+                            <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                              <p className="text-xs font-bold text-white truncate max-w-[120px]">{req.foodPlatform}</p>
+                              {req.orderCode && (
+                                <span className="text-[9px] text-slate-400 font-mono bg-slate-950 px-1.5 py-0.5 rounded border border-slate-800 truncate max-w-[140px]" title={req.orderCode}>
+                                  Mã: {req.orderCode}
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-slate-450">
+                              <span>Sinh viên: {req.student.fullName}</span>
+                              <span>•</span>
+                              <span>Lấy: {req.pickupLocation} → Giao: {req.dropoffLocation || 'Sảnh Trống Đồng'}</span>
+                            </div>
+                            {/* Hiển thị đánh giá của sinh viên */}
+                            {(req as any).feedback && (
+                              <div className="flex items-center gap-1.5 mt-1.5 text-[9px] text-orange-400 bg-orange-500/5 px-2 py-0.5 rounded border border-orange-500/10 w-fit">
+                                <span className="flex gap-0.5">
+                                  {Array.from({ length: (req as any).feedback.rating }).map((_, i) => (
+                                    <Star key={i} size={8} className="fill-orange-500 stroke-orange-500" />
+                                  ))}
+                                </span>
+                                {(req as any).feedback.comment && (
+                                  <span className="text-slate-500 italic">"{(req as any).feedback.comment}"</span>
+                                )}
+                              </div>
                             )}
                           </div>
-                        )}
+                        </div>
+                        <span className="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-1 rounded-md font-bold uppercase shrink-0 whitespace-nowrap">
+                          Hoàn thành
+                        </span>
                       </div>
-                    </div>
-                    <span className="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-1 rounded-md font-bold uppercase shrink-0 whitespace-nowrap">
-                      Hoàn thành
-                    </span>
+                    ))}
                   </div>
-                ))}
-              </div>
+                );
+              })()
             )}
           </div>
         </div>
 
         {/* Available Tasks list */}
         <div className="space-y-6">
-          <div className="bg-slate-900/60 backdrop-blur-xl border border-slate-800 p-5 rounded-3xl shadow-xl h-fit">
-            <h2 className="text-md font-bold text-white mb-4">Các đơn hàng chờ nhận hộ ({pendingRequests.length})</h2>
+          <div className="bg-slate-900/60 backdrop-blur-xl border border-slate-800 p-5 rounded-3xl shadow-xl h-fit space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <h2 className="text-md font-bold text-white">Đơn hàng chờ nhận hộ ({pendingRequests.length})</h2>
+              {pendingRequests.length > 0 && (
+                <div className="relative w-full sm:w-48">
+                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                  <input
+                    type="text"
+                    value={pendingSearchQuery}
+                    onChange={(e) => setPendingSearchQuery(e.target.value)}
+                    placeholder="Tìm đơn chờ..."
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-orange-500"
+                  />
+                  {pendingSearchQuery && (
+                    <button
+                      onClick={() => setPendingSearchQuery('')}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 hover:text-white"
+                    >
+                      Xóa
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
 
             {loading ? (
               <p className="text-slate-500 text-xs">Đang tải...</p>
@@ -362,66 +428,85 @@ export default function ReceiverDashboard() {
                 <p className="text-slate-500 text-xs">Không có yêu cầu chờ nhận hộ nào trống.</p>
               </div>
             ) : (
-              <div className="space-y-4 max-h-[480px] overflow-y-auto pr-1">
-                {pendingRequests.map((job) => (
-                  <div
-                    key={job.id}
-                    className="p-4 bg-slate-955 border border-slate-800 rounded-2xl space-y-3"
-                  >
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <p className="text-xs font-bold text-white">{job.foodPlatform}</p>
-                        <p className="text-[10px] text-slate-500 font-mono">
-                          {job.orderCode ? `Đơn: ${job.orderCode}` : 'Đã đính kèm ảnh'}
-                        </p>
-                      </div>
-                      <span className="text-[9px] bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 px-2 py-0.5 rounded font-bold">
-                        Đang đợi
-                      </span>
-                    </div>
+              (() => {
+                const filtered = pendingRequests.filter((job) => {
+                  if (!pendingSearchQuery.trim()) return true;
+                  const q = pendingSearchQuery.toLowerCase();
+                  return (
+                    (job.orderCode || '').toLowerCase().includes(q) ||
+                    job.foodPlatform.toLowerCase().includes(q) ||
+                    job.student.fullName.toLowerCase().includes(q) ||
+                    job.pickupLocation.toLowerCase().includes(q)
+                  );
+                });
 
-                    <div className="space-y-1 text-[10px] text-slate-400">
-                      <p className="flex items-center gap-1.5" title="Vị trí shipper giao → Vị trí khách nhận"><MapPin size={10} /> {job.pickupLocation} → {job.dropoffLocation || 'Sảnh Trống Đồng'}</p>
-                      <p className="flex items-center gap-1.5"><Clock size={10} /> {new Date(job.pickupTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
-                      <p className="flex items-center gap-1.5"><User size={10} /> {job.student.fullName}</p>
-                    </div>
+                if (filtered.length === 0) {
+                  return <p className="text-xs text-slate-400 text-center py-6">Không tìm thấy đơn chờ nào khớp với "{pendingSearchQuery}"</p>;
+                }
 
-                    {job.imageUrl && (
-                      <div className="mt-2 bg-slate-950 p-2 border border-slate-850 rounded-xl">
-                        <p className="text-[8px] font-bold text-slate-550 uppercase tracking-wider mb-1">Ảnh đơn hàng đính kèm:</p>
-                        <div className="relative w-full max-h-24 rounded-lg overflow-hidden border border-slate-900 bg-slate-900 flex items-center justify-center">
-                          <img
-                            src={job.imageUrl}
-                            alt="Ảnh đơn hàng"
-                            className="max-h-24 max-w-full cursor-zoom-in object-contain rounded hover:scale-[1.02] transition-transform"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setFullscreenImage(job.imageUrl || null);
-                            }}
-                          />
+                return (
+                  <div className="space-y-4 max-h-[480px] overflow-y-auto pr-1">
+                    {filtered.map((job) => (
+                      <div
+                        key={job.id}
+                        className="p-4 bg-slate-955 border border-slate-800 rounded-2xl space-y-3"
+                      >
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="text-xs font-bold text-white">{job.foodPlatform}</p>
+                            <p className="text-[10px] text-slate-500 font-mono">
+                              {job.orderCode ? `Đơn: ${job.orderCode}` : 'Đã đính kèm ảnh'}
+                            </p>
+                          </div>
+                          <span className="text-[9px] bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 px-2 py-0.5 rounded font-bold">
+                            Đang đợi
+                          </span>
+                        </div>
+
+                        <div className="space-y-1 text-[10px] text-slate-400">
+                          <p className="flex items-center gap-1.5" title="Vị trí shipper giao → Vị trí khách nhận"><MapPin size={10} /> {job.pickupLocation} → {job.dropoffLocation || 'Sảnh Trống Đồng'}</p>
+                          <p className="flex items-center gap-1.5"><Clock size={10} /> {new Date(job.pickupTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                          <p className="flex items-center gap-1.5"><User size={10} /> {job.student.fullName}</p>
+                        </div>
+
+                        {job.imageUrl && (
+                          <div className="mt-2 bg-slate-950 p-2 border border-slate-850 rounded-xl">
+                            <p className="text-[8px] font-bold text-slate-550 uppercase tracking-wider mb-1">Ảnh đơn hàng đính kèm:</p>
+                            <div className="relative w-full max-h-24 rounded-lg overflow-hidden border border-slate-900 bg-slate-900 flex items-center justify-center">
+                              <img
+                                src={job.imageUrl}
+                                alt="Ảnh đơn hàng"
+                                className="max-h-24 max-w-full cursor-zoom-in object-contain rounded hover:scale-[1.02] transition-transform"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setFullscreenImage(job.imageUrl || null);
+                                }}
+                              />
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="grid grid-cols-2 gap-2 pt-1">
+                          <button
+                            onClick={() => handleAccept(job.id)}
+                            disabled={btnLoading || !!activeTask}
+                            className="w-full bg-orange-600 hover:bg-orange-500 disabled:bg-slate-850 disabled:text-slate-600 text-white font-bold text-[10px] py-2 rounded-xl transition-all cursor-pointer shadow-md shadow-orange-600/20"
+                          >
+                            Nhận đơn hộ
+                          </button>
+                          <button
+                            onClick={() => handleCancelOrder(job.id)}
+                            disabled={btnLoading}
+                            className="w-full bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 font-bold text-[10px] py-2 rounded-xl transition-all cursor-pointer"
+                          >
+                            Từ chối / Hủy
+                          </button>
                         </div>
                       </div>
-                    )}
-
-                    <div className="grid grid-cols-2 gap-2 pt-1">
-                      <button
-                        onClick={() => handleAccept(job.id)}
-                        disabled={btnLoading || !!activeTask}
-                        className="w-full bg-orange-600 hover:bg-orange-500 disabled:bg-slate-850 disabled:text-slate-600 text-white font-bold text-[10px] py-2 rounded-xl transition-all cursor-pointer shadow-md shadow-orange-600/20"
-                      >
-                        Nhận đơn hộ
-                      </button>
-                      <button
-                        onClick={() => handleCancelOrder(job.id)}
-                        disabled={btnLoading}
-                        className="w-full bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 font-bold text-[10px] py-2 rounded-xl transition-all cursor-pointer"
-                      >
-                        Từ chối / Hủy
-                      </button>
-                    </div>
+                    ))}
                   </div>
-                ))}
-              </div>
+                );
+              })()
             )}
           </div>
         </div>

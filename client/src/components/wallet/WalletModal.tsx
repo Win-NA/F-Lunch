@@ -17,7 +17,8 @@ import {
   AlertTriangle,
   Sparkles,
   Check,
-  RefreshCw
+  RefreshCw,
+  Search
 } from 'lucide-react';
 
 interface WalletModalProps {
@@ -37,6 +38,7 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
   // History State
   const [transactions, setTransactions] = useState<any[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
+  const [historySearchQuery, setHistorySearchQuery] = useState('');
 
   // Copy state helper
   const [copiedField, setCopiedField] = useState<string | null>(null);
@@ -488,71 +490,112 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
           {/* HISTORY TAB */}
           {tab === 'HISTORY' && (
             <div className="space-y-3.5">
+              {/* Search Bar */}
+              <div className="relative">
+                <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                <input
+                  type="text"
+                  value={historySearchQuery}
+                  onChange={(e) => setHistorySearchQuery(e.target.value)}
+                  placeholder="Tìm theo mã giao dịch, số tiền, loại giao dịch..."
+                  style={{ backgroundColor: '#0f172a', borderColor: '#334155', color: '#ffffff' }}
+                  className="w-full pl-11 pr-4 py-3 rounded-2xl border-2 text-sm focus:outline-none focus:border-orange-500 placeholder:text-slate-400"
+                />
+                {historySearchQuery && (
+                  <button
+                    onClick={() => setHistorySearchQuery('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white text-xs bg-slate-800 px-2 py-1 rounded-md"
+                  >
+                    Xóa
+                  </button>
+                )}
+              </div>
+
               {historyLoading ? (
                 <p style={{ color: '#cbd5e1' }} className="text-center text-sm sm:text-base py-10 font-semibold">Đang tải lịch sử giao dịch...</p>
               ) : transactions.length === 0 ? (
                 <p style={{ color: '#cbd5e1' }} className="text-center text-sm sm:text-base py-10 font-semibold">Chưa có giao dịch nào được ghi nhận.</p>
               ) : (
-                transactions.map((tx: any) => {
-                  const isPositive = tx.type === 'DEPOSIT' || tx.type === 'ORDER_REFUND';
-                  return (
-                    <div
-                      key={tx.id}
-                      style={{ backgroundColor: '#1e293b', borderColor: '#334155' }}
-                      className="p-4.5 border-2 rounded-2xl flex items-center justify-between text-xs sm:text-sm shadow-md"
-                    >
-                      <div className="flex items-center gap-3.5">
-                        <div
-                          style={{
-                            backgroundColor: tx.type === 'DEPOSIT' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(249, 115, 22, 0.2)',
-                            color: tx.type === 'DEPOSIT' ? '#34d399' : '#fb923c',
-                            borderColor: tx.type === 'DEPOSIT' ? 'rgba(16, 185, 129, 0.4)' : 'rgba(249, 115, 22, 0.4)',
-                          }}
-                          className="w-11 h-11 rounded-xl border-2 flex items-center justify-center shrink-0"
-                        >
-                          {tx.type === 'DEPOSIT' ? (
-                            <ArrowDownLeft size={22} />
-                          ) : (
-                            <Wallet size={22} />
-                          )}
-                        </div>
-                        <div>
-                          <p style={{ color: '#ffffff' }} className="font-black text-sm sm:text-base">
-                            {tx.type === 'DEPOSIT'
-                              ? 'Nạp tiền vào ví'
-                              : tx.type === 'ORDER_PAYMENT'
-                              ? 'Phí nhận hộ 5k'
-                              : tx.type === 'ORDER_REFUND'
-                              ? 'Hoàn tiền đơn hủy'
-                              : 'Điều chỉnh hệ thống'}
-                          </p>
-                          <p style={{ color: '#cbd5e1' }} className="text-xs font-mono font-medium mt-0.5">
-                            {new Date(tx.createdAt).toLocaleString('vi-VN')} • {tx.transactionCode}
-                          </p>
-                        </div>
-                      </div>
+                (() => {
+                  const filtered = transactions.filter((tx: any) => {
+                    if (!historySearchQuery.trim()) return true;
+                    const q = historySearchQuery.toLowerCase();
+                    const code = (tx.transactionCode || '').toLowerCase();
+                    const note = (tx.description || tx.note || '').toLowerCase();
+                    const amount = (tx.amount || '').toString();
+                    const type = tx.type === 'DEPOSIT' ? 'nạp tiền' : tx.type === 'ORDER_PAYMENT' ? 'phí nhận hộ' : tx.type === 'ORDER_REFUND' ? 'hoàn tiền' : 'điều chỉnh';
+                    return code.includes(q) || note.includes(q) || amount.includes(q) || type.includes(q);
+                  });
 
-                      <div className="text-right">
-                        <p
-                          style={{ color: isPositive ? '#34d399' : '#f8fafc' }}
-                          className="font-mono font-black text-base sm:text-xl"
-                        >
-                          {isPositive ? '+' : '-'}{tx.amount.toLocaleString('vi-VN')} đ
-                        </p>
-                        <span
-                          style={{
-                            backgroundColor: tx.status === 'APPROVED' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(245, 158, 11, 0.2)',
-                            color: tx.status === 'APPROVED' ? '#34d399' : '#fcd34d',
-                            borderColor: tx.status === 'APPROVED' ? 'rgba(16, 185, 129, 0.4)' : 'rgba(245, 158, 11, 0.4)',
-                          }}
-                          className="text-xs font-extrabold px-3 py-1 rounded-md border inline-block mt-0.5"
-                        >
-                          {tx.status === 'APPROVED' ? 'Thành công' : tx.status === 'PENDING' ? 'Chờ duyệt' : 'Từ chối'}
-                        </span>
+                  if (filtered.length === 0) {
+                    return (
+                      <p style={{ color: '#cbd5e1' }} className="text-center text-sm py-8 font-semibold">
+                        Không tìm thấy giao dịch nào khớp với "{historySearchQuery}"
+                      </p>
+                    );
+                  }
+
+                  return filtered.map((tx: any) => {
+                    const isPositive = tx.type === 'DEPOSIT' || tx.type === 'ORDER_REFUND';
+                    return (
+                      <div
+                        key={tx.id}
+                        style={{ backgroundColor: '#1e293b', borderColor: '#334155' }}
+                        className="p-4.5 border-2 rounded-2xl flex items-center justify-between text-xs sm:text-sm shadow-md gap-3"
+                      >
+                        <div className="flex items-center gap-3.5 min-w-0 flex-1">
+                          <div
+                            style={{
+                              backgroundColor: tx.type === 'DEPOSIT' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(249, 115, 22, 0.2)',
+                              color: tx.type === 'DEPOSIT' ? '#34d399' : '#fb923c',
+                              borderColor: tx.type === 'DEPOSIT' ? 'rgba(16, 185, 129, 0.4)' : 'rgba(249, 115, 22, 0.4)',
+                            }}
+                            className="w-11 h-11 rounded-xl border-2 flex items-center justify-center shrink-0"
+                          >
+                            {tx.type === 'DEPOSIT' ? (
+                              <ArrowDownLeft size={22} />
+                            ) : (
+                              <Wallet size={22} />
+                            )}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p style={{ color: '#ffffff' }} className="font-black text-sm sm:text-base truncate">
+                              {tx.type === 'DEPOSIT'
+                                ? 'Nạp tiền vào ví'
+                                : tx.type === 'ORDER_PAYMENT'
+                                ? 'Phí nhận hộ 5k'
+                                : tx.type === 'ORDER_REFUND'
+                                ? 'Hoàn tiền đơn hủy'
+                                : 'Điều chỉnh hệ thống'}
+                            </p>
+                            <p style={{ color: '#cbd5e1' }} className="text-xs font-mono font-medium mt-0.5 truncate">
+                              {new Date(tx.createdAt).toLocaleString('vi-VN')} • {tx.transactionCode}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="text-right shrink-0">
+                          <p
+                            style={{ color: isPositive ? '#34d399' : '#f8fafc' }}
+                            className="font-mono font-black text-base sm:text-xl"
+                          >
+                            {isPositive ? '+' : '-'}{tx.amount.toLocaleString('vi-VN')} đ
+                          </p>
+                          <span
+                            style={{
+                              backgroundColor: tx.status === 'APPROVED' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(245, 158, 11, 0.2)',
+                              color: tx.status === 'APPROVED' ? '#34d399' : '#fcd34d',
+                              borderColor: tx.status === 'APPROVED' ? 'rgba(16, 185, 129, 0.4)' : 'rgba(245, 158, 11, 0.4)',
+                            }}
+                            className="text-xs font-extrabold px-3 py-1 rounded-md border inline-block mt-0.5"
+                          >
+                            {tx.status === 'APPROVED' ? 'Thành công' : tx.status === 'PENDING' ? 'Chờ duyệt' : 'Từ chối'}
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                  );
-                })
+                    );
+                  });
+                })()
               )}
             </div>
           )}
