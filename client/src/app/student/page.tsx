@@ -513,9 +513,9 @@ export default function StudentDashboard() {
                 />
 
                 {ocrLoading && (
-                  <div className="text-xs font-semibold text-amber-300 bg-amber-500/10 border border-amber-500/30 p-3 rounded-2xl flex items-center justify-center gap-2 shadow-sm animate-pulse">
-                    <Clock size={16} className="animate-spin text-amber-400 shrink-0" />
-                    <span>Đang quét & AI kiểm duyệt đơn hàng...</span>
+                  <div className="text-[10px] text-orange-400 flex items-center gap-1.5 animate-pulse bg-orange-500/5 p-2.5 rounded-xl border border-orange-500/10 justify-center">
+                    <Clock size={12} className="animate-spin shrink-0 text-orange-400" />
+                    <span>Đang tự động quét & AI kiểm duyệt đơn hàng...</span>
                   </div>
                 )}
 
@@ -553,30 +553,28 @@ export default function StudentDashboard() {
 
                 {/* AI / OCR Warning Alert: Non-Food or COD Payment (RED ALERT) */}
                 {(!isFoodOrder || paymentStatus === 'UNPAID') && (
-                  <div className="bg-red-950/90 border-2 border-red-500 p-3.5 rounded-2xl space-y-1.5 shadow-lg">
-                    <div className="flex items-center gap-2 font-black text-red-200 text-xs">
-                      <AlertCircle size={18} className="shrink-0 text-red-400" />
-                      <span>
-                        {!isFoodOrder ? '❌ CẢNH BÁO: ĐƠN HÀNG KHÔNG PHẢI ĐỒ ĂN' : '❌ PHÁT HIỆN ĐƠN "TIỀN MẶT" (COD)'}
-                      </span>
+                  <div className="bg-red-500/10 border border-red-500/30 text-red-400 p-2.5 rounded-xl text-[10px] space-y-1">
+                    <div className="flex items-center gap-1.5 font-bold text-red-400">
+                      <AlertCircle size={14} className="shrink-0 text-red-400" />
+                      <span>{!isFoodOrder ? 'Cảnh báo: Đơn hàng không thuộc nhóm Đồ ăn' : 'Phát hiện đơn "Tiền mặt" (COD)'}</span>
                     </div>
-                    <p className="text-[11px] font-extrabold text-red-100 leading-snug">
+                    <p className="text-[9.5px] text-red-400/90 leading-normal">
                       {!isFoodOrder
-                        ? (aiReason || 'F-Lunch CHỈ nhận hộ Đồ ăn / Thức uống. Hệ thống không hỗ trợ nhận hộ bưu kiện, quần áo, thiết bị điện tử hoặc hàng hóa khác.')
-                        : 'F-Lunch CHỈ nhận hộ các đơn hàng đã thanh toán trước (ShopeePay, GrabPay, MoMo, Thẻ...). Vui lòng hủy đơn này và chọn đơn trả trước!'}
+                        ? (aiReason || 'F-Lunch hiện chỉ hỗ trợ nhận hộ Đồ ăn & Thức uống. Hệ thống không nhận hộ bưu kiện hoặc hàng hóa khác.')
+                        : 'F-Lunch chỉ nhận hộ các đơn hàng đã thanh toán trước (ShopeePay, GrabPay, MoMo, Thẻ...). Vui lòng chọn đơn đã thanh toán trực tuyến.'}
                     </p>
                     {detectedCategory && (
-                      <div className="inline-block mt-1 bg-red-900 text-red-100 px-2.5 py-1 rounded-lg text-[10.5px] font-black border border-red-600">
-                        Phân loại phát hiện: {detectedCategory}
+                      <div className="inline-block mt-0.5 bg-red-500/15 text-red-400 px-2 py-0.5 rounded text-[9px] font-semibold border border-red-500/20">
+                        Mặt hàng phát hiện: {detectedCategory}
                       </div>
                     )}
                   </div>
                 )}
 
-                {/* AI Verification Success Banner (ORIGINAL GREEN ALERT) */}
+                {/* AI Verification Success Banner (GREEN ALERT) */}
                 {isFoodOrder && paymentStatus === 'PAID' && (
                   <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 p-2.5 rounded-xl text-[10px] space-y-1">
-                    <div className="flex items-center gap-2 font-bold text-emerald-400">
+                    <div className="flex items-center gap-1.5 font-bold text-emerald-400">
                       <CheckCircle2 size={14} className="shrink-0 text-emerald-400" />
                       <span>Xác thực thành công: Đơn hàng ĐÃ THANH TOÁN!</span>
                     </div>
@@ -593,14 +591,11 @@ export default function StudentDashboard() {
 
                 {/* Info Alert: Unknown payment status (BLUE ALERT) */}
                 {paymentStatus === 'UNKNOWN' && imageBase64 && !ocrLoading && isFoodOrder && (
-                  <div className="bg-blue-950/80 border-2 border-blue-500 p-3 rounded-2xl space-y-1 shadow-sm">
-                    <div className="flex items-center gap-2 font-bold text-blue-200 text-xs">
-                      <Info size={16} className="shrink-0 text-blue-400" />
-                      <span>Đã quét xong ảnh đơn hàng</span>
-                    </div>
-                    <p className="text-[11px] font-semibold text-blue-100 leading-snug">
-                      Chưa tự động nhận dạng ví thanh toán từ ảnh. Đảm bảo đơn đã thanh toán trả trước nhé.
-                    </p>
+                  <div className="bg-blue-500/10 border border-blue-500/20 text-blue-300 p-2.5 rounded-xl text-[10px] flex items-center gap-2">
+                    <Info size={14} className="shrink-0 text-blue-400" />
+                    <span>
+                      Đã quét xong ảnh đơn hàng. Chưa tự động nhận dạng ví thanh toán từ ảnh, hãy đảm bảo đơn đã thanh toán trả trước nhé.
+                    </span>
                   </div>
                 )}
               </div>
