@@ -589,13 +589,16 @@ export default function StudentDashboard() {
                   </div>
                 )}
 
-                {/* Info Alert: Unknown payment status (BLUE ALERT) */}
+                {/* Alert: Unknown payment status (RED WARNING ALERT) */}
                 {paymentStatus === 'UNKNOWN' && imageBase64 && !ocrLoading && isFoodOrder && (
-                  <div className="bg-blue-500/10 border border-blue-500/20 text-blue-300 p-2.5 rounded-xl text-[10px] flex items-center gap-2">
-                    <Info size={14} className="shrink-0 text-blue-400" />
-                    <span>
-                      Đã quét xong ảnh đơn hàng. Chưa tự động nhận dạng ví thanh toán từ ảnh, hãy đảm bảo đơn đã thanh toán trả trước nhé.
-                    </span>
+                  <div className="bg-red-500/10 border border-red-500/30 text-red-400 p-2.5 rounded-xl text-[10px] space-y-1">
+                    <div className="flex items-center gap-1.5 font-bold text-red-400">
+                      <AlertCircle size={14} className="shrink-0 text-red-400" />
+                      <span>Chưa nhận dạng được trạng thái thanh toán</span>
+                    </div>
+                    <p className="text-[9.5px] text-red-400/90 leading-normal">
+                      Hệ thống chưa thể tự động nhận dạng ví thanh toán từ ảnh. Vui lòng đảm bảo đơn hàng của bạn đã được trả trước (ShopeePay, GrabPay, MoMo, Thẻ...) trước khi gửi!
+                    </p>
                   </div>
                 )}
               </div>
