@@ -17,6 +17,7 @@ declare global {
 export default function LoginPage() {
   const router = useRouter();
   const setAuth = useAuthStore((state) => state.setAuth);
+  const updateUser = useAuthStore((state) => state.updateUser);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -61,6 +62,17 @@ export default function LoginPage() {
       const { user, accessToken, refreshToken } = res.data;
       
       setAuth(user, accessToken, refreshToken);
+
+      // Fetch fresh profile & balance instantly
+      try {
+        const profileRes = await api.get('/users/profile');
+        if (profileRes.data) {
+          updateUser(profileRes.data);
+        }
+      } catch (pErr) {
+        // silent catch fallback
+      }
+
       toast.success(`Chào mừng quay trở lại, ${user.fullName}!`);
 
       if (user.role === 'STUDENT') {
@@ -96,6 +108,17 @@ export default function LoginPage() {
       const { user, accessToken, refreshToken } = res.data;
       
       setAuth(user, accessToken, refreshToken);
+
+      // Fetch fresh profile & balance instantly
+      try {
+        const profileRes = await api.get('/users/profile');
+        if (profileRes.data) {
+          updateUser(profileRes.data);
+        }
+      } catch (pErr) {
+        // silent catch fallback
+      }
+
       toast.success(`Chào mừng quay trở lại, ${user.fullName}!`);
 
       // Điều hướng theo vai trò

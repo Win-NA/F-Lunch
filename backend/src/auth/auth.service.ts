@@ -50,6 +50,10 @@ export class AuthService {
         email: user.email,
         role: user.role,
         mssv: user.mssv,
+        realBalance: user.realBalance ?? 0,
+        bonusBalance: user.bonusBalance ?? 0,
+        phoneNumber: user.phoneNumber || null,
+        avatar: user.avatar || null,
       },
       ...tokens,
     };
@@ -80,6 +84,10 @@ export class AuthService {
         email: user.email,
         role: user.role,
         mssv: user.mssv,
+        realBalance: user.realBalance ?? 0,
+        bonusBalance: user.bonusBalance ?? 0,
+        phoneNumber: user.phoneNumber || null,
+        avatar: user.avatar || null,
       },
       ...tokens,
     };
@@ -138,6 +146,10 @@ export class AuthService {
           email: user.email,
           role: user.role,
           mssv: user.mssv,
+          realBalance: user.realBalance ?? 0,
+          bonusBalance: user.bonusBalance ?? 0,
+          phoneNumber: user.phoneNumber || null,
+          avatar: user.avatar || null,
         },
         ...tokens,
       };

@@ -28,14 +28,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     setMounted(true);
   }, []);
 
-  // Fetch initial profile & balance
+  // Fetch initial profile & balance on mount, user change, or route change
   useEffect(() => {
     if (user && mounted) {
       api.get('/users/profile')
         .then((res) => updateUser(res.data))
         .catch(() => {});
     }
-  }, [mounted]);
+  }, [mounted, user?.id, pathname]);
 
   // Global Notification Polling & Toasts
   useEffect(() => {

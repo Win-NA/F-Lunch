@@ -21,15 +21,21 @@ import {
 export default function Sidebar({ onOpenWallet }: { onOpenWallet?: () => void }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const { user, logout } = useAuthStore();
+  const { user, logout, updateUser } = useAuthStore();
   const [unreadCount, setUnreadCount] = useState<number>(0);
 
-  const fetchUnreadCount = async () => {
+  const fetchSyncData = async () => {
     try {
-      const res = await api.get('/notifications');
-      if (Array.isArray(res.data)) {
-        const count = res.data.filter((n: any) => !n.isRead).length;
+      const [notifRes, profileRes] = await Promise.all([
+        api.get('/notifications').catch(() => null),
+        api.get('/users/profile').catch(() => null),
+      ]);
+      if (notifRes && Array.isArray(notifRes.data)) {
+        const count = notifRes.data.filter((n: any) => !n.isRead).length;
         setUnreadCount(count);
+      }
+      if (profileRes && profileRes.data) {
+        updateUser(profileRes.data);
       }
     } catch (err) {
       // silent catch
@@ -38,11 +44,11 @@ export default function Sidebar({ onOpenWallet }: { onOpenWallet?: () => void })
 
   useEffect(() => {
     if (user) {
-      fetchUnreadCount();
-      const interval = setInterval(fetchUnreadCount, 3000);
+      fetchSyncData();
+      const interval = setInterval(fetchSyncData, 3000);
       return () => clearInterval(interval);
     }
-  }, [user]);
+  }, [user?.id]);
 
   if (!user) return null;
 
