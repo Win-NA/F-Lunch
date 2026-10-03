@@ -520,15 +520,8 @@ export default function StudentDashboard() {
                 )}
 
                 {extractedOrderCode && (
-                  <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 p-2.5 rounded-2xl text-xs flex items-center justify-between shadow-sm">
-                    <span className="font-semibold">Mã đơn nhận dạng được: <strong className="font-black text-emerald-300 text-sm tracking-wide">{extractedOrderCode}</strong></span>
-                    <button
-                      type="button"
-                      onClick={() => setExtractedOrderCode(null)}
-                      className="text-red-400 hover:text-red-300 hover:underline font-bold text-xs cursor-pointer px-2 py-0.5 rounded bg-red-500/10 border border-red-500/20"
-                    >
-                      Xóa mã
-                    </button>
+                  <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 p-2.5 rounded-xl text-[10px] flex items-center gap-2">
+                    <span>Mã đơn nhận dạng được: <strong className="text-emerald-400 font-bold">{extractedOrderCode}</strong></span>
                   </div>
                 )}
 
@@ -580,18 +573,18 @@ export default function StudentDashboard() {
                   </div>
                 )}
 
-                {/* AI Verification Success Banner (GREEN ALERT) */}
+                {/* AI Verification Success Banner (ORIGINAL GREEN ALERT) */}
                 {isFoodOrder && paymentStatus === 'PAID' && (
-                  <div className="bg-emerald-950/80 border-2 border-emerald-500 p-3.5 rounded-2xl space-y-1 shadow-sm">
-                    <div className="flex items-center gap-2 font-extrabold text-emerald-200 text-xs">
-                      <CheckCircle2 size={18} className="shrink-0 text-emerald-400" />
-                      <span>ĐƠN HÀNG HỢP LỆ & ĐÃ XÁC THỰC!</span>
+                  <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 p-2.5 rounded-xl text-[10px] space-y-1">
+                    <div className="flex items-center gap-2 font-bold text-emerald-400">
+                      <CheckCircle2 size={14} className="shrink-0 text-emerald-400" />
+                      <span>Xác thực thành công: Đơn hàng ĐÃ THANH TOÁN!</span>
                     </div>
-                    <p className="text-[11.5px] font-bold text-emerald-100 leading-snug">
-                      Đơn hàng đồ ăn hợp lệ, đã trả trước qua <strong>{detectedPaymentMethod || 'Ví / Thẻ trực tuyến'}</strong>.
+                    <p className="text-[9.5px] text-emerald-400/90 leading-normal">
+                      Đơn hàng đồ ăn hợp lệ, đã trả trước qua <strong>{detectedPaymentMethod || 'Ví/Thẻ Trực tuyến'}</strong>.
                     </p>
                     {aiPowered && (
-                      <div className="inline-flex items-center gap-1.5 bg-emerald-900 text-emerald-100 px-2.5 py-0.5 rounded-md text-[10px] font-extrabold border border-emerald-600 mt-1">
+                      <div className="inline-flex items-center gap-1 bg-emerald-500/15 text-emerald-400 px-2 py-0.5 rounded text-[9px] font-medium border border-emerald-500/20 mt-0.5">
                         🤖 Kiểm duyệt bởi AI Gemini Vision
                       </div>
                     )}

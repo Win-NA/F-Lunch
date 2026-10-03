@@ -687,15 +687,8 @@ export default function RequestDetailPage() {
                   )}
 
                   {editExtractedOrderCode && (
-                    <div className="bg-emerald-500/5 border border-emerald-500/20 text-emerald-400 p-2.5 rounded-xl text-[10px] flex items-center justify-between">
-                      <span>Mã đơn nhận dạng được: <strong>{editExtractedOrderCode}</strong></span>
-                      <button
-                        type="button"
-                        onClick={() => setEditExtractedOrderCode(null)}
-                        className="text-red-400 hover:text-red-300 font-bold cursor-pointer"
-                      >
-                        Xóa mã
-                      </button>
+                    <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 p-2.5 rounded-xl text-[10px] flex items-center gap-2">
+                      <span>Mã đơn nhận dạng được: <strong className="text-emerald-400 font-bold">{editExtractedOrderCode}</strong></span>
                     </div>
                   )}
 
