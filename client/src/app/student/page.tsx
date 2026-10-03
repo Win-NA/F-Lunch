@@ -98,15 +98,25 @@ export default function StudentDashboard() {
     return null;
   };
 
-  const checkNonFoodKeywords = (text: string): boolean => {
+  const checkNonFoodKeywords = (text: string): { isNonFood: boolean; matchedKeyword: string | null } => {
     const lower = text.toLowerCase();
     const nonFoodKeywords = [
-      'grabexpress', 'lalamove', 'shopee express', 'spx express', 'ghtk', 'giao hàng nhanh',
-      'áo thun', 'áo sơ mi', 'quần jean', 'quần đùi', 'giày thể thao', 'mỹ phẩm', 'son môi',
-      'điện thoại', 'tai nghe', 'sạc dự phòng', 'ốp lưng', 'văn phòng phẩm', 'sách', 'tủ đồ',
-      'bưu kiện', 'hàng hóa', 'bưu phẩm', 'quần áo'
+      // E-Commerce Platforms & UI terms (TikTok Shop, Shopee, Lazada...)
+      'tiktok', 'tiktok shop', 'lazada', 'tiki', 'shopee mall', 'liên hệ với tiktok', 'liên hệ với người bán',
+      'yêu cầu hoàn tiền', 'thêm vào giỏ', 'mua lại', 'viết đánh giá', 'trả hàng miễn phí', 'phụ kiện chất',
+      // Parcel Delivery Platforms
+      'grabexpress', 'lalamove', 'shopee express', 'spx express', 'ghtk', 'ghn', 'viettelpost', 'ninjavan', 'giao hàng nhanh', 'bưu kiện', 'hàng hóa', 'bưu phẩm',
+      // Non-food product terms
+      'phụ kiện', 'kính bảo vệ', 'kính cường lực', 'ốp lưng', 'cáp sạc', 'củ sạc', 'tai nghe', 'sạc dự phòng', 'camera', 'gopro',
+      'áo thun', 'áo sơ mi', 'áo khoác', 'quần jean', 'quần đùi', 'quần áo', 'giày thể thao', 'giày dép', 'túi xách', 'ví nữ', 'ví nam',
+      'mỹ phẩm', 'son môi', 'kem dưỡng', 'nước hoa', 'điện thoại', 'văn phòng phẩm', 'sách', 'tủ đồ', 'đồ chơi', 'trang sức'
     ];
-    return nonFoodKeywords.some((kw) => lower.includes(kw));
+
+    const matched = nonFoodKeywords.find((kw) => lower.includes(kw));
+    return {
+      isNonFood: Boolean(matched),
+      matchedKeyword: matched || null,
+    };
   };
 
   const analyzePaymentStatus = (text: string): { status: 'PAID' | 'UNPAID' | 'UNKNOWN'; method: string | null } => {
@@ -194,16 +204,16 @@ export default function StudentDashboard() {
 
       const code = extractOrderCode(text);
       const paymentInfo = analyzePaymentStatus(text);
-      const isNonFood = checkNonFoodKeywords(text);
+      const { isNonFood, matchedKeyword } = checkNonFoodKeywords(text);
 
       setPaymentStatus(paymentInfo.status);
       setDetectedPaymentMethod(paymentInfo.method);
 
       if (isNonFood) {
         setIsFoodOrder(false);
-        setDetectedCategory('Hàng hóa / Bưu kiện khác (Non-Food)');
-        setAiReason('Ảnh đơn chụp màn hình chứa sản phẩm/bưu kiện không thuộc nhóm Đồ ăn & Thức uống.');
-        toast.error('CẢNH BÁO: Đơn hàng chứa sản phẩm không phải đồ ăn!');
+        setDetectedCategory(`Mặt hàng E-Commerce / Phụ kiện (${matchedKeyword || 'Non-Food'})`);
+        setAiReason(`Ảnh đơn hàng chứa từ khóa sản phẩm/trang mua sắm '${matchedKeyword}', không thuộc nhóm Đồ ăn & Thức uống.`);
+        toast.error(`CẢNH BÁO: Đơn hàng thuộc nhóm mua sắm/phụ kiện (${matchedKeyword}), không phải đồ ăn!`);
       } else {
         setIsFoodOrder(true);
       }

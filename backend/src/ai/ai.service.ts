@@ -19,7 +19,7 @@ export class AiService {
   constructor(private configService: ConfigService) {}
 
   async analyzeOrderImage(imageBase64: string): Promise<OrderAnalysisResult> {
-    const apiKey = this.configService.get<string>('GEMINI_API_KEY');
+    const apiKey = this.configService.get<string>('GEMINI_API_KEY') || process.env.GEMINI_API_KEY;
 
     if (apiKey && apiKey.trim() !== '') {
       try {
@@ -49,8 +49,8 @@ export class AiService {
     // Clean base64 string
     const cleanBase64 = imageBase64.replace(/^data:image\/\w+;base64,/, '');
 
-    const prompt = `Bạn là hệ thống AI kiểm duyệt và phân loại ảnh chụp màn hình đơn hàng cho ứng dụng F-Lunch tại trường đại học.
-Nhiệm vụ: Phân tích chi tiết ảnh đơn hàng được cung cấp và trả về JSON thuần túy (KHÔNG dùng markdown codeblock, không thêm ký tự lạ bên ngoài JSON).
+    const prompt = `Bạn là hệ thống AI kiểm duyệt và phân loại ảnh chụp màn hình đơn hàng cho ứng dụng giao nhận thức ăn F-Lunch tại trường học.
+Nhiệm vụ: Phân tích kỹ ảnh chụp đơn hàng được cung cấp và trả về 1 đối tượng JSON thuần túy (KHÔNG dùng markdown codeblock, không thêm ký tự lạ ngoài JSON).
 
 Định dạng JSON yêu cầu:
 {
@@ -59,13 +59,19 @@ Nhiệm vụ: Phân tích chi tiết ảnh đơn hàng được cung cấp và t
   "orderCode": "Mã đơn hàng đọc được hoặc null",
   "paymentStatus": "PAID" | "UNPAID" | "UNKNOWN",
   "detectedPaymentMethod": "Phương thức thanh toán (ShopeePay, GrabPay, MoMo, Thẻ ngân hàng, Tiền mặt) hoặc null",
-  "detectedCategory": "Tên loại mặt hàng (VD: Đồ ăn/Thức uống, Quần áo, Bưu kiện giao hàng, Thiết bị điện tử)",
-  "reasonText": "Giải thích ngắn gọn 1 câu bằng tiếng Việt về lý do chấp nhận hoặc từ chối đơn hàng"
+  "detectedCategory": "Tên ngắn gọn sản phẩm/ứng dụng (VD: Phụ kiện điện thoại TikTok Shop, Áo thun Shopee, Đồ ăn GrabFood...)",
+  "reasonText": "Lời giải thích ngắn 1 câu tiếng Việt lý do chấp nhận hoặc từ chối"
 }
 
-Quy tắc bắt buộc:
-1. "isFoodOrder": Ghi TRUE nếu đơn là Đồ ăn, Nước uống, Trà sữa, Cơm, Bún, Phở, Đồ ăn vặt từ GrabFood, ShopeeFood, BeFood, Baemin, quán ăn. Ghi FALSE nếu là mặt hàng khác (Quần áo, Giày dép, Mỹ phẩm, Linh kiện điện tử, Bưu kiện giao nhận hàng GrabExpress/Lalamove/Shopee Express).
-2. "paymentStatus": Ghi PAID nếu đơn đã thanh toán trực tuyến (ShopeePay, GrabPay, MoMo, ZaloPay, Thẻ Visa/ATM, Tiền mặt: 0đ). Ghi UNPAID nếu là Tiền mặt (COD), Thanh toán khi nhận hàng, Thu hộ tiền mặt > 0đ. Ghi UNKNOWN nếu không xác định được.`;
+Quy tắc BẮT BUỘC:
+1. "isFoodOrder":
+   - Đặt FALSE NẾU đơn hàng là mua sắm từ trang thương mại điện tử / mua sắm tổng hợp: TikTok Shop, TikTok, Shopee E-commerce/Mall, Lazada, Tiki, Amazon.
+   - Đặt FALSE NẾU sản phẩm là Phụ kiện điện thoại (kính bảo vệ camera, ốp lưng, kính cường lực, cáp sạc, tai nghe...), Quần áo, Giày dép, Mỹ phẩm, Thiết bị điện tử, Bưu kiện GrabExpress/Lalamove.
+   - CHỈ ĐẶT TRUE NẾU đây là đơn giao Đồ ăn, Nước uống, Trà sữa, Cơm, Bún, Phở, Đồ ăn vặt từ ứng dụng giao đồ ăn (GrabFood, ShopeeFood, BeFood, Baemin, GoFood hoặc menu nhà hàng).
+2. "paymentStatus":
+   - Đặt PAID nếu đơn đã thanh toán trực tuyến (ShopeePay, GrabPay, MoMo, ZaloPay, Thẻ Visa/ATM, Tiền mặt: 0đ).
+   - Đặt UNPAID nếu là Tiền mặt (COD), Thanh toán khi nhận hàng, Thu hộ tiền mặt > 0đ.
+   - Đặt UNKNOWN nếu không rõ.`;
 
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
