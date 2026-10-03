@@ -326,7 +326,7 @@ export default function StudentDashboard() {
       const nextHour = (new Date().getHours() + 1) % 24;
       setPickupHour(nextHour.toString().padStart(2, '0'));
       setPickupMinute('00');
-      
+
       // Tải lại dữ liệu và làm mới số dư ví
       fetchRequests();
       try {
@@ -425,7 +425,6 @@ export default function StudentDashboard() {
               </p>
               <div className="pt-2 border-t border-amber-500/20 flex items-center justify-between text-[10px] text-slate-300 font-medium">
                 <span>Trạng thái: Đơn đang trong quá trình xử lý</span>
-                <span className="text-orange-400 font-bold underline">Xem danh sách ở bên dưới 👇</span>
               </div>
             </div>
           ) : (
