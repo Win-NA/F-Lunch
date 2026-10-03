@@ -574,10 +574,10 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
                           </div>
                         </div>
 
-                        <div className="text-right shrink-0">
+                        <div className="text-right shrink-0 whitespace-nowrap">
                           <p
                             style={{ color: isPositive ? '#34d399' : '#f8fafc' }}
-                            className="font-mono font-black text-base sm:text-xl"
+                            className="font-mono font-black text-base sm:text-xl whitespace-nowrap"
                           >
                             {isPositive ? '+' : '-'}{tx.amount.toLocaleString('vi-VN')} đ
                           </p>
@@ -587,7 +587,7 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
                               color: tx.status === 'APPROVED' ? '#34d399' : '#fcd34d',
                               borderColor: tx.status === 'APPROVED' ? 'rgba(16, 185, 129, 0.4)' : 'rgba(245, 158, 11, 0.4)',
                             }}
-                            className="text-xs font-extrabold px-3 py-1 rounded-md border inline-block mt-0.5"
+                            className="text-xs font-extrabold px-3 py-1 rounded-md border inline-block mt-0.5 whitespace-nowrap"
                           >
                             {tx.status === 'APPROVED' ? 'Thành công' : tx.status === 'PENDING' ? 'Chờ duyệt' : 'Từ chối'}
                           </span>

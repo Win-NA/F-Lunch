@@ -1564,23 +1564,23 @@ function AdminDashboardContent() {
                                 <p className="text-[10px] text-slate-300 mt-1 font-medium">{tx.note || `Thực hiện qua ${tx.paymentMethod}`}</p>
                                 <p className="text-[9px] text-slate-500 mt-0.5 font-mono">{new Date(tx.createdAt).toLocaleString('vi-VN')}</p>
                               </div>
-                              <div className="text-right font-mono">
-                                <p className={`font-extrabold text-sm ${isNegative ? 'text-rose-400' : 'text-emerald-400'}`}>
+                              <div className="text-right font-mono shrink-0 whitespace-nowrap pl-2">
+                                <p className={`font-extrabold text-sm ${isNegative ? 'text-rose-400' : 'text-emerald-400'} whitespace-nowrap`}>
                                   {isNegative ? '-' : '+'}{tx.amount.toLocaleString('vi-VN')} đ
                                 </p>
                                 {tx.bonusAmount > 0 && (
-                                  <p className="text-[10px] text-orange-400 font-bold">+{tx.bonusAmount.toLocaleString('vi-VN')} đ KM</p>
+                                  <p className="text-[10px] text-orange-400 font-bold whitespace-nowrap">+{tx.bonusAmount.toLocaleString('vi-VN')} đ KM</p>
                                 )}
                                 {tx.status === 'APPROVED' ? (
-                                  <span className="text-[9px] font-bold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20 inline-block mt-0.5">
+                                  <span className="text-[9px] font-bold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20 inline-block mt-0.5 whitespace-nowrap">
                                     Thành công
                                   </span>
                                 ) : tx.status === 'PENDING' ? (
-                                  <span className="text-[9px] font-bold text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20 inline-block mt-0.5">
+                                  <span className="text-[9px] font-bold text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20 inline-block mt-0.5 whitespace-nowrap">
                                     Chờ xác nhận
                                   </span>
                                 ) : (
-                                  <span className="text-[9px] font-bold text-rose-400 bg-rose-500/10 px-1.5 py-0.5 rounded border border-rose-500/20 inline-block mt-0.5">
+                                  <span className="text-[9px] font-bold text-rose-400 bg-rose-500/10 px-1.5 py-0.5 rounded border border-rose-500/20 inline-block mt-0.5 whitespace-nowrap">
                                     Từ chối
                                   </span>
                                 )}
@@ -3069,7 +3069,7 @@ function AdminDashboardContent() {
             </div>
 
             {/* Desktop Table: Student Members Wallet */}
-            <div className="hidden md:block overflow-hidden border border-slate-800 rounded-2xl bg-slate-955/50">
+            <div className="hidden md:block overflow-x-auto border border-slate-800 rounded-2xl bg-slate-955/50">
               <table className="w-full text-left text-xs text-slate-350 min-w-[750px]">
                 <thead className="text-[10px] text-slate-400 uppercase border-b border-slate-800 bg-slate-900/80">
                   <tr>
@@ -3277,92 +3277,150 @@ function AdminDashboardContent() {
               </div>
             </div>
 
-            <div className="overflow-hidden border border-slate-800 rounded-2xl bg-slate-955/50">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs text-slate-350 min-w-[650px]">
-                  <thead className="text-[10px] text-slate-400 uppercase border-b border-slate-800 bg-slate-900/80">
-                    <tr>
-                      <th className="px-4 py-3.5 font-bold">Mã GD / Thời gian</th>
-                      <th className="px-4 py-3.5 font-bold">Thành viên nạp</th>
-                      <th className="px-4 py-3.5 font-bold">Loại / Phương thức</th>
-                      <th className="px-4 py-3.5 font-bold text-right">Số tiền nạp / KM</th>
-                      <th className="px-4 py-3.5 font-bold text-right">Trạng thái</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-850">
-                    {(() => {
-                      const depositTxs = adminTransactions.filter((tx: any) => tx.type === 'DEPOSIT' || tx.type === 'ADMIN_ADJUST');
-                      const filteredTxs = depositTxs.filter((tx: any) => {
-                        if (!auditLogSearch.trim()) return true;
-                        const q = auditLogSearch.toLowerCase();
-                        return (
-                          (tx.transactionCode || '').toLowerCase().includes(q) ||
-                          (tx.user?.fullName || '').toLowerCase().includes(q) ||
-                          (tx.user?.email || '').toLowerCase().includes(q) ||
-                          (tx.user?.mssv || '').toLowerCase().includes(q) ||
-                          (tx.note || tx.description || '').toLowerCase().includes(q) ||
-                          (tx.amount || '').toString().includes(q)
-                        );
-                      });
+            <div className="border border-slate-800 rounded-2xl bg-slate-955/50 overflow-hidden">
+              {(() => {
+                const depositTxs = adminTransactions.filter((tx: any) => tx.type === 'DEPOSIT' || tx.type === 'ADMIN_ADJUST');
+                const filteredTxs = depositTxs.filter((tx: any) => {
+                  if (!auditLogSearch.trim()) return true;
+                  const q = auditLogSearch.toLowerCase();
+                  return (
+                    (tx.transactionCode || '').toLowerCase().includes(q) ||
+                    (tx.user?.fullName || '').toLowerCase().includes(q) ||
+                    (tx.user?.email || '').toLowerCase().includes(q) ||
+                    (tx.user?.mssv || '').toLowerCase().includes(q) ||
+                    (tx.note || tx.description || '').toLowerCase().includes(q) ||
+                    (tx.amount || '').toString().includes(q)
+                  );
+                });
 
-                      if (filteredTxs.length === 0) {
-                        return (
+                if (filteredTxs.length === 0) {
+                  return (
+                    <div className="text-center py-8 text-slate-500 text-xs">
+                      {auditLogSearch.trim()
+                        ? `Không tìm thấy nhật ký nạp tiền nào khớp với "${auditLogSearch}"`
+                        : 'Chưa có giao dịch nạp tiền nào được ghi nhận.'}
+                    </div>
+                  );
+                }
+
+                return (
+                  <>
+                    {/* MOBILE CARD VIEW (< sm) */}
+                    <div className="block sm:hidden space-y-3 p-3">
+                      {filteredTxs.map((tx: any) => (
+                        <div key={tx.id} className="p-3.5 bg-slate-900 border border-slate-800 rounded-2xl space-y-2">
+                          <div className="flex justify-between items-start gap-2 border-b border-slate-800/80 pb-2">
+                            <div>
+                              <span className={`text-[9px] font-bold px-2 py-0.5 rounded-md inline-block ${
+                                tx.type === 'DEPOSIT' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
+                                'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                              }`}>
+                                {tx.type === 'DEPOSIT' ? 'NẠP TIỀN TỰ ĐỘNG' : 'ADMIN ĐIỀU CHỈNH'}
+                              </span>
+                              <p className="font-mono font-bold text-white text-xs mt-1">#{tx.transactionCode}</p>
+                            </div>
+                            <div className="text-right shrink-0 whitespace-nowrap">
+                              {tx.status === 'APPROVED' ? (
+                                <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 whitespace-nowrap inline-block">
+                                  ✅ Thành công
+                                </span>
+                              ) : tx.status === 'PENDING' ? (
+                                <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 whitespace-nowrap inline-block">
+                                  ⏳ Chờ duyệt
+                                </span>
+                              ) : (
+                                <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/20 whitespace-nowrap inline-block">
+                                  ❌ Từ chối
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="flex justify-between items-center text-xs gap-2 pt-0.5">
+                            <div>
+                              <p className="font-bold text-white text-xs">{tx.user?.fullName || 'Thành viên'}</p>
+                              <p className="text-[10px] text-slate-400 font-mono">{tx.user?.email} {tx.user?.mssv ? `• ${tx.user.mssv}` : ''}</p>
+                            </div>
+                            <div className="text-right font-mono shrink-0 whitespace-nowrap">
+                              <p className="font-extrabold text-sm text-emerald-400 whitespace-nowrap">+{tx.amount.toLocaleString('vi-VN')}đ</p>
+                              {tx.bonusAmount > 0 && (
+                                <p className="text-[10px] text-orange-400 font-bold whitespace-nowrap">+{tx.bonusAmount.toLocaleString('vi-VN')}đ KM</p>
+                              )}
+                            </div>
+                          </div>
+
+                          {tx.note && (
+                            <p className="text-[10px] text-slate-400 bg-slate-955 p-2 rounded-xl border border-slate-800/60 font-sans leading-relaxed break-words">
+                              {tx.note}
+                            </p>
+                          )}
+
+                          <p className="text-[9px] text-slate-500 font-mono text-right">{new Date(tx.createdAt).toLocaleString('vi-VN')}</p>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* DESKTOP TABLE VIEW (>= sm) */}
+                    <div className="hidden sm:block overflow-x-auto">
+                      <table className="w-full text-left text-xs text-slate-350 min-w-[750px]">
+                        <thead className="text-[10px] text-slate-400 uppercase border-b border-slate-800 bg-slate-900/80">
                           <tr>
-                            <td colSpan={5} className="text-center py-8 text-slate-500 text-xs">
-                              {auditLogSearch.trim()
-                                ? `Không tìm thấy nhật ký nạp tiền nào khớp với "${auditLogSearch}"`
-                                : 'Chưa có giao dịch nạp tiền nào được ghi nhận.'}
-                            </td>
+                            <th className="px-4 py-3.5 font-bold">Mã GD / Thời gian</th>
+                            <th className="px-4 py-3.5 font-bold">Thành viên nạp</th>
+                            <th className="px-4 py-3.5 font-bold">Loại / Phương thức</th>
+                            <th className="px-4 py-3.5 font-bold text-right">Số tiền nạp / KM</th>
+                            <th className="px-4 py-3.5 font-bold text-right">Trạng thái</th>
                           </tr>
-                        );
-                      }
-
-                      return filteredTxs.map((tx: any) => (
-                        <tr key={tx.id} className="hover:bg-slate-800/20 transition-colors">
-                          <td className="px-4 py-3.5 font-mono">
-                            <p className="font-bold text-white text-xs">{tx.transactionCode}</p>
-                            <p className="text-[10px] text-slate-500">{new Date(tx.createdAt).toLocaleString('vi-VN')}</p>
-                          </td>
-                          <td className="px-4 py-3.5">
-                            <p className="font-bold text-white">{tx.user?.fullName}</p>
-                            <p className="text-[10px] text-slate-400">{tx.user?.email} {tx.user?.mssv ? `• ${tx.user.mssv}` : ''}</p>
-                          </td>
-                          <td className="px-4 py-3.5">
-                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
-                              tx.type === 'DEPOSIT' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
-                              'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                            }`}>
-                              {tx.type === 'DEPOSIT' ? 'NẠP TIỀN TỰ ĐỘNG' : 'ADMIN ĐIỀU CHỈNH'}
-                            </span>
-                            <p className="text-[10px] text-slate-500 mt-0.5">{tx.note || tx.paymentMethod || 'VietQR / Bank'}</p>
-                          </td>
-                          <td className="px-4 py-3.5 text-right font-mono">
-                            <p className="font-extrabold text-sm text-emerald-400">+{tx.amount.toLocaleString('vi-VN')}đ</p>
-                            {tx.bonusAmount > 0 && (
-                              <p className="text-[10px] text-orange-400 font-bold">+{tx.bonusAmount.toLocaleString('vi-VN')}đ KM</p>
-                            )}
-                          </td>
-                          <td className="px-4 py-3.5 text-right">
-                            {tx.status === 'APPROVED' ? (
-                              <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                                ✅ Thành công
-                              </span>
-                            ) : tx.status === 'PENDING' ? (
-                              <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                                ⏳ Chờ duyệt
-                              </span>
-                            ) : (
-                              <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/20">
-                                ❌ Từ chối
-                              </span>
-                            )}
-                          </td>
-                        </tr>
-                      ));
-                    })()}
-                  </tbody>
-                </table>
-              </div>
+                        </thead>
+                        <tbody className="divide-y divide-slate-850">
+                          {filteredTxs.map((tx: any) => (
+                            <tr key={tx.id} className="hover:bg-slate-800/20 transition-colors">
+                              <td className="px-4 py-3.5 font-mono">
+                                <p className="font-bold text-white text-xs">{tx.transactionCode}</p>
+                                <p className="text-[10px] text-slate-500">{new Date(tx.createdAt).toLocaleString('vi-VN')}</p>
+                              </td>
+                              <td className="px-4 py-3.5">
+                                <p className="font-bold text-white">{tx.user?.fullName}</p>
+                                <p className="text-[10px] text-slate-400">{tx.user?.email} {tx.user?.mssv ? `• ${tx.user.mssv}` : ''}</p>
+                              </td>
+                              <td className="px-4 py-3.5">
+                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
+                                  tx.type === 'DEPOSIT' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
+                                  'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                                }`}>
+                                  {tx.type === 'DEPOSIT' ? 'NẠP TIỀN TỰ ĐỘNG' : 'ADMIN ĐIỀU CHỈNH'}
+                                </span>
+                                <p className="text-[10px] text-slate-500 mt-0.5 max-w-xs truncate" title={tx.note || tx.paymentMethod}>{tx.note || tx.paymentMethod || 'VietQR / Bank'}</p>
+                              </td>
+                              <td className="px-4 py-3.5 text-right font-mono shrink-0 whitespace-nowrap">
+                                <p className="font-extrabold text-sm text-emerald-400 whitespace-nowrap">+{tx.amount.toLocaleString('vi-VN')}đ</p>
+                                {tx.bonusAmount > 0 && (
+                                  <p className="text-[10px] text-orange-400 font-bold whitespace-nowrap">+{tx.bonusAmount.toLocaleString('vi-VN')}đ KM</p>
+                                )}
+                              </td>
+                              <td className="px-4 py-3.5 text-right shrink-0 whitespace-nowrap">
+                                {tx.status === 'APPROVED' ? (
+                                  <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 whitespace-nowrap inline-block">
+                                    ✅ Thành công
+                                  </span>
+                                ) : tx.status === 'PENDING' ? (
+                                  <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 whitespace-nowrap inline-block">
+                                    ⏳ Chờ duyệt
+                                  </span>
+                                ) : (
+                                  <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/20 whitespace-nowrap inline-block">
+                                    ❌ Từ chối
+                                  </span>
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </>
+                );
+              })()}
             </div>
           </div>
         </div>
