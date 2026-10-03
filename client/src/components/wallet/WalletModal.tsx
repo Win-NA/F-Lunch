@@ -83,15 +83,29 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
     }
   };
 
-  const fetchHistory = async () => {
-    setHistoryLoading(true);
+  const depositAmountRef = useRef(depositAmount);
+  useEffect(() => {
+    depositAmountRef.current = depositAmount;
+  }, [depositAmount]);
+
+  const timeLeftRef = useRef(timeLeft);
+  useEffect(() => {
+    timeLeftRef.current = timeLeft;
+  }, [timeLeft]);
+
+  const fetchHistory = async (isSilent = false) => {
+    if (!isSilent && transactions.length === 0) {
+      setHistoryLoading(true);
+    }
     try {
       const res = await api.get('/transactions/my-transactions');
       setTransactions(res.data || []);
     } catch (err) {
       // silent catch
     } finally {
-      setHistoryLoading(false);
+      if (!isSilent) {
+        setHistoryLoading(false);
+      }
     }
   };
 
@@ -131,29 +145,40 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
     return `${m}:${s}`;
   };
 
+  // Initial fetch when modal opens or tab changes
   useEffect(() => {
     if (isOpen) {
       fetchProfile();
       if (tab === 'HISTORY') {
-        fetchHistory();
+        fetchHistory(false);
       }
-      const interval = setInterval(async () => {
-        if (depositAmount && depositAmount >= 10000 && timeLeft > 0) {
-          try {
-            const res = await api.post('/transactions/auto-check-deposit');
-            if (res.data?.success) {
-              fetchProfile();
-              fetchHistory();
-            }
-          } catch (e) {
-            // silent catch
-          }
-        }
-        fetchProfile();
-      }, 2000);
-      return () => clearInterval(interval);
     }
-  }, [isOpen, tab, depositAmount, timeLeft]);
+  }, [isOpen, tab]);
+
+  // Background polling for balance & auto-check deposit without reloading spinner
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const interval = setInterval(async () => {
+      const amt = depositAmountRef.current;
+      const timer = timeLeftRef.current;
+
+      if (amt && amt >= 10000 && timer > 0) {
+        try {
+          const res = await api.post('/transactions/auto-check-deposit');
+          if (res.data?.success) {
+            fetchProfile();
+            fetchHistory(true);
+          }
+        } catch (e) {
+          // silent catch
+        }
+      }
+      fetchProfile();
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [isOpen]);
 
   if (!isOpen || !user) return null;
 
@@ -283,6 +308,19 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
           {/* DEPOSIT TAB */}
           {tab === 'DEPOSIT' && (
             <div className="space-y-7">
+              {/* Red Warning Banner - ALWAYS VISIBLE AT TOP */}
+              <div style={{ backgroundColor: '#450a0a', borderColor: '#dc2626' }} className="p-5 rounded-2xl border-2 flex items-start gap-3.5 text-sm sm:text-base shadow-xl">
+                <AlertTriangle size={28} style={{ color: '#f87171' }} className="shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <p style={{ color: '#fca5a5' }} className="font-black uppercase tracking-wider text-xs sm:text-sm">
+                    LƯU Ý QUAN TRỌNG (KHÔNG THỂ RÚT / HOÀN TIỀN):
+                  </p>
+                  <p style={{ color: '#fee2e2' }} className="text-xs sm:text-sm leading-relaxed font-semibold">
+                    Số dư Ví F-Lunch chỉ sử dụng cho phí nhận hộ 5.000đ/đơn và <strong style={{ color: '#ffffff' }} className="font-extrabold underline">KHÔNG THỂ rút ra ngoài hoặc hoàn tiền mặt</strong>. Vui lòng cân nhắc kỹ trước khi quét mã chuyển khoản.
+                  </p>
+                </div>
+              </div>
+
               {/* Step 1: Select Amount */}
               <div className="space-y-3.5">
                 <label style={{ color: '#fb923c' }} className="block text-xs sm:text-sm font-black uppercase tracking-widest">
@@ -469,19 +507,6 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
                       </p>
                     </div>
                   )}
-
-                  {/* Red Warning Banner */}
-                  <div style={{ backgroundColor: '#450a0a', borderColor: '#dc2626' }} className="p-5 rounded-2xl border-2 flex items-start gap-3.5 text-sm sm:text-base shadow-xl">
-                    <AlertTriangle size={28} style={{ color: '#f87171' }} className="shrink-0 mt-0.5" />
-                    <div className="space-y-1">
-                      <p style={{ color: '#fca5a5' }} className="font-black uppercase tracking-wider text-xs sm:text-sm">
-                        LƯU Ý QUAN TRỌNG (KHÔNG THỂ RÚT / HOÀN TIỀN):
-                      </p>
-                      <p style={{ color: '#fee2e2' }} className="text-xs sm:text-sm leading-relaxed font-semibold">
-                        Số dư Ví F-Lunch chỉ sử dụng cho phí nhận hộ 5.000đ/đơn và <strong style={{ color: '#ffffff' }} className="font-extrabold underline">KHÔNG THỂ rút ra ngoài hoặc hoàn tiền mặt</strong>. Vui lòng cân nhắc kỹ trước khi quét mã chuyển khoản.
-                      </p>
-                    </div>
-                  </div>
                 </div>
               )}
             </div>
@@ -537,6 +562,26 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
 
                   return filtered.map((tx: any) => {
                     const isPositive = tx.type === 'DEPOSIT' || tx.type === 'ORDER_REFUND';
+                    const isApproved = tx.status === 'APPROVED';
+                    const isPending = tx.status === 'PENDING';
+
+                    const badgeBg = isApproved
+                      ? 'rgba(16, 185, 129, 0.2)'
+                      : isPending
+                      ? 'rgba(245, 158, 11, 0.2)'
+                      : 'rgba(239, 68, 68, 0.2)';
+                    const badgeColor = isApproved
+                      ? '#34d399'
+                      : isPending
+                      ? '#fcd34d'
+                      : '#fca5a5';
+                    const badgeBorder = isApproved
+                      ? 'rgba(16, 185, 129, 0.4)'
+                      : isPending
+                      ? 'rgba(245, 158, 11, 0.4)'
+                      : 'rgba(239, 68, 68, 0.5)';
+                    const statusText = isApproved ? 'Thành công' : isPending ? 'Chờ duyệt' : 'Từ chối';
+
                     return (
                       <div
                         key={tx.id}
@@ -583,13 +628,13 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
                           </p>
                           <span
                             style={{
-                              backgroundColor: tx.status === 'APPROVED' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(245, 158, 11, 0.2)',
-                              color: tx.status === 'APPROVED' ? '#34d399' : '#fcd34d',
-                              borderColor: tx.status === 'APPROVED' ? 'rgba(16, 185, 129, 0.4)' : 'rgba(245, 158, 11, 0.4)',
+                              backgroundColor: badgeBg,
+                              color: badgeColor,
+                              borderColor: badgeBorder,
                             }}
                             className="text-xs font-extrabold px-3 py-1 rounded-md border inline-block mt-0.5 whitespace-nowrap"
                           >
-                            {tx.status === 'APPROVED' ? 'Thành công' : tx.status === 'PENDING' ? 'Chờ duyệt' : 'Từ chối'}
+                            {statusText}
                           </span>
                         </div>
                       </div>
