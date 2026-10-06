@@ -18,7 +18,9 @@ import {
   AlertCircle,
   CheckCircle2,
   Info,
-  Search
+  Search,
+  Copy,
+  MessageSquare
 } from 'lucide-react';
 
 interface RequestItem {
@@ -736,6 +738,22 @@ export default function StudentDashboard() {
                         </div>
                         <div className="flex items-center gap-1.5 shrink-0">
                           {getStatusBadge(req.status)}
+                          {req.receiver && ['ACCEPTED', 'RECEIVED', 'READY_FOR_PICKUP'].includes(req.status) && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const phoneStr = req.receiver?.phoneNumber ? req.receiver.phoneNumber : '';
+                                const textToCopy = `Chào anh/chị tài xế, em có nhờ bạn nhận hộ. Khi tới ${req.pickupLocation || 'Cổng 1 FPT'}, anh/chị vui lòng gọi cho bạn nhận hộ giúp em: ${req.receiver?.fullName} - SĐT: ${phoneStr}. Em cảm ơn!`;
+                                navigator.clipboard.writeText(textToCopy);
+                                toast.success('Đã sao chép tin nhắn gửi tài xế!');
+                              }}
+                              className="px-2.5 py-1 text-[10px] sm:text-[11px] font-extrabold rounded-lg bg-orange-600 hover:bg-orange-500 text-white shadow-sm shadow-orange-600/30 transition-all cursor-pointer flex items-center gap-1 shrink-0 active:scale-95"
+                              title="Copy tin nhắn thông báo cho tài xế giao hàng"
+                            >
+                              <Copy size={11} /> Copy tin nhắn gửi tài xế
+                            </button>
+                          )}
                           {req.status === 'PENDING' && (
                             <button
                               type="button"

@@ -15,7 +15,9 @@ import {
   Clock,
   CheckCircle2,
   X,
-  Star
+  Star,
+  Copy,
+  MessageSquare
 } from 'lucide-react';
 
 interface RequestDetail {
@@ -57,6 +59,7 @@ export default function RequestDetailPage() {
 
   // Feedback Modal State
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [showDriverPopupModal, setShowDriverPopupModal] = useState(false);
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState('');
   const [feedbackLoading, setFeedbackLoading] = useState(false);
@@ -181,12 +184,47 @@ export default function RequestDetailPage() {
     }
   };
 
+  const handleDismissDriverModal = (copyText?: boolean) => {
+    if (request && typeof window !== 'undefined') {
+      const key = `driver_popup_seen_${request.id}`;
+      const altKey = `f_lunch_driver_popup_seen_${request.id}`;
+      localStorage.setItem(key, 'true');
+      localStorage.setItem(altKey, 'true');
+      sessionStorage.setItem(key, 'true');
+      sessionStorage.setItem(altKey, 'true');
+
+      if (copyText) {
+        const phoneStr = request.receiver?.phoneNumber || '';
+        const textToCopy = `Chào anh/chị tài xế, em có nhờ bạn nhận hộ. Khi tới ${request.pickupLocation || 'Cổng 1 FPT'}, anh/chị vui lòng gọi cho bạn nhận hộ giúp em: ${request.receiver?.fullName} - SĐT: ${phoneStr}. Em cảm ơn!`;
+        navigator.clipboard.writeText(textToCopy);
+        toast.success('Đã sao chép tin nhắn & Đóng hướng dẫn!');
+      }
+    }
+    setShowDriverPopupModal(false);
+  };
+
   const fetchDetail = async () => {
     try {
       const res = await api.get(`/requests/${requestId}`);
       setRequest(res.data);
       if (res.data.status === 'COMPLETED' && !res.data.feedback) {
         setShowFeedbackModal(true);
+      }
+
+      // Check first-time driver info popup modal
+      if (
+        res.data.receiver &&
+        ['ACCEPTED', 'RECEIVED', 'READY_FOR_PICKUP'].includes(res.data.status)
+      ) {
+        const key = `driver_popup_seen_${res.data.id}`;
+        const altKey = `f_lunch_driver_popup_seen_${res.data.id}`;
+        if (typeof window !== 'undefined') {
+          const isSeenLocal = localStorage.getItem(key) || localStorage.getItem(altKey);
+          const isSeenSession = sessionStorage.getItem(key) || sessionStorage.getItem(altKey);
+          if (!isSeenLocal && !isSeenSession) {
+            setShowDriverPopupModal(true);
+          }
+        }
       }
 
       if (!isEditing) {
@@ -278,6 +316,46 @@ export default function RequestDetailPage() {
 
         {/* Left/Middle column: Details and Tracker */}
         <div className="lg:col-span-2 space-y-6">
+
+          {/* Thông báo gửi tài xế khi có người nhận hộ */}
+          {request.receiver && ['ACCEPTED', 'RECEIVED', 'READY_FOR_PICKUP'].includes(request.status) && (
+            <div className="bg-slate-900 border-2 border-orange-500 p-4 sm:p-5 rounded-3xl shadow-2xl space-y-3.5">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-orange-500/30 pb-3">
+                <div className="flex items-center gap-2 text-orange-400 font-black text-xs sm:text-sm uppercase tracking-wide">
+                  <MessageSquare size={18} className="text-orange-400 shrink-0" />
+                  <span>Thông tin gửi tài xế giao hàng ({request.foodPlatform})</span>
+                </div>
+                <span className="w-fit text-[10px] font-extrabold bg-orange-600 text-white px-2.5 py-0.5 rounded-full shadow-sm uppercase tracking-wider">
+                  Quan trọng
+                </span>
+              </div>
+
+              <p className="text-xs sm:text-sm text-slate-100 font-medium leading-relaxed">
+                Người nhận hộ <strong className="text-orange-400 font-black">{request.receiver.fullName}</strong> đã nhận đơn! Vui lòng copy mẫu tin nhắn bên dưới dán vào phần <strong className="text-white underline">Chat / Ghi chú</strong> cho tài xế trên app <strong>{request.foodPlatform}</strong>:
+              </p>
+
+              {/* Message Template Box with Ultra-High Contrast */}
+              <div className="bg-slate-950 p-4 rounded-2xl border-2 border-orange-500/70 shadow-inner relative">
+                <p className="text-xs sm:text-sm font-bold text-white leading-relaxed">
+                  &ldquo;Chào anh/chị tài xế, em có nhờ bạn nhận hộ. Khi tới <span className="text-orange-400 font-black underline decoration-orange-400/60">{request.pickupLocation || 'Cổng 1 FPT'}</span>, anh/chị vui lòng gọi cho bạn nhận hộ giúp em: <span className="text-orange-400 font-black underline decoration-orange-400/60">{request.receiver.fullName}</span> - SĐT: <span className="text-orange-400 font-black underline decoration-orange-400/60">{request.receiver.phoneNumber || 'Chưa cập nhật SĐT'}</span>. Em cảm ơn!&rdquo;
+                </p>
+              </div>
+
+              {/* Copy Action Button */}
+              <button
+                type="button"
+                onClick={() => {
+                  const phoneStr = request.receiver?.phoneNumber ? request.receiver.phoneNumber : '';
+                  const textToCopy = `Chào anh/chị tài xế, em có nhờ bạn nhận hộ. Khi tới ${request.pickupLocation || 'Cổng 1 FPT'}, anh/chị vui lòng gọi cho bạn nhận hộ giúp em: ${request.receiver?.fullName} - SĐT: ${phoneStr}. Em cảm ơn!`;
+                  navigator.clipboard.writeText(textToCopy);
+                  toast.success('Đã sao chép nội dung tin nhắn gửi tài xế!');
+                }}
+                className="w-full bg-orange-600 hover:bg-orange-500 active:scale-[0.98] text-white font-extrabold text-xs sm:text-sm py-3.5 px-4 rounded-xl transition-all shadow-lg shadow-orange-600/30 cursor-pointer flex items-center justify-center gap-2"
+              >
+                <Copy size={16} /> Sao chép tin nhắn gửi tài xế
+              </button>
+            </div>
+          )}
 
           {/* Tracker Card */}
           <div className="bg-slate-900/60 backdrop-blur-xl border border-slate-800 p-5 rounded-3xl shadow-xl">
@@ -731,6 +809,75 @@ export default function RequestDetailPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Driver Notification First-Time Modal Popup */}
+      {showDriverPopupModal && request && request.receiver && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-slate-900 border-2 border-orange-500 p-5 sm:p-6 rounded-3xl shadow-2xl max-w-lg w-full space-y-4 text-white relative max-h-[90vh] overflow-y-auto">
+            <div className="flex items-start justify-between border-b border-orange-500/30 pb-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-orange-500/15 border border-orange-500/30 flex items-center justify-center text-orange-400 shrink-0">
+                  <MessageSquare size={22} />
+                </div>
+                <div>
+                  <h3 className="text-sm sm:text-base font-black text-orange-400 uppercase tracking-wide">
+                    ĐÃ CÓ NGƯỜI NHẬN HỘ ĐƠN HÀNG!
+                  </h3>
+                  <p className="text-[11px] text-slate-300 font-medium">
+                    Vui lòng thực hiện bước hướng dẫn quan trọng dưới đây
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => handleDismissDriverModal(false)}
+                className="text-slate-400 hover:text-white p-1 rounded-lg transition-colors cursor-pointer"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="space-y-3 text-xs sm:text-sm text-slate-200 leading-relaxed">
+              <div className="p-3.5 bg-slate-950 border border-orange-500/40 rounded-2xl space-y-1.5">
+                <p className="font-extrabold text-orange-400 text-xs sm:text-sm">
+                  👤 Người nhận hộ: <span className="text-white font-black">{request.receiver.fullName}</span>
+                </p>
+                <p className="font-semibold text-slate-200 text-xs">
+                  📞 Số điện thoại: <span className="text-orange-400 font-bold">{request.receiver.phoneNumber || 'Chưa cập nhật'}</span>
+                </p>
+                <p className="text-xs text-slate-300">
+                  📍 Vị trí giao: <span className="text-orange-400 font-bold">{request.pickupLocation || 'Cổng 1 FPT'}</span>
+                </p>
+              </div>
+
+              <p className="font-medium text-slate-200">
+                ⚠️ <strong className="text-amber-400">Lưu ý bắt buộc:</strong> Tài xế <strong className="text-white">{request.foodPlatform}</strong> không sử dụng ứng dụng F-Lunch. Bạn cần <strong className="text-orange-400 underline">gửi tin nhắn bên dưới cho tài xế</strong> để tài xế liên hệ trực tiếp cho người nhận hộ khi tới nơi!
+              </p>
+
+              {/* Highlighted Message Box */}
+              <div className="bg-slate-955 p-3.5 sm:p-4 rounded-2xl border-2 border-orange-500/70 text-white font-bold text-xs sm:text-sm leading-relaxed shadow-inner">
+                &ldquo;Chào anh/chị tài xế, em có nhờ bạn nhận hộ. Khi tới <span className="text-orange-400 font-black underline">{request.pickupLocation || 'Cổng 1 FPT'}</span>, anh/chị vui lòng gọi cho bạn nhận hộ giúp em: <span className="text-orange-400 font-black underline">{request.receiver.fullName}</span> - SĐT: <span className="text-orange-400 font-black underline">{request.receiver.phoneNumber || 'Chưa có SĐT'}</span>. Em cảm ơn!&rdquo;
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-2.5 pt-2">
+              <button
+                type="button"
+                onClick={() => handleDismissDriverModal(true)}
+                className="flex-1 bg-orange-600 hover:bg-orange-500 active:scale-[0.98] text-white font-extrabold text-xs sm:text-sm py-3.5 px-4 rounded-xl transition-all shadow-lg shadow-orange-600/30 cursor-pointer flex items-center justify-center gap-2"
+              >
+                <Copy size={16} /> Sao chép tin nhắn & Đóng
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDismissDriverModal(false)}
+                className="bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs sm:text-sm py-3.5 px-4 rounded-xl transition-all cursor-pointer"
+              >
+                Đã hiểu, Đóng
+              </button>
+            </div>
           </div>
         </div>
       )}

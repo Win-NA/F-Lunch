@@ -8,77 +8,64 @@ const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
-  console.log('Seeding database...');
+  console.log('Seeding database safely...');
 
-  // Hash password
   const hashedPassword = await bcrypt.hash('123456', 10);
 
-  // Clear existing data (in order of relations)
-  await prisma.feedback.deleteMany();
-  await prisma.notification.deleteMany();
-  await prisma.receivingRequest.deleteMany();
-  await prisma.user.deleteMany();
-
-  // Create Admin
-  const admin = await prisma.user.create({
-    data: {
-      fullName: 'System Administrator',
-      email: 'admin@fpt.edu.vn',
+  // Admin account
+  const admin = await prisma.user.upsert({
+    where: { email: 'se180055ledonhatanh@gmail.com' },
+    update: {
+      role: UserRole.ADMIN,
+      realBalance: 255000,
+    },
+    create: {
+      fullName: 'Anh Lê Đỗ Nhật (Win)',
+      email: 'se180055ledonhatanh@gmail.com',
       password: hashedPassword,
-      phoneNumber: '0901234567',
       role: UserRole.ADMIN,
       status: UserStatus.ACTIVE,
+      realBalance: 255000,
     },
   });
-  console.log(`Created admin: ${admin.email}`);
 
-  // Create Students
-  const student1 = await prisma.user.create({
-    data: {
-      fullName: 'Nguyen Van Student One',
-      email: 'student1@fpt.edu.vn',
+  // Student account
+  const student = await prisma.user.upsert({
+    where: { email: 'anhldnse180055@fpt.edu.vn' },
+    update: {
+      role: UserRole.STUDENT,
+      realBalance: 255000,
+    },
+    create: {
+      fullName: 'Le Do Nhat Anh (K18 HCM)',
+      email: 'anhldnse180055@fpt.edu.vn',
       password: hashedPassword,
-      phoneNumber: '0902222222',
       role: UserRole.STUDENT,
       status: UserStatus.ACTIVE,
+      realBalance: 255000,
     },
   });
-  const student2 = await prisma.user.create({
-    data: {
-      fullName: 'Tran Thi Student Two',
-      email: 'student2@fpt.edu.vn',
-      password: hashedPassword,
-      phoneNumber: '0903333333',
-      role: UserRole.STUDENT,
-      status: UserStatus.ACTIVE,
-    },
-  });
-  console.log(`Created students: ${student1.email}, ${student2.email}`);
 
-  // Create Receivers
-  const receiver1 = await prisma.user.create({
-    data: {
-      fullName: 'Le Van Receiver One',
-      email: 'receiver1@fpt.edu.vn',
+  // Receiver account
+  const receiver = await prisma.user.upsert({
+    where: { email: 'nhatanh@gmail.com' },
+    update: {
+      role: UserRole.RECEIVER,
+      phoneNumber: '0909146466',
+      realBalance: 255000,
+    },
+    create: {
+      fullName: 'Lê Đỗ Nhật Anh',
+      email: 'nhatanh@gmail.com',
       password: hashedPassword,
-      phoneNumber: '0904444444',
+      phoneNumber: '0909146466',
       role: UserRole.RECEIVER,
       status: UserStatus.ACTIVE,
+      realBalance: 255000,
     },
   });
-  const receiver2 = await prisma.user.create({
-    data: {
-      fullName: 'Pham Thi Receiver Two',
-      email: 'receiver2@fpt.edu.vn',
-      password: hashedPassword,
-      phoneNumber: '0905555555',
-      role: UserRole.RECEIVER,
-      status: UserStatus.ACTIVE,
-    },
-  });
-  console.log(`Created receivers: ${receiver1.email}, ${receiver2.email}`);
 
-  console.log('Seeding complete!');
+  console.log(`Seeding complete: ADMIN (${admin.email}), STUDENT (${student.email}), RECEIVER (${receiver.email})`);
 }
 
 main()
