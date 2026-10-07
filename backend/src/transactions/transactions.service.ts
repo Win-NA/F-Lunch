@@ -209,59 +209,73 @@ export class TransactionsService {
     const rawCleanMemo = removeAccents(memoContent);
     const users = await this.prisma.user.findMany();
 
-    // 1. Kiểm tra xem nội dung chuyển khoản có chứa Mã giao dịch PENDING (FL-DEP-...) hay không
-    const pendingTxs = await this.prisma.transaction.findMany({
-      where: {
-        type: TransactionType.DEPOSIT,
-        status: TransactionStatus.PENDING,
-      },
-      include: { user: true },
-      orderBy: { createdAt: 'desc' },
+    let targetUserId: string | null = null;
+    let pendingTx: any = null;
+
+    // 1. ƯU TIÊN 1: Tìm Sinh viên theo đầy đủ MSSV (bao gồm cả chữ và số, ví dụ HE192402)
+    let matchedUser = users.find(u => {
+      const mssvClean = u.mssv ? removeAccents(u.mssv) : '';
+      return mssvClean.length >= 3 && rawCleanMemo.includes(mssvClean);
     });
 
-    let pendingTx: any = pendingTxs.find(tx => {
-      const cleanTxCode = removeAccents(tx.transactionCode);
-      return cleanTxCode.length >= 5 && rawCleanMemo.includes(cleanTxCode);
-    });
+    if (matchedUser) {
+      targetUserId = matchedUser.id;
+    }
 
-    let targetUserId = pendingTx ? pendingTx.userId : null;
-
-    // 2. Nếu không khớp mã giao dịch, ưu tiên tìm Sinh viên theo đầy đủ MSSV (bao gồm cả chữ và số, ví dụ HE192402)
+    // 2. ƯU TIÊN 2: Nếu không có MSSV, kiểm tra Mã giao dịch PENDING (FL-DEP-...) trong nội dung chuyển khoản
     if (!targetUserId) {
-      let matchedUser = users.find(u => {
-        const mssvClean = u.mssv ? removeAccents(u.mssv) : '';
-        return mssvClean.length >= 3 && rawCleanMemo.includes(mssvClean);
+      const pendingTxs = await this.prisma.transaction.findMany({
+        where: {
+          type: TransactionType.DEPOSIT,
+          status: TransactionStatus.PENDING,
+        },
+        include: { user: true },
+        orderBy: { createdAt: 'desc' },
       });
 
-      // 3. Nếu không tìm thấy MSSV đầy đủ, tìm theo Email prefix
-      if (!matchedUser) {
-        matchedUser = users.find(u => {
-          const emailPrefix = u.email ? removeAccents(u.email.split('@')[0]) : '';
-          return emailPrefix.length >= 3 && rawCleanMemo.includes(emailPrefix);
-        });
-      }
+      pendingTx = pendingTxs.find(tx => {
+        const cleanTxCode = removeAccents(tx.transactionCode);
+        return cleanTxCode.length >= 5 && rawCleanMemo.includes(cleanTxCode);
+      });
 
-      // 4. Nếu vẫn không tìm thấy, mới tìm theo Họ và tên (không dấu)
-      if (!matchedUser) {
-        matchedUser = users.find(u => {
-          const nameClean = u.fullName ? removeAccents(u.fullName) : '';
-          return nameClean.length >= 3 && rawCleanMemo.includes(nameClean);
-        });
+      if (pendingTx) {
+        targetUserId = pendingTx.userId;
       }
+    }
 
+    // 3. ƯU TIÊN 3: Nếu vẫn không tìm thấy, tìm theo Email prefix
+    if (!targetUserId) {
+      matchedUser = users.find(u => {
+        const emailPrefix = u.email ? removeAccents(u.email.split('@')[0]) : '';
+        return emailPrefix.length >= 3 && rawCleanMemo.includes(emailPrefix);
+      });
       if (matchedUser) {
         targetUserId = matchedUser.id;
-        // Tìm transaction PENDING trùng số tiền của user này (nếu có)
-        pendingTx = await this.prisma.transaction.findFirst({
-          where: {
-            userId: targetUserId,
-            type: TransactionType.DEPOSIT,
-            status: TransactionStatus.PENDING,
-            amount: amount,
-          },
-          orderBy: { createdAt: 'desc' },
-        });
       }
+    }
+
+    // 4. ƯU TIÊN 4: Nếu vẫn không tìm thấy, tìm theo Họ và tên (không dấu)
+    if (!targetUserId) {
+      matchedUser = users.find(u => {
+        const nameClean = u.fullName ? removeAccents(u.fullName) : '';
+        return nameClean.length >= 3 && rawCleanMemo.includes(nameClean);
+      });
+      if (matchedUser) {
+        targetUserId = matchedUser.id;
+      }
+    }
+
+    // Nếu tìm thấy targetUserId nhưng chưa có pendingTx, tìm transaction PENDING trùng số tiền của user này (nếu có)
+    if (targetUserId && !pendingTx) {
+      pendingTx = await this.prisma.transaction.findFirst({
+        where: {
+          userId: targetUserId,
+          type: TransactionType.DEPOSIT,
+          status: TransactionStatus.PENDING,
+          amount: amount,
+        },
+        orderBy: { createdAt: 'desc' },
+      });
     }
 
     if (!targetUserId) {
