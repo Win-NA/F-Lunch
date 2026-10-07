@@ -57,6 +57,9 @@ export default function ReceiverDashboard() {
   const [completedCount, setCompletedCount] = useState(0);
   const [completedTodayCount, setCompletedTodayCount] = useState(0);
 
+  // Detail Modal State
+  const [modalTab, setModalTab] = useState<'EARNINGS' | 'TIER' | null>(null);
+
   const fetchData = async () => {
     try {
       // Tải yêu cầu chờ nhận hộ
@@ -200,12 +203,16 @@ export default function ReceiverDashboard() {
           </div>
           <div>
             <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Đơn hoàn thành hôm nay</p>
-            <p className="text-lg font-bold text-white mt-0.5">{completedTodayCount} <span className="text-[10px] text-slate-500 font-normal underline">Xem lịch sử →</span></p>
+            <p className="text-lg font-bold text-white mt-0.5">{completedTodayCount}</p>
           </div>
         </div>
 
-        <div className="bg-slate-900/60 backdrop-blur-xl border border-slate-800 p-4 rounded-3xl flex items-center gap-3.5">
-          <div className="w-11 h-11 rounded-2xl bg-orange-500/10 flex items-center justify-center text-orange-500 shrink-0">
+        <div 
+          onClick={() => setModalTab('EARNINGS')}
+          className="bg-slate-900/60 backdrop-blur-xl border border-slate-800 p-4 rounded-3xl flex items-center gap-3.5 cursor-pointer hover:bg-slate-850/80 transition-all group"
+          title="Nhấn để xem chi tiết tiền công hôm nay"
+        >
+          <div className="w-11 h-11 rounded-2xl bg-orange-500/10 flex items-center justify-center text-orange-500 shrink-0 group-hover:scale-105 transition-transform">
             <DollarSign size={20} />
           </div>
           <div>
@@ -215,12 +222,16 @@ export default function ReceiverDashboard() {
           </div>
         </div>
 
-        <div className="bg-slate-900/60 backdrop-blur-xl border border-slate-800 p-4 rounded-3xl flex items-center gap-3.5">
-          <div className="w-11 h-11 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-500 shrink-0">
+        <div 
+          onClick={() => setModalTab('TIER')}
+          className="bg-slate-900/60 backdrop-blur-xl border border-slate-800 p-4 rounded-3xl flex items-center gap-3.5 cursor-pointer hover:bg-slate-850/80 transition-all group"
+          title="Nhấn để xem chi tiết mức thưởng của bạn"
+        >
+          <div className="w-11 h-11 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-500 shrink-0 group-hover:scale-105 transition-transform">
             <Award size={20} />
           </div>
           <div>
-            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Bậc thưởng lũy tiến</p>
+            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Mức thưởng của bạn</p>
             <p className="text-xs font-bold text-white mt-1">{currentTierText}</p>
           </div>
         </div>
@@ -562,6 +573,133 @@ export default function ReceiverDashboard() {
         </div>
 
       </div>
+
+      {/* Modal Details for Earnings & Bonus Tiers */}
+      {modalTab && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200"
+          onClick={() => setModalTab(null)}
+        >
+          <div 
+            className="bg-slate-900 border border-slate-800 w-full max-w-md rounded-3xl p-6 shadow-2xl space-y-5 relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setModalTab(null)}
+              className="absolute top-5 right-5 w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+            >
+              <X size={18} />
+            </button>
+
+            <div className="flex items-center gap-3 border-b border-slate-800/80 pb-4">
+              <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 ${modalTab === 'EARNINGS' ? 'bg-orange-500/10 text-orange-500' : 'bg-blue-500/10 text-blue-500'}`}>
+                {modalTab === 'EARNINGS' ? <DollarSign size={22} /> : <Award size={22} />}
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-white">
+                  {modalTab === 'EARNINGS' ? 'Chi tiết Tiền công hôm nay' : 'Chi tiết Mức thưởng của bạn'}
+                </h3>
+                <p className="text-[11px] text-slate-400">Thống kê thu nhập & chính sách thưởng lũy tiến của Người nhận hộ</p>
+              </div>
+            </div>
+
+            {/* Modal Tabs Header */}
+            <div className="flex rounded-2xl bg-slate-950 p-1 border border-slate-800">
+              <button
+                onClick={() => setModalTab('EARNINGS')}
+                className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-all cursor-pointer ${
+                  modalTab === 'EARNINGS' ? 'bg-orange-500 text-white shadow-lg' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                Tiền công hôm nay
+              </button>
+              <button
+                onClick={() => setModalTab('TIER')}
+                className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-all cursor-pointer ${
+                  modalTab === 'TIER' ? 'bg-blue-500 text-white shadow-lg' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                Mức thưởng của bạn
+              </button>
+            </div>
+
+            {/* Content for EARNINGS tab */}
+            {modalTab === 'EARNINGS' && (
+              <div className="space-y-4">
+                <div className="bg-gradient-to-br from-orange-500/10 to-amber-500/5 border border-orange-500/20 rounded-2xl p-4 text-center">
+                  <p className="text-xs text-orange-300 font-medium">Tổng tiền công tích lũy hôm nay</p>
+                  <p className="text-3xl font-black text-orange-400 mt-1">{todayEarnings.toLocaleString('vi-VN')} <span className="text-sm font-normal text-orange-200">VND</span></p>
+                  <p className="text-[11px] text-slate-400 mt-1">Hoàn thành <span className="font-bold text-white">{completedTodayCount}</span> đơn hàng hôm nay</p>
+                </div>
+
+                <div className="space-y-2 text-xs">
+                  <div className="flex justify-between items-center bg-slate-950/60 p-3 rounded-xl border border-slate-800/80">
+                    <span className="text-slate-400">Đơn hàng tiếp theo (Đơn #{completedTodayCount + 1})</span>
+                    <span className="font-bold text-emerald-400">+{nextOrderRate.toLocaleString('vi-VN')}đ / đơn</span>
+                  </div>
+                  <div className="flex justify-between items-center bg-slate-950/60 p-3 rounded-xl border border-slate-800/80">
+                    <span className="text-slate-400">Mức thưởng đang áp dụng</span>
+                    <span className="font-bold text-blue-400">{currentTierText}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Content for TIER tab */}
+            {modalTab === 'TIER' && (
+              <div className="space-y-4">
+                <div className="bg-gradient-to-br from-blue-500/10 to-indigo-500/5 border border-blue-500/20 rounded-2xl p-4">
+                  <p className="text-xs text-blue-300 font-semibold">Hiện tại: <span className="text-white font-bold">{currentTierText}</span></p>
+                  <div className="w-full bg-slate-800 h-2.5 rounded-full mt-3 overflow-hidden">
+                    <div 
+                      className="bg-gradient-to-r from-blue-500 to-indigo-400 h-full rounded-full transition-all duration-500"
+                      style={{ width: `${Math.min(100, (completedTodayCount / 20) * 100)}%` }}
+                    />
+                  </div>
+                  <p className="text-[10px] text-slate-400 mt-2 text-right">Đã hoàn thành {completedTodayCount} đơn hôm nay</p>
+                </div>
+
+                <div className="space-y-2.5">
+                  <p className="text-xs font-bold text-slate-300">Bảng thưởng lũy tiến theo số đơn/ngày:</p>
+
+                  <div className={`p-3 rounded-2xl border transition-all ${completedTodayCount <= 10 ? 'bg-blue-500/10 border-blue-500/40 text-white' : 'bg-slate-950/50 border-slate-800 text-slate-400'}`}>
+                    <div className="flex justify-between items-center">
+                      <span className="font-bold text-xs">Bậc 1 (Từ 1 - 10 đơn)</span>
+                      <span className="font-black text-sm text-emerald-400">3.000đ <span className="text-[10px] font-normal text-slate-400">/đơn</span></span>
+                    </div>
+                    <p className="text-[11px] mt-0.5 text-slate-400">Tiền công cơ bản cho mỗi đơn nhận hộ.</p>
+                  </div>
+
+                  <div className={`p-3 rounded-2xl border transition-all ${completedTodayCount > 10 && completedTodayCount <= 20 ? 'bg-blue-500/10 border-blue-500/40 text-white' : 'bg-slate-950/50 border-slate-800 text-slate-400'}`}>
+                    <div className="flex justify-between items-center">
+                      <span className="font-bold text-xs">Bậc 2 (Từ 11 - 20 đơn)</span>
+                      <span className="font-black text-sm text-orange-400">3.500đ <span className="text-[10px] font-normal text-slate-400">/đơn</span></span>
+                    </div>
+                    <p className="text-[11px] mt-0.5 text-slate-400">Thưởng thêm +500đ/đơn từ đơn thứ 11.</p>
+                  </div>
+
+                  <div className={`p-3 rounded-2xl border transition-all ${completedTodayCount > 20 ? 'bg-blue-500/10 border-blue-500/40 text-white' : 'bg-slate-950/50 border-slate-800 text-slate-400'}`}>
+                    <div className="flex justify-between items-center">
+                      <span className="font-bold text-xs">Bậc 3 (Từ 21 đơn trở lên)</span>
+                      <span className="font-black text-sm text-purple-400">3.800đ <span className="text-[10px] font-normal text-slate-400">/đơn</span></span>
+                    </div>
+                    <p className="text-[11px] mt-0.5 text-slate-400">Thưởng cao nhất +800đ/đơn cho sự chăm chỉ!</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="pt-2">
+              <button
+                onClick={() => setModalTab(null)}
+                className="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-2xl transition-colors cursor-pointer"
+              >
+                Đóng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Fullscreen Image Zoom Overlay */}
       {fullscreenImage && (
