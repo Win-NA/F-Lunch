@@ -4,10 +4,10 @@ import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/stores/auth.store';
-import { 
-  Bell, 
-  Check, 
-  CheckCheck, 
+import {
+  Bell,
+  Check,
+  CheckCheck,
   Inbox,
   ShieldAlert,
   ShoppingBag,
@@ -46,7 +46,7 @@ export default function NotificationsPage() {
       return 'Chưa có thông báo hệ thống hoặc khiếu nại mới nào.';
     }
     if (role === 'RECEIVER') return 'Bạn chưa có thông báo mới nào về đơn hàng hoặc thu nhập.';
-    return 'Bạn chưa nhận me được thông báo mới nào.';
+    return 'Bạn chưa nhận được thông báo mới nào.';
   };
 
   const fetchNotifications = async () => {
@@ -109,7 +109,7 @@ export default function NotificationsPage() {
     const timeStr = date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
 
     if (isToday) {
-      return `${timeStr} hôm nay`;
+      return `${timeStr}`;
     }
     if (isYesterday) {
       return `${timeStr} hôm qua`;
@@ -194,31 +194,28 @@ export default function NotificationsPage() {
         <div className="flex items-center gap-1.5 bg-slate-950/80 p-1.5 rounded-2xl border border-slate-800 text-xs font-semibold">
           <button
             onClick={() => setActiveTab('ALL')}
-            className={`flex-1 py-2 px-3 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-              activeTab === 'ALL'
-                ? 'bg-slate-800 text-white shadow-md font-bold'
-                : 'text-slate-400 hover:text-white hover:bg-slate-900/50'
-            }`}
+            className={`flex-1 py-2 px-3 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${activeTab === 'ALL'
+              ? 'bg-slate-800 text-white shadow-md font-bold'
+              : 'text-slate-400 hover:text-white hover:bg-slate-900/50'
+              }`}
           >
             <SlidersHorizontal size={13} /> tất cả ({notifications.length})
           </button>
           <button
             onClick={() => setActiveTab('ADMIN')}
-            className={`flex-1 py-2 px-3 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-              activeTab === 'ADMIN'
-                ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-md font-bold'
-                : 'text-slate-400 hover:text-white hover:bg-slate-900/50'
-            }`}
+            className={`flex-1 py-2 px-3 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${activeTab === 'ADMIN'
+              ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-md font-bold'
+              : 'text-slate-400 hover:text-white hover:bg-slate-900/50'
+              }`}
           >
             <ShieldAlert size={13} className="text-amber-400" /> Quản trị & Hệ thống ({notifications.filter(isAdminNotification).length})
           </button>
           <button
             onClick={() => setActiveTab('ORDERS')}
-            className={`flex-1 py-2 px-3 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-              activeTab === 'ORDERS'
-                ? 'bg-orange-500/20 text-orange-300 border border-orange-500/40 shadow-md font-bold'
-                : 'text-slate-400 hover:text-white hover:bg-slate-900/50'
-            }`}
+            className={`flex-1 py-2 px-3 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${activeTab === 'ORDERS'
+              ? 'bg-orange-500/20 text-orange-300 border border-orange-500/40 shadow-md font-bold'
+              : 'text-slate-400 hover:text-white hover:bg-slate-900/50'
+              }`}
           >
             <ShoppingBag size={13} className="text-orange-400" /> Đơn cá nhân ({notifications.filter((n) => !isAdminNotification(n)).length})
           </button>
@@ -240,13 +237,12 @@ export default function NotificationsPage() {
               <div
                 key={n.id}
                 onClick={() => !n.isRead && handleMarkAsRead(n.id)}
-                className={`p-4 rounded-2xl border transition-all flex items-start gap-3.5 ${
-                  n.isRead
-                    ? 'bg-slate-900/30 border-slate-850 hover:bg-slate-900/50'
-                    : isAdminType
+                className={`p-4 rounded-2xl border transition-all flex items-start gap-3.5 ${n.isRead
+                  ? 'bg-slate-900/30 border-slate-850 hover:bg-slate-900/50'
+                  : isAdminType
                     ? 'bg-amber-950/20 border-amber-500/30 hover:border-amber-500/50 shadow-md cursor-pointer'
                     : 'bg-slate-900/80 border-orange-500/20 hover:border-orange-500/30 cursor-pointer shadow-md'
-                }`}
+                  }`}
               >
                 {getIcon(n)}
                 <div className="flex-1 min-w-0">
@@ -257,11 +253,10 @@ export default function NotificationsPage() {
                       </h4>
                       {role === 'ADMIN' && (
                         <span
-                          className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 border ${
-                            isAdminType
-                              ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
-                              : 'bg-slate-800 text-slate-400 border-slate-700'
-                          }`}
+                          className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 border ${isAdminType
+                            ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                            : 'bg-slate-800 text-slate-400 border-slate-700'
+                            }`}
                         >
                           {isAdminType ? 'Quản trị' : 'Đơn hàng'}
                         </span>
@@ -281,9 +276,8 @@ export default function NotificationsPage() {
 
                 {!n.isRead && (
                   <span
-                    className={`w-2 h-2 rounded-full shrink-0 self-center ${
-                      isAdminType ? 'bg-amber-400 animate-pulse' : 'bg-orange-500'
-                    }`}
+                    className={`w-2 h-2 rounded-full shrink-0 self-center ${isAdminType ? 'bg-amber-400 animate-pulse' : 'bg-orange-500'
+                      }`}
                   />
                 )}
               </div>
