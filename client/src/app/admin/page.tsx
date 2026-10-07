@@ -438,7 +438,7 @@ function AdminDashboardContent() {
     };
   }, [requests]);
 
-  // Receiver KPI Map Computation (Kiểm soát KPI và số đơn từng người nhận hộ)
+  // Receiver KPI Map Computation (Kiểm soát KPI và số đơn từng người nhận hộ theo mốc lũy tiến)
   const receiverKPIMap = useMemo(() => {
     const map = new Map<string, {
       totalAssigned: number;
@@ -448,7 +448,15 @@ function AdminDashboardContent() {
       totalEarnings: number;
       ratings: number[];
       avgRating: string;
+      dailyRequests: Map<string, number>;
     }>();
+
+    const calculateDailyEarnings = (N: number): number => {
+      if (N <= 0) return 0;
+      if (N <= 10) return N * 3000;
+      if (N <= 20) return 30000 + (N - 10) * 3500;
+      return 65000 + (N - 20) * 3800;
+    };
 
     requests.forEach(r => {
       if (r.receiver) {
@@ -461,12 +469,15 @@ function AdminDashboardContent() {
           totalEarnings: 0,
           ratings: [],
           avgRating: 'Chưa có',
+          dailyRequests: new Map<string, number>(),
         };
 
         current.totalAssigned += 1;
         if (r.status === 'COMPLETED') {
           current.completedCount += 1;
-          current.totalEarnings += 5000;
+          const d = new Date(r.updatedAt || r.createdAt);
+          const dateKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+          current.dailyRequests.set(dateKey, (current.dailyRequests.get(dateKey) || 0) + 1);
         } else if (['ACCEPTED', 'RECEIVED', 'READY_FOR_PICKUP'].includes(r.status)) {
           current.activeCount += 1;
         } else if (r.status === 'CANCELLED') {
@@ -482,6 +493,12 @@ function AdminDashboardContent() {
     });
 
     map.forEach((value) => {
+      let sumEarnings = 0;
+      value.dailyRequests.forEach((count) => {
+        sumEarnings += calculateDailyEarnings(count);
+      });
+      value.totalEarnings = sumEarnings;
+
       if (value.ratings.length > 0) {
         const sum = value.ratings.reduce((a, b) => a + b, 0);
         value.avgRating = (sum / value.ratings.length).toFixed(1);
@@ -490,6 +507,7 @@ function AdminDashboardContent() {
 
     return map;
   }, [requests]);
+
 
   // Student Order Stats Map Computation (Thống kê số đơn đã đặt của từng Sinh viên cho CEO Dashboard)
   const studentStatsMap = useMemo(() => {

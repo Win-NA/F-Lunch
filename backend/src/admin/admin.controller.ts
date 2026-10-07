@@ -25,4 +25,10 @@ export class AdminController {
   getAllFeedbacks() {
     return this.adminService.getAllFeedbacks();
   }
+
+  @Get('payroll')
+  getReceiverPayroll() {
+    return this.adminService.getReceiverPayroll();
+  }
 }
+

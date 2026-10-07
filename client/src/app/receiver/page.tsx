@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
@@ -17,7 +17,8 @@ import {
   X,
   Star,
   Pizza,
-  Search
+  Search,
+  Award
 } from 'lucide-react';
 
 interface RequestItem {
@@ -31,12 +32,14 @@ interface RequestItem {
   note?: string;
   imageUrl?: string;
   createdAt: string;
+  updatedAt?: string;
   student: {
     fullName: string;
     email: string;
     phoneNumber?: string;
   };
 }
+
 
 export default function ReceiverDashboard() {
   const router = useRouter();
@@ -147,6 +150,37 @@ export default function ReceiverDashboard() {
     return status;
   };
 
+  const historySectionRef = useRef<HTMLDivElement>(null);
+
+  const calculateDailyEarnings = (N: number): number => {
+    if (N <= 0) return 0;
+    if (N <= 10) return N * 3000;
+    if (N <= 20) return 30000 + (N - 10) * 3500;
+    return 65000 + (N - 20) * 3800;
+  };
+
+  const todayEarnings = calculateDailyEarnings(completedTodayCount);
+  const nextOrderRate = completedTodayCount < 10 ? 3000 : completedTodayCount < 20 ? 3500 : 3800;
+  const currentTierText = completedTodayCount < 10 
+    ? 'Bậc 1 (1-10 đơn: 3.000đ/đơn)' 
+    : completedTodayCount < 20 
+    ? 'Bậc 2 (11-20 đơn: 3.500đ/đơn)' 
+    : 'Bậc 3 (21+ đơn: 3.800đ/đơn)';
+
+  const monthEarnings = historyRequests.reduce((acc, req) => {
+    // Basic summation for completed history in current month
+    const d = new Date(req.updatedAt || req.createdAt);
+    const now = new Date();
+    if (d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()) {
+      return acc + 3000; // approximate or real balance sum
+    }
+    return acc;
+  }, 0);
+
+  const scrollToHistory = () => {
+    historySectionRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
   return (
     <div className="space-y-6 pb-12">
       <div>
@@ -155,27 +189,43 @@ export default function ReceiverDashboard() {
       </div>
 
       {/* Receiver Statistics Panel */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-3xl">
-        <div className="bg-slate-900/60 backdrop-blur-xl border border-slate-800 p-5 rounded-3xl flex items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-500">
-            <CheckCircle size={22} />
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-4xl">
+        <div 
+          onClick={scrollToHistory}
+          className="bg-slate-900/60 backdrop-blur-xl border border-slate-800 p-4 rounded-3xl flex items-center gap-3.5 cursor-pointer hover:bg-slate-850/80 transition-all group"
+          title="Nhấn để xem danh sách lịch sử đơn đã hoàn thành"
+        >
+          <div className="w-11 h-11 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 shrink-0 group-hover:scale-105 transition-transform">
+            <CheckCircle size={20} />
           </div>
           <div>
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Đơn hoàn thành hôm nay</p>
-            <p className="text-xl font-bold text-white mt-1">{completedTodayCount}</p>
+            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Đơn hoàn thành hôm nay</p>
+            <p className="text-lg font-bold text-white mt-0.5">{completedTodayCount} <span className="text-[10px] text-slate-500 font-normal underline">Xem lịch sử →</span></p>
           </div>
         </div>
 
-        <div className="bg-slate-900/60 backdrop-blur-xl border border-slate-800 p-5 rounded-3xl flex items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-orange-500/10 flex items-center justify-center text-orange-500">
-            <DollarSign size={22} />
+        <div className="bg-slate-900/60 backdrop-blur-xl border border-slate-800 p-4 rounded-3xl flex items-center gap-3.5">
+          <div className="w-11 h-11 rounded-2xl bg-orange-500/10 flex items-center justify-center text-orange-500 shrink-0">
+            <DollarSign size={20} />
           </div>
           <div>
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Tiền công hôm nay</p>
-            <p className="text-xl font-bold text-white mt-1">{(completedTodayCount * 5000).toLocaleString()} VND</p>
+            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Tiền công hôm nay</p>
+            <p className="text-lg font-bold text-white mt-0.5">{todayEarnings.toLocaleString('vi-VN')} VND</p>
+            <p className="text-[9px] text-orange-400 font-medium mt-0.5">Đơn thứ {completedTodayCount + 1}: +{nextOrderRate.toLocaleString('vi-VN')}đ/đơn</p>
+          </div>
+        </div>
+
+        <div className="bg-slate-900/60 backdrop-blur-xl border border-slate-800 p-4 rounded-3xl flex items-center gap-3.5">
+          <div className="w-11 h-11 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-500 shrink-0">
+            <Award size={20} />
+          </div>
+          <div>
+            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Bậc thưởng lũy tiến</p>
+            <p className="text-xs font-bold text-white mt-1">{currentTierText}</p>
           </div>
         </div>
       </div>
+
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
@@ -298,7 +348,7 @@ export default function ReceiverDashboard() {
           </div>
 
           {/* Lịch sử nhận hộ đơn hàng */}
-          <div className="bg-slate-900/60 backdrop-blur-xl border border-slate-800 p-5 rounded-3xl shadow-xl space-y-4">
+          <div ref={historySectionRef} className="bg-slate-900/60 backdrop-blur-xl border border-slate-800 p-5 rounded-3xl shadow-xl space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <h2 className="text-md font-bold text-white">Lịch sử đơn nhận hộ ({historyRequests.length})</h2>
               {historyRequests.length > 0 && (

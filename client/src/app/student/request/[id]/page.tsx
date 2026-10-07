@@ -31,6 +31,8 @@ interface RequestDetail {
   note?: string;
   imageUrl?: string;
   createdAt: string;
+  updatedAt?: string;
+
   student: {
     fullName: string;
     email: string;
@@ -414,9 +416,17 @@ export default function RequestDetailPage() {
                       </span>
 
                       <div>
-                        <h4 className={`text-xs font-bold ${isCurrent ? 'text-orange-500' : isFuture ? 'text-slate-500' : 'text-white'}`}>
-                          {stepLabel}
-                        </h4>
+                        <div className="flex items-center gap-2">
+                          <h4 className={`text-xs font-bold ${isCurrent ? 'text-orange-500' : isFuture ? 'text-slate-500' : 'text-white'}`}>
+                            {stepLabel}
+                          </h4>
+                          {(isCompleted || isCurrent) && (
+                            <span className="text-[10px] text-slate-400 font-medium">
+                              • {new Date(step === 'PENDING' ? request.createdAt : (request.updatedAt || request.createdAt)).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </span>
+
+                          )}
+                        </div>
                         <p className="text-[10px] text-slate-400 mt-1">{stepDesc}</p>
                       </div>
                     </div>
@@ -441,7 +451,18 @@ export default function RequestDetailPage() {
               </div>
             </div>
 
-            <div className="flex items-start gap-2.5 pt-2">
+            <div className="grid grid-cols-2 gap-4 pt-2 border-t border-slate-800/40">
+              <div>
+                <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Ngày đặt đơn</p>
+                <p className="text-xs font-bold text-white mt-1">{new Date(request.createdAt).toLocaleDateString('vi-VN')} - {new Date(request.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+              </div>
+              <div>
+                <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Giờ tài xế giao tới</p>
+                <p className="text-xs font-bold text-white mt-1">{new Date(request.pickupTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-2.5 pt-2 border-t border-slate-800/40">
               <MapPin className="text-orange-500 shrink-0 mt-0.5" size={14} />
               <div>
                 <p className="text-[10px] font-semibold text-slate-500">Vị trí shipper giao tới</p>
@@ -457,13 +478,6 @@ export default function RequestDetailPage() {
               </div>
             </div>
 
-            <div className="flex items-start gap-2.5 pt-2">
-              <Calendar className="text-orange-500 shrink-0 mt-0.5" size={14} />
-              <div>
-                <p className="text-[10px] font-semibold text-slate-500">Giờ dự kiến giao</p>
-                <p className="text-xs font-bold text-white mt-0.5">{new Date(request.pickupTime).toLocaleString()}</p>
-              </div>
-            </div>
 
             {request.note && (
               <div className="bg-slate-950 p-4 border border-slate-800 rounded-xl mt-4">

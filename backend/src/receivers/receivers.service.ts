@@ -197,9 +197,40 @@ export class ReceiversService {
       throw new BadRequestException('Request must be READY_FOR_PICKUP to complete');
     }
 
-    const updated = await this.prisma.receivingRequest.update({
-      where: { id: request.id },
-      data: { status: RequestStatus.COMPLETED },
+    // Calculate current daily completed orders for this receiver to determine progressive tier payout
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+
+    const todayCompletedCount = await this.prisma.receivingRequest.count({
+      where: {
+        receiverId,
+        status: RequestStatus.COMPLETED,
+        updatedAt: { gte: startOfToday },
+      },
+    });
+
+    const currentOrderNum = todayCompletedCount + 1;
+    let earningAmount = 3000;
+    if (currentOrderNum > 20) {
+      earningAmount = 3800;
+    } else if (currentOrderNum > 10) {
+      earningAmount = 3500;
+    }
+
+    const updated = await this.prisma.$transaction(async (tx) => {
+      const req = await tx.receivingRequest.update({
+        where: { id: request.id },
+        data: { status: RequestStatus.COMPLETED },
+      });
+
+      await tx.user.update({
+        where: { id: receiverId },
+        data: {
+          realBalance: { increment: earningAmount },
+        },
+      });
+
+      return req;
     });
 
     // Notify student
@@ -214,18 +245,20 @@ export class ReceiversService {
     });
 
     // Notify receiver
+    const bonusNotice = currentOrderNum > 20 ? ' (Bậc 3: 3.800đ/đơn)' : currentOrderNum > 10 ? ' (Bậc 2: 3.500đ/đơn)' : ' (Bậc 1: 3.000đ/đơn)';
     await this.prisma.notification.create({
       data: {
         userId: receiverId,
         requestId: request.id,
         title: 'Giao đơn thành công! 💰',
-        message: `Bạn đã bàn giao thành công đơn hàng cho sinh viên ${request.student.fullName}. Thu nhập +5.000đ đã được ghi nhận.`,
+        message: `Bạn đã hoàn thành đơn thứ ${currentOrderNum} trong ngày cho sinh viên ${request.student.fullName}. Thu nhập +${earningAmount.toLocaleString('vi-VN')}đ${bonusNotice} đã được cộng vào ví.`,
         type: NotificationType.SUCCESS,
       },
     });
 
     return updated;
   }
+
 
   async findHistory(receiverId: string) {
     return this.prisma.receivingRequest.findMany({
