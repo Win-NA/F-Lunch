@@ -577,50 +577,50 @@ export default function ReceiverDashboard() {
       {/* Modal Details for Earnings & Bonus Tiers */}
       {modalTab && (
         <div 
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-in fade-in duration-200"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
           onClick={() => setModalTab(null)}
         >
           <div 
-            className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 w-full max-w-md rounded-3xl p-6 shadow-2xl space-y-5 relative text-slate-900 dark:text-white"
+            className="bg-[#fffaf3] border border-[#fed7aa] w-full max-w-md rounded-3xl p-6 shadow-2xl space-y-5 relative text-[#451a03]"
             onClick={(e) => e.stopPropagation()}
           >
             <button
               onClick={() => setModalTab(null)}
-              className="absolute top-5 right-5 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+              className="absolute top-5 right-5 w-8 h-8 rounded-full bg-[#fce7d0] hover:bg-[#fbdab7] text-[#78350f] flex items-center justify-center transition-colors cursor-pointer"
             >
               <X size={18} />
             </button>
 
-            <div className="flex items-center gap-3 border-b border-slate-200 dark:border-slate-800 pb-4">
-              <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 ${modalTab === 'EARNINGS' ? 'bg-orange-500/15 text-orange-600 dark:bg-orange-500/10 dark:text-orange-400' : 'bg-blue-500/15 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400'}`}>
+            <div className="flex items-center gap-3 border-b border-[#fde68a] pb-4">
+              <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 ${modalTab === 'EARNINGS' ? 'bg-[#ffedd5] text-[#ea580c]' : 'bg-[#dbeafe] text-[#2563eb]'}`}>
                 {modalTab === 'EARNINGS' ? <DollarSign size={24} /> : <Award size={24} />}
               </div>
               <div>
-                <h3 className="text-lg font-extrabold text-slate-900 dark:text-white">
+                <h3 className="text-lg font-black text-[#451a03]">
                   {modalTab === 'EARNINGS' ? 'Chi tiết Tiền công hôm nay' : 'Chi tiết Mức thưởng của bạn'}
                 </h3>
-                <p className="text-xs font-medium text-slate-600 dark:text-slate-400 mt-0.5">Thống kê thu nhập & chính sách thưởng lũy tiến của Người nhận hộ</p>
+                <p className="text-xs font-semibold text-[#78350f] mt-0.5">Thống kê thu nhập & chính sách thưởng lũy tiến của Người nhận hộ</p>
               </div>
             </div>
 
             {/* Modal Tabs Header */}
-            <div className="flex rounded-2xl bg-slate-100 dark:bg-slate-950 p-1 border border-slate-200 dark:border-slate-800">
+            <div className="flex rounded-2xl bg-[#fff1e6] p-1 border border-[#fde68a]">
               <button
                 onClick={() => setModalTab('EARNINGS')}
-                className={`flex-1 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                className={`flex-1 py-2.5 text-xs font-black rounded-xl transition-all cursor-pointer ${
                   modalTab === 'EARNINGS' 
-                    ? 'bg-orange-600 text-white shadow-md' 
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                    ? 'bg-[#ea580c] text-white shadow-md' 
+                    : 'text-[#78350f] hover:text-[#451a03]'
                 }`}
               >
                 Tiền công hôm nay
               </button>
               <button
                 onClick={() => setModalTab('TIER')}
-                className={`flex-1 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                className={`flex-1 py-2.5 text-xs font-black rounded-xl transition-all cursor-pointer ${
                   modalTab === 'TIER' 
-                    ? 'bg-blue-600 text-white shadow-md' 
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                    ? 'bg-[#2563eb] text-white shadow-md' 
+                    : 'text-[#78350f] hover:text-[#451a03]'
                 }`}
               >
                 Mức thưởng của bạn
@@ -630,24 +630,24 @@ export default function ReceiverDashboard() {
             {/* Content for EARNINGS tab */}
             {modalTab === 'EARNINGS' && (
               <div className="space-y-4">
-                <div className="bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800/40 rounded-2xl p-4 text-center">
-                  <p className="text-xs text-orange-900 dark:text-orange-300 font-bold">Tổng tiền công tích lũy hôm nay</p>
-                  <p className="text-3xl font-black text-orange-600 dark:text-orange-400 mt-1">
-                    {todayEarnings.toLocaleString('vi-VN')} <span className="text-sm font-extrabold text-orange-700 dark:text-orange-300">VND</span>
+                <div className="bg-[#fff3e0] border border-[#ffb74d]/50 rounded-2xl p-4 text-center shadow-xs">
+                  <p className="text-xs text-[#78350f] font-extrabold">Tổng tiền công tích lũy hôm nay</p>
+                  <p className="text-3xl font-black text-[#ea580c] mt-1">
+                    {todayEarnings.toLocaleString('vi-VN')} <span className="text-sm font-black text-[#b45309]">VND</span>
                   </p>
-                  <p className="text-xs text-slate-700 dark:text-slate-300 mt-1 font-medium">
-                    Hoàn thành <span className="font-extrabold text-slate-900 dark:text-white">{completedTodayCount}</span> đơn hàng hôm nay
+                  <p className="text-xs text-[#78350f] mt-1 font-semibold">
+                    Hoàn thành <span className="font-black text-[#451a03] text-sm">{completedTodayCount}</span> đơn hàng hôm nay
                   </p>
                 </div>
 
                 <div className="space-y-2.5 text-xs">
-                  <div className="flex justify-between items-center bg-slate-50 dark:bg-slate-950/60 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800">
-                    <span className="text-slate-700 dark:text-slate-300 font-semibold">Đơn hàng tiếp theo (Đơn #{completedTodayCount + 1})</span>
-                    <span className="font-extrabold text-emerald-700 dark:text-emerald-400">+{nextOrderRate.toLocaleString('vi-VN')}đ / đơn</span>
+                  <div className="flex justify-between items-center bg-[#fffaf3] p-3.5 rounded-2xl border border-[#fde68a]">
+                    <span className="text-[#451a03] font-bold">Đơn hàng tiếp theo (Đơn #{completedTodayCount + 1})</span>
+                    <span className="font-black text-[#047857] text-sm">+{nextOrderRate.toLocaleString('vi-VN')}đ / đơn</span>
                   </div>
-                  <div className="flex justify-between items-center bg-slate-50 dark:bg-slate-950/60 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800">
-                    <span className="text-slate-700 dark:text-slate-300 font-semibold">Mức thưởng đang áp dụng</span>
-                    <span className="font-extrabold text-blue-700 dark:text-blue-400">{currentTierText}</span>
+                  <div className="flex justify-between items-center bg-[#fffaf3] p-3.5 rounded-2xl border border-[#fde68a]">
+                    <span className="text-[#451a03] font-bold">Mức thưởng đang áp dụng</span>
+                    <span className="font-black text-[#1d4ed8]">{currentTierText}</span>
                   </div>
                 </div>
               </div>
@@ -656,46 +656,46 @@ export default function ReceiverDashboard() {
             {/* Content for TIER tab */}
             {modalTab === 'TIER' && (
               <div className="space-y-4">
-                <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800/40 rounded-2xl p-4">
-                  <p className="text-xs text-blue-900 dark:text-blue-200 font-bold">
-                    Hiện tại: <span className="text-blue-700 dark:text-white font-extrabold">{currentTierText}</span>
+                <div className="bg-[#eff6ff] border border-[#bfdbfe] rounded-2xl p-4 shadow-xs">
+                  <p className="text-xs text-[#1e40af] font-bold">
+                    Hiện tại: <span className="text-[#1d4ed8] font-black">{currentTierText}</span>
                   </p>
-                  <div className="w-full bg-slate-200 dark:bg-slate-800 h-3 rounded-full mt-3 overflow-hidden">
+                  <div className="w-full bg-[#dbeafe] h-3 rounded-full mt-3 overflow-hidden">
                     <div 
-                      className="bg-gradient-to-r from-blue-600 to-indigo-600 h-full rounded-full transition-all duration-500"
+                      className="bg-gradient-to-r from-[#2563eb] to-[#4f46e5] h-full rounded-full transition-all duration-500"
                       style={{ width: `${Math.min(100, (completedTodayCount / 20) * 100)}%` }}
                     />
                   </div>
-                  <p className="text-xs text-slate-700 dark:text-slate-300 mt-2 text-right font-semibold">
-                    Đã hoàn thành <span className="font-extrabold text-slate-900 dark:text-white">{completedTodayCount}</span> đơn hôm nay
+                  <p className="text-xs text-[#1e3a8a] mt-2 text-right font-bold">
+                    Đã hoàn thành <span className="font-black text-[#1d4ed8]">{completedTodayCount}</span> đơn hôm nay
                   </p>
                 </div>
 
                 <div className="space-y-2.5">
-                  <p className="text-xs font-bold text-slate-900 dark:text-slate-200">Bảng thưởng lũy tiến theo số đơn/ngày:</p>
+                  <p className="text-xs font-black text-[#451a03]">Bảng thưởng lũy tiến theo số đơn/ngày:</p>
 
-                  <div className={`p-3.5 rounded-2xl border transition-all ${completedTodayCount <= 10 ? 'bg-blue-50 dark:bg-blue-950/40 border-2 border-blue-600 dark:border-blue-500 shadow-sm' : 'bg-slate-50/60 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800'}`}>
+                  <div className={`p-3.5 rounded-2xl border transition-all ${completedTodayCount <= 10 ? 'bg-[#eff6ff] border-2 border-[#2563eb] shadow-xs' : 'bg-[#fffaf3] border border-[#fde68a]'}`}>
                     <div className="flex justify-between items-center">
-                      <span className="font-extrabold text-xs text-slate-900 dark:text-white">Bậc 1 (Từ 1 - 10 đơn)</span>
-                      <span className="font-black text-sm text-emerald-700 dark:text-emerald-400">3.000đ <span className="text-xs font-normal text-slate-500 dark:text-slate-400">/đơn</span></span>
+                      <span className="font-black text-xs text-[#451a03]">Bậc 1 (Từ 1 - 10 đơn)</span>
+                      <span className="font-black text-sm text-[#047857]">3.000đ <span className="text-xs font-semibold text-[#065f46]">/đơn</span></span>
                     </div>
-                    <p className="text-xs mt-1 text-slate-600 dark:text-slate-400 font-medium">Tiền công cơ bản cho mỗi đơn nhận hộ.</p>
+                    <p className="text-xs mt-1 text-[#78350f] font-semibold">Tiền công cơ bản cho mỗi đơn nhận hộ.</p>
                   </div>
 
-                  <div className={`p-3.5 rounded-2xl border transition-all ${completedTodayCount > 10 && completedTodayCount <= 20 ? 'bg-blue-50 dark:bg-blue-950/40 border-2 border-blue-600 dark:border-blue-500 shadow-sm' : 'bg-slate-50/60 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800'}`}>
+                  <div className={`p-3.5 rounded-2xl border transition-all ${completedTodayCount > 10 && completedTodayCount <= 20 ? 'bg-[#eff6ff] border-2 border-[#2563eb] shadow-xs' : 'bg-[#fffaf3] border border-[#fde68a]'}`}>
                     <div className="flex justify-between items-center">
-                      <span className="font-extrabold text-xs text-slate-900 dark:text-white">Bậc 2 (Từ 11 - 20 đơn)</span>
-                      <span className="font-black text-sm text-orange-700 dark:text-orange-400">3.500đ <span className="text-xs font-normal text-slate-500 dark:text-slate-400">/đơn</span></span>
+                      <span className="font-black text-xs text-[#451a03]">Bậc 2 (Từ 11 - 20 đơn)</span>
+                      <span className="font-black text-sm text-[#c2410c]">3.500đ <span className="text-xs font-semibold text-[#9a3412]">/đơn</span></span>
                     </div>
-                    <p className="text-xs mt-1 text-slate-600 dark:text-slate-400 font-medium">Thưởng thêm +500đ/đơn từ đơn thứ 11 trong ngày.</p>
+                    <p className="text-xs mt-1 text-[#78350f] font-semibold">Thưởng thêm +500đ/đơn từ đơn thứ 11 trong ngày.</p>
                   </div>
 
-                  <div className={`p-3.5 rounded-2xl border transition-all ${completedTodayCount > 20 ? 'bg-blue-50 dark:bg-blue-950/40 border-2 border-blue-600 dark:border-blue-500 shadow-sm' : 'bg-slate-50/60 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800'}`}>
+                  <div className={`p-3.5 rounded-2xl border transition-all ${completedTodayCount > 20 ? 'bg-[#eff6ff] border-2 border-[#2563eb] shadow-xs' : 'bg-[#fffaf3] border border-[#fde68a]'}`}>
                     <div className="flex justify-between items-center">
-                      <span className="font-extrabold text-xs text-slate-900 dark:text-white">Bậc 3 (Từ 21 đơn trở lên)</span>
-                      <span className="font-black text-sm text-purple-700 dark:text-purple-400">3.800đ <span className="text-xs font-normal text-slate-500 dark:text-slate-400">/đơn</span></span>
+                      <span className="font-black text-xs text-[#451a03]">Bậc 3 (Từ 21 đơn trở lên)</span>
+                      <span className="font-black text-sm text-[#7e22ce]">3.800đ <span className="text-xs font-semibold text-[#6b21a8]">/đơn</span></span>
                     </div>
-                    <p className="text-xs mt-1 text-slate-600 dark:text-slate-400 font-medium">Thưởng cao nhất +800đ/đơn cho sự chăm chỉ!</p>
+                    <p className="text-xs mt-1 text-[#78350f] font-semibold">Thưởng cao nhất +800đ/đơn cho sự chăm chỉ!</p>
                   </div>
                 </div>
               </div>
@@ -704,7 +704,7 @@ export default function ReceiverDashboard() {
             <div className="pt-2">
               <button
                 onClick={() => setModalTab(null)}
-                className="w-full py-3 bg-slate-900 hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 text-white text-xs font-extrabold rounded-2xl transition-colors cursor-pointer shadow-md"
+                className="w-full py-3 bg-[#f5e6d3] hover:bg-[#ebd9c3] border border-[#e7d2b7] text-[#78350f] hover:text-[#451a03] text-xs font-black rounded-2xl transition-colors cursor-pointer shadow-xs"
               >
                 Đóng
               </button>
