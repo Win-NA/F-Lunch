@@ -4,15 +4,11 @@ import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/stores/auth.store';
-import {
-  Bell,
-  Check,
-  CheckCheck,
-  Inbox,
-  ShieldAlert,
-  ShoppingBag,
-  SlidersHorizontal,
-  Clock
+import { 
+  Bell, 
+  Check, 
+  CheckCheck, 
+  Inbox
 } from 'lucide-react';
 
 interface NotificationItem {
@@ -31,7 +27,6 @@ export default function NotificationsPage() {
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [btnLoading, setBtnLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<'ALL' | 'ADMIN' | 'ORDERS'>('ALL');
 
   const getSubtitle = () => {
     if (role === 'ADMIN') return 'Cập nhật biến động hệ thống, duyệt nạp tiền và khiếu nại';
@@ -40,11 +35,7 @@ export default function NotificationsPage() {
   };
 
   const getEmptyStateMessage = () => {
-    if (role === 'ADMIN') {
-      if (activeTab === 'ADMIN') return 'Không có thông báo khiếu nại hoặc hệ thống nào cần quản trị.';
-      if (activeTab === 'ORDERS') return 'Không có thông báo đơn hàng cá nhân nào.';
-      return 'Chưa có thông báo hệ thống hoặc khiếu nại mới nào.';
-    }
+    if (role === 'ADMIN') return 'Chưa có thông báo hệ thống hoặc khiếu nại mới nào.';
     if (role === 'RECEIVER') return 'Bạn chưa có thông báo mới nào về đơn hàng hoặc thu nhập.';
     return 'Bạn chưa nhận được thông báo mới nào.';
   };
@@ -88,7 +79,7 @@ export default function NotificationsPage() {
     }
   };
 
-  // Format date precisely: show "15:19 hôm nay", "15:10 hôm qua", or "15:19 - 07/10/2026"
+  // Format date precisely: "15:19" for today, "15:10 hôm qua" for yesterday, "21:54 - 05/10/2026" for older
   const formatNotificationTime = (createdAtStr: string) => {
     if (!createdAtStr) return '';
     const date = new Date(createdAtStr);
@@ -109,7 +100,7 @@ export default function NotificationsPage() {
     const timeStr = date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
 
     if (isToday) {
-      return `${timeStr}`;
+      return timeStr;
     }
     if (isYesterday) {
       return `${timeStr} hôm qua`;
@@ -119,7 +110,7 @@ export default function NotificationsPage() {
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const year = date.getFullYear();
 
-    return `${timeStr} • ${day}/${month}/${year}`;
+    return `${timeStr} - ${day}/${month}/${year}`;
   };
 
   // Helper to check if a notification belongs to Admin System/Report domain
@@ -141,19 +132,13 @@ export default function NotificationsPage() {
     );
   };
 
-  // Filtered notifications list
-  const filteredNotifications = notifications.filter((n) => {
-    if (role !== 'ADMIN' || activeTab === 'ALL') return true;
-    if (activeTab === 'ADMIN') return isAdminNotification(n);
-    if (activeTab === 'ORDERS') return !isAdminNotification(n);
-    return true;
-  });
+  // If role is ADMIN, automatically show ONLY admin system/report notifications
+  const displayedNotifications = role === 'ADMIN'
+    ? notifications.filter(isAdminNotification)
+    : notifications;
 
-  const getIcon = (n: NotificationItem) => {
-    if (isAdminNotification(n)) {
-      return <ShieldAlert className="text-amber-500 shrink-0" size={20} />;
-    }
-    switch (n.type) {
+  const getIcon = (type: string) => {
+    switch (type) {
       case 'SUCCESS':
         return <CheckCircleIcon className="text-emerald-500 shrink-0" size={20} />;
       case 'WARNING':
@@ -169,7 +154,7 @@ export default function NotificationsPage() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6 pb-12">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+      <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-extrabold tracking-tight text-white flex items-center gap-2">
             <Bell className="text-orange-500" size={24} />
@@ -178,7 +163,7 @@ export default function NotificationsPage() {
           <p className="text-slate-400 text-xs mt-1">{getSubtitle()}</p>
         </div>
 
-        {notifications.some((n) => !n.isRead) && (
+        {displayedNotifications.some((n) => !n.isRead) && (
           <button
             onClick={handleMarkAllAsRead}
             disabled={btnLoading}
@@ -189,103 +174,49 @@ export default function NotificationsPage() {
         )}
       </div>
 
-      {/* Tabs for Admin / Filter Categorization */}
-      {role === 'ADMIN' && (
-        <div className="flex items-center gap-1.5 bg-slate-950/80 p-1.5 rounded-2xl border border-slate-800 text-xs font-semibold">
-          <button
-            onClick={() => setActiveTab('ALL')}
-            className={`flex-1 py-2 px-3 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${activeTab === 'ALL'
-              ? 'bg-slate-800 text-white shadow-md font-bold'
-              : 'text-slate-400 hover:text-white hover:bg-slate-900/50'
-              }`}
-          >
-            <SlidersHorizontal size={13} /> tất cả ({notifications.length})
-          </button>
-          <button
-            onClick={() => setActiveTab('ADMIN')}
-            className={`flex-1 py-2 px-3 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${activeTab === 'ADMIN'
-              ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-md font-bold'
-              : 'text-slate-400 hover:text-white hover:bg-slate-900/50'
-              }`}
-          >
-            <ShieldAlert size={13} className="text-amber-400" /> Quản trị & Hệ thống ({notifications.filter(isAdminNotification).length})
-          </button>
-          <button
-            onClick={() => setActiveTab('ORDERS')}
-            className={`flex-1 py-2 px-3 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${activeTab === 'ORDERS'
-              ? 'bg-orange-500/20 text-orange-300 border border-orange-500/40 shadow-md font-bold'
-              : 'text-slate-400 hover:text-white hover:bg-slate-900/50'
-              }`}
-          >
-            <ShoppingBag size={13} className="text-orange-400" /> Đơn cá nhân ({notifications.filter((n) => !isAdminNotification(n)).length})
-          </button>
-        </div>
-      )}
-
       {loading ? (
-        <p className="text-slate-550 text-xs">Đang tải thông báo...</p>
-      ) : filteredNotifications.length === 0 ? (
-        <div className="text-center py-12 border border-dashed border-slate-800 rounded-3xl bg-slate-900/40 space-y-2">
-          <Inbox className="mx-auto text-slate-700" size={36} />
-          <p className="text-slate-400 text-xs font-medium">{getEmptyStateMessage()}</p>
+        <p className="text-slate-500 text-xs">Đang tải thông báo...</p>
+      ) : displayedNotifications.length === 0 ? (
+        <div className="text-center py-12 border border-dashed border-slate-800 rounded-3xl bg-slate-900/40">
+          <Inbox className="mx-auto text-slate-700 mb-2" size={32} />
+          <p className="text-slate-500 text-xs">{getEmptyStateMessage()}</p>
         </div>
       ) : (
         <div className="space-y-3">
-          {filteredNotifications.map((n) => {
-            const isAdminType = isAdminNotification(n);
-            return (
-              <div
-                key={n.id}
-                onClick={() => !n.isRead && handleMarkAsRead(n.id)}
-                className={`p-4 rounded-2xl border transition-all flex items-start gap-3.5 ${n.isRead
+          {displayedNotifications.map((n) => (
+            <div
+              key={n.id}
+              onClick={() => !n.isRead && handleMarkAsRead(n.id)}
+              className={`p-4 rounded-2xl border transition-all flex items-start gap-4 ${
+                n.isRead
                   ? 'bg-slate-900/30 border-slate-850 hover:bg-slate-900/50'
-                  : isAdminType
-                    ? 'bg-amber-950/20 border-amber-500/30 hover:border-amber-500/50 shadow-md cursor-pointer'
-                    : 'bg-slate-900/80 border-orange-500/20 hover:border-orange-500/30 cursor-pointer shadow-md'
-                  }`}
-              >
-                {getIcon(n)}
-                <div className="flex-1 min-w-0">
-                  <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <h4 className={`text-xs font-bold truncate ${n.isRead ? 'text-slate-300 font-semibold' : 'text-white'}`}>
-                        {n.title}
-                      </h4>
-                      {role === 'ADMIN' && (
-                        <span
-                          className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 border ${isAdminType
-                            ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
-                            : 'bg-slate-800 text-slate-400 border-slate-700'
-                            }`}
-                        >
-                          {isAdminType ? 'Quản trị' : 'Đơn hàng'}
-                        </span>
-                      )}
-                    </div>
-
-                    <span className="text-[10px] text-slate-450 font-medium flex items-center gap-1 shrink-0 bg-slate-950 px-2 py-0.5 rounded-md border border-slate-850" title={new Date(n.createdAt).toLocaleString('vi-VN')}>
-                      <Clock size={10} className="text-slate-500" />
-                      {formatNotificationTime(n.createdAt)}
-                    </span>
-                  </div>
-
-                  <p className={`text-[11px] mt-1.5 leading-relaxed ${n.isRead ? 'text-slate-450' : 'text-slate-200'}`}>
-                    {n.message}
-                  </p>
+                  : 'bg-slate-900/80 border-orange-500/20 hover:border-orange-500/30 cursor-pointer shadow-md'
+              }`}
+            >
+              {getIcon(n.type)}
+              <div className="flex-1 min-w-0">
+                <div className="flex justify-between items-start gap-2">
+                  <h4 className={`text-xs font-bold truncate ${n.isRead ? 'text-slate-350 font-semibold' : 'text-white'}`}>
+                    {n.title}
+                  </h4>
+                  <span className="text-[9px] text-slate-500 whitespace-nowrap">
+                    {formatNotificationTime(n.createdAt)}
+                  </span>
                 </div>
-
-                {!n.isRead && (
-                  <span
-                    className={`w-2 h-2 rounded-full shrink-0 self-center ${isAdminType ? 'bg-amber-400 animate-pulse' : 'bg-orange-500'
-                      }`}
-                  />
-                )}
+                <p className={`text-[11px] mt-1 leading-relaxed ${n.isRead ? 'text-slate-500' : 'text-slate-300'}`}>
+                  {n.message}
+                </p>
               </div>
-            );
-          })}
+
+              {!n.isRead && (
+                <span className="w-2 h-2 rounded-full bg-orange-500 shrink-0 self-center" />
+              )}
+            </div>
+          ))}
         </div>
       )}
     </div>
   );
 }
+
 
