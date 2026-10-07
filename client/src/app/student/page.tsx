@@ -689,7 +689,7 @@ export default function StudentDashboard() {
             ) : activeRequests.length === 0 ? (
               <div className="text-center py-10 border border-dashed border-slate-800 rounded-2xl">
                 <Pizza className="mx-auto text-slate-600 mb-2" size={28} />
-                <p className="text-slate-500 text-xs">Không có yêu cầu nào đang hoạt động. Tạo một cái ở bảng bên trái nhé!</p>
+                <p className="text-slate-500 text-xs">Không có yêu cầu nào đang hoạt động. Hãy tạo đơn mới nhé!</p>
               </div>
             ) : (
               (() => {
