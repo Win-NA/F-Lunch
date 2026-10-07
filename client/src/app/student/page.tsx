@@ -710,62 +710,80 @@ export default function StudentDashboard() {
                 }
 
                 return (
-                  <div className="divide-y divide-slate-800">
+                  <div className="space-y-3">
                     {filtered.map((req) => (
                       <div
                         key={req.id}
                         onClick={() => router.push(`/student/request/${req.id}`)}
-                        className="py-3.5 first:pt-0 last:pb-0 flex items-center justify-between gap-3 hover:bg-slate-800/10 px-2 rounded-xl transition-colors cursor-pointer"
+                        className="p-3.5 rounded-2xl bg-slate-950/50 hover:bg-slate-800/40 border border-slate-800/80 hover:border-slate-700/80 transition-all cursor-pointer space-y-3 shadow-md hover:shadow-lg group"
                       >
-                        <div className="flex items-center gap-3 min-w-0 flex-1">
-                          <div className="w-9 h-9 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-500 shrink-0">
-                            <Pizza size={18} />
-                          </div>
-                          <div className="min-w-0 flex-1 space-y-1">
-                            <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                              <p className="text-xs font-bold text-white truncate max-w-[120px]">{req.foodPlatform}</p>
+                        {/* Top Header Row: Platform Icon, Platform Name, Order Code, Status Badge, Arrow */}
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                            <div className="w-9 h-9 rounded-xl bg-orange-500/10 group-hover:bg-orange-500/20 flex items-center justify-center text-orange-500 shrink-0 border border-orange-500/20 transition-colors">
+                              <Pizza size={18} />
+                            </div>
+                            <div className="flex flex-wrap items-center gap-1.5 min-w-0">
+                              <p className="text-xs sm:text-sm font-bold text-white truncate max-w-[130px] sm:max-w-[180px]">{req.foodPlatform}</p>
                               {req.orderCode && (
-                                <span className="text-[9px] text-slate-400 font-mono bg-slate-950 px-1.5 py-0.5 rounded border border-slate-800 truncate max-w-[140px]" title={req.orderCode}>
+                                <span className="text-[9px] text-slate-300 font-mono bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800 truncate shrink-0 max-w-[130px]" title={req.orderCode}>
                                   Mã: {req.orderCode}
                                 </span>
                               )}
                             </div>
-                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-slate-450">
-                              <span className="flex items-center gap-1" title="Vị trí shipper giao → Vị trí bạn nhận"><MapPin size={10} className="shrink-0" /> {req.pickupLocation} → {req.dropoffLocation || 'Sảnh Trống Đồng'}</span>
-                              <span className="flex items-center gap-1"><Clock size={10} className="shrink-0" /> {new Date(req.pickupTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            {getStatusBadge(req.status)}
+                            <ChevronRight className="text-slate-500 group-hover:text-slate-300 transition-colors" size={16} />
                           </div>
                         </div>
-                        <div className="flex items-center gap-1.5 shrink-0">
-                          {getStatusBadge(req.status)}
-                          {req.receiver && ['ACCEPTED', 'RECEIVED', 'READY_FOR_PICKUP'].includes(req.status) && (
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                const phoneStr = req.receiver?.phoneNumber ? req.receiver.phoneNumber : '';
-                                const textToCopy = `Chào anh/chị tài xế, em có nhờ bạn nhận hộ. Khi tới ${req.pickupLocation || 'Cổng 1 FPT'}, anh/chị vui lòng gọi cho bạn nhận hộ giúp em: ${req.receiver?.fullName} - SĐT: ${phoneStr}. Em cảm ơn!`;
-                                navigator.clipboard.writeText(textToCopy);
-                                toast.success('Đã sao chép tin nhắn gửi tài xế!');
-                              }}
-                              className="px-2.5 py-1 text-[10px] sm:text-[11px] font-extrabold rounded-lg bg-orange-600 hover:bg-orange-500 text-white shadow-sm shadow-orange-600/30 transition-all cursor-pointer flex items-center gap-1 shrink-0 active:scale-95"
-                              title="Copy tin nhắn thông báo cho tài xế giao hàng"
-                            >
-                              <Copy size={11} /> Copy tin nhắn gửi tài xế
-                            </button>
-                          )}
-                          {req.status === 'PENDING' && (
-                            <button
-                              type="button"
-                              onClick={(e) => handleCancelRequestFromDashboard(e, req.id)}
-                              className="px-2.5 py-1 text-[10px] font-bold rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 transition-colors cursor-pointer"
-                              title="Hủy đơn nhận hộ này và hoàn tiền 5.000đ"
-                            >
-                              Hủy đơn
-                            </button>
-                          )}
-                          <ChevronRight className="text-slate-600" size={14} />
+
+                        {/* Location & Time Info */}
+                        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 text-[10px] sm:text-xs text-slate-400 pt-2 border-t border-slate-800/50">
+                          <div className="flex items-center gap-1.5 text-slate-300 font-medium min-w-0" title="Vị trí shipper giao → Vị trí bạn nhận">
+                            <MapPin size={12} className="shrink-0 text-orange-400" />
+                            <span className="truncate max-w-[200px] sm:max-w-[320px]">{req.pickupLocation} → {req.dropoffLocation || 'Sảnh Trống Đồng'}</span>
+                          </div>
+
+                          <div className="flex items-center gap-1 text-slate-400 shrink-0">
+                            <Clock size={12} className="shrink-0 text-slate-500" />
+                            <span>{new Date(req.pickupTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                          </div>
                         </div>
+
+                        {/* Action Button Row (Copy message or Cancel) */}
+                        {((req.receiver && ['ACCEPTED', 'RECEIVED', 'READY_FOR_PICKUP'].includes(req.status)) || req.status === 'PENDING') && (
+                          <div className="pt-1 flex items-center justify-end gap-2">
+                            {req.receiver && ['ACCEPTED', 'RECEIVED', 'READY_FOR_PICKUP'].includes(req.status) && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  const phoneStr = req.receiver?.phoneNumber ? req.receiver.phoneNumber : '';
+                                  const textToCopy = `Chào anh/chị tài xế, em có nhờ bạn nhận hộ. Khi tới ${req.pickupLocation || 'Cổng 1 FPT'}, anh/chị vui lòng gọi cho bạn nhận hộ giúp em: ${req.receiver?.fullName} - SĐT: ${phoneStr}. Em cảm ơn!`;
+                                  navigator.clipboard.writeText(textToCopy);
+                                  toast.success('Đã sao chép tin nhắn gửi tài xế!');
+                                }}
+                                className="w-full sm:w-auto px-3 py-1.5 text-[11px] font-extrabold rounded-xl bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 active:scale-[0.98] text-white shadow-md shadow-orange-600/20 transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                                title="Copy tin nhắn thông báo cho tài xế giao hàng"
+                              >
+                                <Copy size={13} />
+                                <span>Copy tin nhắn gửi tài xế</span>
+                              </button>
+                            )}
+                            {req.status === 'PENDING' && (
+                              <button
+                                type="button"
+                                onClick={(e) => handleCancelRequestFromDashboard(e, req.id)}
+                                className="w-full sm:w-auto px-3 py-1.5 text-[11px] font-bold rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 transition-colors cursor-pointer"
+                                title="Hủy đơn nhận hộ này và hoàn tiền 5.000đ"
+                              >
+                                Hủy đơn
+                              </button>
+                            )}
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -821,34 +839,35 @@ export default function StudentDashboard() {
                 }
 
                 return (
-                  <div className="divide-y divide-slate-800">
+                  <div className="space-y-2.5">
                     {filtered.map((req) => (
                       <div
                         key={req.id}
                         onClick={() => router.push(`/student/request/${req.id}`)}
-                        className="py-3.5 first:pt-0 last:pb-0 flex items-center justify-between gap-3 hover:bg-slate-800/10 px-2 rounded-xl transition-colors cursor-pointer"
+                        className="p-3.5 rounded-2xl bg-slate-950/40 hover:bg-slate-850/50 border border-slate-800/60 hover:border-slate-700/60 transition-all cursor-pointer space-y-2 group"
                       >
-                        <div className="flex items-center gap-3 min-w-0 flex-1">
-                          <div className="w-9 h-9 rounded-xl bg-slate-850 flex items-center justify-center text-slate-400 shrink-0">
-                            <Pizza size={18} />
-                          </div>
-                          <div className="min-w-0 flex-1 space-y-1">
-                            <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                              <p className="text-xs font-bold text-white truncate max-w-[120px]">{req.foodPlatform}</p>
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                            <div className="w-8 h-8 rounded-xl bg-slate-850 group-hover:bg-slate-800 flex items-center justify-center text-slate-400 shrink-0 transition-colors">
+                              <Pizza size={16} />
+                            </div>
+                            <div className="flex flex-wrap items-center gap-1.5 min-w-0">
+                              <p className="text-xs sm:text-sm font-bold text-white truncate max-w-[130px] sm:max-w-[180px]">{req.foodPlatform}</p>
                               {req.orderCode && (
-                                <span className="text-[9px] text-slate-400 font-mono bg-slate-950 px-1.5 py-0.5 rounded border border-slate-800 truncate max-w-[140px]" title={req.orderCode}>
+                                <span className="text-[9px] text-slate-400 font-mono bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800 truncate shrink-0 max-w-[120px]" title={req.orderCode}>
                                   Mã: {req.orderCode}
                                 </span>
                               )}
                             </div>
-                            <div className="flex items-center gap-3 text-[10px] text-slate-450">
-                              <span className="flex items-center gap-1"><Calendar size={10} className="shrink-0" /> {new Date(req.pickupTime).toLocaleDateString('vi-VN')}</span>
-                            </div>
+                          </div>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            {getStatusBadge(req.status)}
+                            <ChevronRight className="text-slate-600 group-hover:text-slate-400 transition-colors" size={14} />
                           </div>
                         </div>
-                        <div className="flex items-center gap-1.5 shrink-0">
-                          {getStatusBadge(req.status)}
-                          <ChevronRight className="text-slate-600" size={14} />
+                        <div className="flex items-center gap-3 text-[10px] text-slate-400 pt-1 border-t border-slate-800/30">
+                          <span className="flex items-center gap-1"><Calendar size={10} className="shrink-0 text-slate-500" /> {new Date(req.pickupTime).toLocaleDateString('vi-VN')}</span>
+                          <span className="flex items-center gap-1"><MapPin size={10} className="shrink-0 text-slate-500" /> {req.pickupLocation}</span>
                         </div>
                       </div>
                     ))}
