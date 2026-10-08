@@ -1443,8 +1443,10 @@ function AdminDashboardContent() {
                                 <p className="text-[10px] text-slate-300 mt-1 font-medium">{tx.note || 'Điều chỉnh số dư thành viên'}</p>
                                 <p className="text-[9px] text-slate-500 font-mono">{new Date(tx.createdAt).toLocaleString('vi-VN')}</p>
                               </div>
-                              <div className="text-right font-mono">
-                                <p className="font-extrabold text-sm text-emerald-400">+{tx.amount.toLocaleString('vi-VN')}đ</p>
+                              <div className="text-right font-mono shrink-0 whitespace-nowrap pl-2">
+                                <p className={`font-black text-sm whitespace-nowrap ${tx.amount < 0 ? 'text-red-500' : 'text-emerald-400'}`}>
+                                  {tx.amount < 0 ? '-' : '+'}{Math.abs(tx.amount).toLocaleString('vi-VN')}đ
+                                </p>
                               </div>
                             </div>
                           ))
@@ -2841,17 +2843,17 @@ function AdminDashboardContent() {
                           )}
                         </td>
 
-                        <td className="px-4 py-3.5">
-                          <span className="flex items-center gap-1.5">
+                        <td className="px-4 py-3.5 whitespace-nowrap">
+                          <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
                             {u.status === 'ACTIVE' ? (
                               <>
-                                <CheckCircle size={12} className="text-emerald-500" />
-                                <span className="text-[11px] text-emerald-400 font-semibold">Hoạt động</span>
+                                <CheckCircle size={12} className="text-emerald-500 shrink-0" />
+                                <span className="text-[11px] text-emerald-400 font-semibold whitespace-nowrap">Hoạt động</span>
                               </>
                             ) : (
                               <>
-                                <XCircle size={12} className="text-red-500" />
-                                <span className="text-[11px] text-red-400 font-semibold">Bị khóa</span>
+                                <XCircle size={12} className="text-red-500 shrink-0" />
+                                <span className="text-[11px] text-red-400 font-semibold whitespace-nowrap">Bị khóa</span>
                               </>
                             )}
                           </span>
