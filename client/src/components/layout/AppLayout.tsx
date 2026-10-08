@@ -91,12 +91,32 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   const isAuthPage = pathname === '/login' || pathname === '/register' || pathname === '/';
 
-  // Handle redirect on logout or unauthenticated access
+  // Handle redirect on logout or unauthenticated access & role authorization check
   useEffect(() => {
-    if (mounted && !user && !isAuthPage) {
+    if (!mounted) return;
+
+    if (!user && !isAuthPage) {
       router.replace('/login');
+      return;
     }
-  }, [user, mounted, isAuthPage, router]);
+
+    if (user) {
+      const isStudentRoute = pathname.startsWith('/student');
+      const isReceiverRoute = pathname.startsWith('/receiver');
+      const isAdminRoute = pathname.startsWith('/admin');
+
+      if (isAdminRoute && user.role !== 'ADMIN') {
+        toast.error('Bạn không có quyền truy cập trang Quản trị!');
+        router.replace(user.role === 'RECEIVER' ? '/receiver' : '/student');
+      } else if (isReceiverRoute && user.role !== 'RECEIVER') {
+        toast.error('Bạn không có quyền truy cập trang Nhận hộ!');
+        router.replace(user.role === 'ADMIN' ? '/admin' : '/student');
+      } else if (isStudentRoute && user.role !== 'RECEIVER' && user.role !== 'STUDENT') {
+        toast.error('Bạn không có quyền truy cập trang này!');
+        router.replace('/admin');
+      }
+    }
+  }, [user, mounted, isAuthPage, pathname, router]);
 
   // Prevent hydration flicker before client state is loaded
   if (!mounted) {
@@ -105,6 +125,25 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   if (isAuthPage || !user) {
     return <>{children}</>;
+  }
+
+  // Block rendering unauthorized page content while redirecting
+  const isUnauthorized =
+    (pathname.startsWith('/admin') && user.role !== 'ADMIN') ||
+    (pathname.startsWith('/receiver') && user.role !== 'RECEIVER') ||
+    (pathname.startsWith('/student') && user.role !== 'STUDENT' && user.role !== 'RECEIVER');
+
+  if (isUnauthorized) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
+        <div className="text-center space-y-3">
+          <div className="w-12 h-12 rounded-2xl bg-red-600/20 text-red-500 border border-red-500/30 flex items-center justify-center mx-auto text-xl font-bold">
+            403
+          </div>
+          <p className="text-sm font-semibold text-slate-300">Đang kiểm tra quyền truy cập...</p>
+        </div>
+      </div>
+    );
   }
 
   // Force MSSV update for new STUDENT/RECEIVER accounts

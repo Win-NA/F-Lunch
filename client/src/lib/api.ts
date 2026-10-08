@@ -69,6 +69,21 @@ api.interceptors.response.use(
         return Promise.reject(refreshError);
       }
     }
+
+    if (error.response?.status === 403) {
+      if (typeof window !== 'undefined') {
+        const currentUser = useAuthStore.getState().user;
+        if (currentUser) {
+          const targetPath = currentUser.role === 'ADMIN' ? '/admin' : currentUser.role === 'RECEIVER' ? '/receiver' : '/student';
+          if (window.location.pathname !== targetPath) {
+            window.location.href = targetPath;
+          }
+        } else {
+          window.location.href = '/login';
+        }
+      }
+    }
+
     return Promise.reject(error);
   }
 );
