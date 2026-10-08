@@ -100,7 +100,7 @@ export default function StudentReportsPage() {
       await api.post('/reports', {
         type,
         description: description.trim(),
-        expectedAmount: expectedAmount ? parseInt(expectedAmount, 10) : undefined,
+        expectedAmount: expectedAmount ? parseInt(expectedAmount.replace(/\D/g, ''), 10) : undefined,
         proofImage: proofImage || undefined,
       });
 
@@ -214,13 +214,12 @@ export default function StudentReportsPage() {
                   Số tiền bạn đã chuyển khoản (VNĐ) *
                 </label>
                 <input
-                  type="number"
-                  value={expectedAmount}
-                  onChange={(e) => setExpectedAmount(e.target.value)}
-                  placeholder="VD: 50000"
+                  type="text"
+                  inputMode="numeric"
+                  value={expectedAmount ? Number(expectedAmount.replace(/\D/g, '')).toLocaleString('vi-VN').replace(/,/g, '.') : ''}
+                  onChange={(e) => setExpectedAmount(e.target.value.replace(/\D/g, ''))}
+                  placeholder="VD: 50.000"
                   className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white font-mono font-extrabold placeholder-slate-600 focus:outline-none focus:border-orange-500"
-                  min={1000}
-                  step={1000}
                 />
               </div>
             )}

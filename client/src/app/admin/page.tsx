@@ -5,10 +5,10 @@ import { useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth.store';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
-import { 
-  Shield, 
-  Users, 
-  Pizza, 
+import {
+  Shield,
+  Users,
+  Pizza,
   Star,
   CheckCircle,
   XCircle,
@@ -283,8 +283,8 @@ function AdminDashboardContent() {
         processAction === 'APPROVED'
           ? 'Đã duyệt báo cáo & cộng tiền thành công vào ví sinh viên!'
           : processAction === 'REJECTED'
-          ? 'Đã từ chối khiếu nại báo cáo!'
-          : 'Đã cập nhật trạng thái giải quyết sự cố!'
+            ? 'Đã từ chối khiếu nại báo cáo!'
+            : 'Đã cập nhật trạng thái giải quyết sự cố!'
       );
 
       setProcessReportModal(null);
@@ -406,12 +406,12 @@ function AdminDashboardContent() {
     const now = new Date();
     if (tf === 'TODAY') {
       return d.getDate() === now.getDate() &&
-             d.getMonth() === now.getMonth() &&
-             d.getFullYear() === now.getFullYear();
+        d.getMonth() === now.getMonth() &&
+        d.getFullYear() === now.getFullYear();
     }
     if (tf === 'MONTH') {
       return d.getMonth() === now.getMonth() &&
-             d.getFullYear() === now.getFullYear();
+        d.getFullYear() === now.getFullYear();
     }
     if (tf === 'YEAR') {
       return d.getFullYear() === now.getFullYear();
@@ -659,13 +659,13 @@ function AdminDashboardContent() {
     return requests.filter(r => {
       const matchStatus = statusFilter === 'ALL' || r.status === statusFilter;
       const q = searchQuery.toLowerCase().trim();
-      const matchSearch = !q || 
+      const matchSearch = !q ||
         (r.orderCode && r.orderCode.toLowerCase().includes(q)) ||
         (r.foodPlatform && r.foodPlatform.toLowerCase().includes(q)) ||
         (r.student?.fullName && r.student.fullName.toLowerCase().includes(q)) ||
         (r.student?.email && r.student.email.toLowerCase().includes(q)) ||
         (r.receiver?.fullName && r.receiver.fullName.toLowerCase().includes(q));
-      
+
       return matchStatus && matchSearch;
     });
   }, [requests, statusFilter, searchQuery]);
@@ -721,33 +721,29 @@ function AdminDashboardContent() {
                 <div className="flex items-center gap-1 mt-4 bg-slate-955 p-1 rounded-xl border border-slate-800 overflow-x-auto max-w-full">
                   <button
                     onClick={() => setRevenueModalTimeframe('TODAY')}
-                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
-                      revenueModalTimeframe === 'TODAY' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'
-                    }`}
+                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${revenueModalTimeframe === 'TODAY' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'
+                      }`}
                   >
                     Hôm nay ({requests.filter(r => r.status === 'COMPLETED' && isDateInTimeframe(r.updatedAt || r.createdAt, 'TODAY')).length})
                   </button>
                   <button
                     onClick={() => setRevenueModalTimeframe('MONTH')}
-                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
-                      revenueModalTimeframe === 'MONTH' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'
-                    }`}
+                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${revenueModalTimeframe === 'MONTH' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'
+                      }`}
                   >
                     Tháng này ({requests.filter(r => r.status === 'COMPLETED' && isDateInTimeframe(r.updatedAt || r.createdAt, 'MONTH')).length})
                   </button>
                   <button
                     onClick={() => setRevenueModalTimeframe('YEAR')}
-                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
-                      revenueModalTimeframe === 'YEAR' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'
-                    }`}
+                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${revenueModalTimeframe === 'YEAR' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'
+                      }`}
                   >
                     Năm nay ({requests.filter(r => r.status === 'COMPLETED' && isDateInTimeframe(r.updatedAt || r.createdAt, 'YEAR')).length})
                   </button>
                   <button
                     onClick={() => setRevenueModalTimeframe('ALL')}
-                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
-                      revenueModalTimeframe === 'ALL' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'
-                    }`}
+                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${revenueModalTimeframe === 'ALL' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'
+                      }`}
                   >
                     Tất cả ({requests.filter(r => r.status === 'COMPLETED').length})
                   </button>
@@ -877,9 +873,8 @@ function AdminDashboardContent() {
               {/* Modal Header */}
               <div className="border-b border-slate-800 pb-3 pr-8 shrink-0">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider ${
-                    userOrdersModal.role === 'STUDENT' ? 'bg-orange-500/10 text-orange-400 border border-orange-500/20' : 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
-                  }`}>
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider ${userOrdersModal.role === 'STUDENT' ? 'bg-orange-500/10 text-orange-400 border border-orange-500/20' : 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
+                    }`}>
                     {userOrdersModal.role === 'STUDENT' ? 'Sinh Viên Đặt Đơn' : 'Người Nhận Hộ'}
                   </span>
                   <h3 className="text-base sm:text-lg font-extrabold text-white">
@@ -941,11 +936,10 @@ function AdminDashboardContent() {
                                 <span className="text-[10px] font-semibold px-2 py-0.5 bg-slate-800 text-slate-300 rounded-full">
                                   {req.foodPlatform}
                                 </span>
-                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                                  req.status === 'CANCELLED' 
-                                    ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' 
+                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${req.status === 'CANCELLED'
+                                    ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
                                     : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                                }`}>
+                                  }`}>
                                   {req.status === 'CANCELLED' ? 'Hoàn phí 5.000đ' : 'Phí 5.000đ (Đã thanh toán ví)'}
                                 </span>
                               </div>
@@ -1117,10 +1111,10 @@ function AdminDashboardContent() {
                     <p className="text-[9px] font-bold uppercase tracking-wider text-yellow-400">Đánh giá của sinh viên</p>
                     <div className="flex items-center gap-1">
                       {[1, 2, 3, 4, 5].map((s) => (
-                        <Star 
-                          key={s} 
-                          size={12} 
-                          className={s <= selectedRequestDetail.feedback!.rating ? 'text-yellow-500 fill-yellow-500' : 'text-slate-800'} 
+                        <Star
+                          key={s}
+                          size={12}
+                          className={s <= selectedRequestDetail.feedback!.rating ? 'text-yellow-500 fill-yellow-500' : 'text-slate-800'}
                         />
                       ))}
                     </div>
@@ -1146,20 +1140,20 @@ function AdminDashboardContent() {
 
         {/* FULLSCREEN IMAGE OVERLAY */}
         {fullscreenImage && (
-          <div 
+          <div
             className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4"
             onClick={() => setFullscreenImage(null)}
           >
-            <button 
+            <button
               className="absolute top-4 right-4 text-white hover:text-slate-300 p-2 cursor-pointer bg-slate-900/50 rounded-full"
               onClick={() => setFullscreenImage(null)}
             >
               <X size={24} />
             </button>
             <div className="relative max-w-full max-h-[85vh] flex items-center justify-center">
-              <img 
-                src={fullscreenImage} 
-                alt="Ảnh đơn hàng phóng to" 
+              <img
+                src={fullscreenImage}
+                alt="Ảnh đơn hàng phóng to"
                 className="max-w-full max-h-[85vh] object-contain rounded-2xl border border-slate-800 shadow-2xl"
                 onClick={(e) => e.stopPropagation()}
               />
@@ -1198,18 +1192,16 @@ function AdminDashboardContent() {
                   <button
                     type="button"
                     onClick={() => setAdjustAction('ADD')}
-                    className={`flex-1 py-2 rounded-lg text-xs font-black transition-all cursor-pointer ${
-                      adjustAction === 'ADD' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'
-                    }`}
+                    className={`flex-1 py-2 rounded-lg text-xs font-black transition-all cursor-pointer ${adjustAction === 'ADD' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'
+                      }`}
                   >
                     + Cộng Tiền Vào Ví
                   </button>
                   <button
                     type="button"
                     onClick={() => setAdjustAction('SUBTRACT')}
-                    className={`flex-1 py-2 rounded-lg text-xs font-black transition-all cursor-pointer ${
-                      adjustAction === 'SUBTRACT' ? 'bg-red-600 text-white shadow' : 'text-slate-400 hover:text-white'
-                    }`}
+                    className={`flex-1 py-2 rounded-lg text-xs font-black transition-all cursor-pointer ${adjustAction === 'SUBTRACT' ? 'bg-red-600 text-white shadow' : 'text-slate-400 hover:text-white'
+                      }`}
                   >
                     - Trừ Tiền Khỏi Ví
                   </button>
@@ -1234,13 +1226,12 @@ function AdminDashboardContent() {
                     Số tiền (VNĐ) *
                   </label>
                   <input
-                    type="number"
-                    value={adjustAmount}
-                    onChange={(e) => setAdjustAmount(e.target.value)}
-                    placeholder="Nhập số tiền (Ví dụ: 20000)..."
+                    type="text"
+                    inputMode="numeric"
+                    value={adjustAmount ? Number(adjustAmount.replace(/\D/g, '')).toLocaleString('vi-VN').replace(/,/g, '.') : ''}
+                    onChange={(e) => setAdjustAmount(e.target.value.replace(/\D/g, ''))}
+                    placeholder="Nhập số tiền (Ví dụ: 200.000)..."
                     className="w-full bg-slate-955 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-orange-500 font-mono font-bold"
-                    min={1000}
-                    step={1000}
                   />
                 </div>
 
@@ -1268,9 +1259,8 @@ function AdminDashboardContent() {
                   <button
                     type="submit"
                     disabled={adjustLoading}
-                    className={`flex-1 py-2.5 rounded-xl text-white font-bold text-xs transition-all shadow-md cursor-pointer ${
-                      adjustAction === 'ADD' ? 'bg-emerald-600 hover:bg-emerald-500' : 'bg-red-600 hover:bg-red-500'
-                    }`}
+                    className={`flex-1 py-2.5 rounded-xl text-white font-bold text-xs transition-all shadow-md cursor-pointer ${adjustAction === 'ADD' ? 'bg-emerald-600 hover:bg-emerald-500' : 'bg-red-600 hover:bg-red-500'
+                      }`}
                   >
                     {adjustLoading ? 'Đang lưu...' : adjustAction === 'ADD' ? 'Xác Nhận Cộng Tiền' : 'Xác Nhận Trừ Tiền'}
                   </button>
@@ -1293,14 +1283,13 @@ function AdminDashboardContent() {
 
               <div className="border-b border-slate-800 pb-3 pr-8 shrink-0">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider ${
-                    userTxModal.role === 'STUDENT' ? 'bg-orange-500/10 text-orange-400 border border-orange-500/20' :
-                    userTxModal.role === 'RECEIVER' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' :
-                    'bg-red-500/10 text-red-400 border border-red-500/20'
-                  }`}>
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider ${userTxModal.role === 'STUDENT' ? 'bg-orange-500/10 text-orange-400 border border-orange-500/20' :
+                      userTxModal.role === 'RECEIVER' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' :
+                        'bg-red-500/10 text-red-400 border border-red-500/20'
+                    }`}>
                     {userTxModal.role === 'STUDENT' ? 'Lịch sử Giao dịch Khách hàng' :
-                     userTxModal.role === 'RECEIVER' ? 'Lịch sử Giao nhận' :
-                     'Nhật ký Quản trị'}
+                      userTxModal.role === 'RECEIVER' ? 'Lịch sử Giao nhận' :
+                        'Nhật ký Quản trị'}
                   </span>
                   <h3 className="text-base sm:text-lg font-extrabold text-white">
                     {userTxModal.fullName}
@@ -1315,29 +1304,29 @@ function AdminDashboardContent() {
                 const targetRole = userTxModal.role;
 
                 // Transactions for Student / Admin
-                const userTxs = adminTransactions.filter(t => 
-                  t.userId === userTxModal.id || 
-                  t.user?.id === userTxModal.id || 
+                const userTxs = adminTransactions.filter(t =>
+                  t.userId === userTxModal.id ||
+                  t.user?.id === userTxModal.id ||
                   (t.user?.email && t.user.email.toLowerCase() === userTxModal.email?.toLowerCase())
                 );
 
                 // Orders for Student or Receiver
-                const studentReqs = requests.filter(r => 
-                  r.student?.id === userTxModal.id || 
+                const studentReqs = requests.filter(r =>
+                  r.student?.id === userTxModal.id ||
                   (r.student?.email && r.student.email.toLowerCase() === userTxModal.email?.toLowerCase())
                 );
 
-                const receiverReqs = requests.filter(r => 
-                  r.receiver?.id === userTxModal.id || 
+                const receiverReqs = requests.filter(r =>
+                  r.receiver?.id === userTxModal.id ||
                   (r.receiver?.email && r.receiver.email.toLowerCase() === userTxModal.email?.toLowerCase())
                 );
 
                 // Admin Operations Log (Strictly for actions performed by or related to THIS specific admin)
                 const adminActions = adminTransactions.filter(t => {
-                  const isTargetUser = t.userId === userTxModal.id || 
-                                       t.user?.id === userTxModal.id || 
-                                       (t.user?.email && t.user.email.toLowerCase() === userTxModal.email.toLowerCase());
-                  
+                  const isTargetUser = t.userId === userTxModal.id ||
+                    t.user?.id === userTxModal.id ||
+                    (t.user?.email && t.user.email.toLowerCase() === userTxModal.email.toLowerCase());
+
                   const isActorInNote = t.note && (
                     t.note.toLowerCase().includes(userTxModal.fullName.toLowerCase()) ||
                     t.note.toLowerCase().includes(userTxModal.email.toLowerCase()) ||
@@ -1492,7 +1481,7 @@ function AdminDashboardContent() {
                       </div>
                       <div>
                         <span className="text-[10px] text-slate-500 font-semibold uppercase block">Phí 5k đã trả</span>
-                        <span className="font-extrabold text-rose-400 text-sm">-{totalPaidFees.toLocaleString('vi-VN')}đ ({orderPaymentCount} đơn)</span>
+                        <span className="font-black text-red-500 text-sm">-{totalPaidFees.toLocaleString('vi-VN')}đ ({orderPaymentCount} đơn)</span>
                       </div>
                       <div>
                         <span className="text-[10px] text-slate-500 font-semibold uppercase block">Đơn đã đặt</span>
@@ -1505,27 +1494,24 @@ function AdminDashboardContent() {
                         <button
                           type="button"
                           onClick={() => setUserTxTypeFilter('ALL')}
-                          className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
-                            userTxTypeFilter === 'ALL' ? 'bg-orange-600 text-white shadow' : 'text-slate-400 hover:text-white'
-                          }`}
+                          className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${userTxTypeFilter === 'ALL' ? 'bg-orange-600 text-white shadow' : 'text-slate-400 hover:text-white'
+                            }`}
                         >
                           Tất cả ({userTxs.length})
                         </button>
                         <button
                           type="button"
                           onClick={() => setUserTxTypeFilter('DEPOSIT')}
-                          className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
-                            userTxTypeFilter === 'DEPOSIT' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'
-                          }`}
+                          className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${userTxTypeFilter === 'DEPOSIT' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'
+                            }`}
                         >
                           Nạp tiền & KM ({userTxs.filter(t => t.type === 'DEPOSIT' || t.type === 'ADMIN_ADJUST').length})
                         </button>
                         <button
                           type="button"
                           onClick={() => setUserTxTypeFilter('ORDER_PAYMENT')}
-                          className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
-                            userTxTypeFilter === 'ORDER_PAYMENT' ? 'bg-rose-600 text-white shadow' : 'text-slate-400 hover:text-white'
-                          }`}
+                          className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${userTxTypeFilter === 'ORDER_PAYMENT' ? 'bg-red-600 text-white shadow' : 'text-slate-400 hover:text-white'
+                            }`}
                         >
                           Phí thanh toán ({orderPaymentCount})
                         </button>
@@ -1568,16 +1554,15 @@ function AdminDashboardContent() {
                             <div key={tx.id} className="p-3 bg-slate-955 rounded-xl border border-slate-800 flex items-center justify-between text-xs hover:border-slate-700 transition-colors">
                               <div>
                                 <div className="flex items-center gap-2">
-                                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${
-                                    tx.type === 'DEPOSIT' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
-                                    tx.type === 'ORDER_REFUND' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' :
-                                    tx.type === 'ORDER_PAYMENT' ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20' :
-                                    'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                                  }`}>
+                                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${tx.type === 'DEPOSIT' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
+                                      tx.type === 'ORDER_REFUND' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' :
+                                        tx.type === 'ORDER_PAYMENT' ? 'bg-red-500/15 text-red-500 border border-red-500/30 font-bold' :
+                                          'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                                    }`}>
                                     {tx.type === 'DEPOSIT' ? 'NẠP TIỀN VÀO VÍ' :
-                                     tx.type === 'ORDER_PAYMENT' ? 'THANH TOÁN PHÍ ĐƠN 5K' :
-                                     tx.type === 'ORDER_REFUND' ? 'HOÀN PHÍ HỦY ĐƠN' :
-                                     tx.type === 'ADMIN_ADJUST' ? 'ADMIN ĐIỀU CHỈNH' : tx.type}
+                                      tx.type === 'ORDER_PAYMENT' ? 'THANH TOÁN PHÍ ĐƠN 5K' :
+                                        tx.type === 'ORDER_REFUND' ? 'HOÀN PHÍ HỦY ĐƠN' :
+                                          tx.type === 'ADMIN_ADJUST' ? 'ADMIN ĐIỀU CHỈNH' : tx.type}
                                   </span>
                                   <span className="font-mono text-[10px] text-slate-400">#{tx.transactionCode}</span>
                                 </div>
@@ -1585,7 +1570,7 @@ function AdminDashboardContent() {
                                 <p className="text-[9px] text-slate-500 mt-0.5 font-mono">{new Date(tx.createdAt).toLocaleString('vi-VN')}</p>
                               </div>
                               <div className="text-right font-mono shrink-0 whitespace-nowrap pl-2">
-                                <p className={`font-extrabold text-sm ${isNegative ? 'text-rose-400' : 'text-emerald-400'} whitespace-nowrap`}>
+                                <p className={`font-black text-sm ${isNegative ? 'text-red-500' : 'text-emerald-400'} whitespace-nowrap`}>
                                   {isNegative ? '-' : '+'}{tx.amount.toLocaleString('vi-VN')} đ
                                 </p>
                                 {tx.bonusAmount > 0 && (
@@ -1600,7 +1585,7 @@ function AdminDashboardContent() {
                                     Chờ xác nhận
                                   </span>
                                 ) : (
-                                  <span className="text-[9px] font-bold text-rose-400 bg-rose-500/10 px-1.5 py-0.5 rounded border border-rose-500/20 inline-block mt-0.5 whitespace-nowrap">
+                                  <span className="text-[9px] font-bold text-red-500 bg-red-500/15 px-1.5 py-0.5 rounded border border-red-500/30 inline-block mt-0.5 whitespace-nowrap">
                                     Từ chối
                                   </span>
                                 )}
@@ -1649,27 +1634,24 @@ function AdminDashboardContent() {
                   <button
                     type="button"
                     onClick={() => setProcessAction('APPROVED')}
-                    className={`py-2 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
-                      processAction === 'APPROVED' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'
-                    }`}
+                    className={`py-2 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${processAction === 'APPROVED' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'
+                      }`}
                   >
                     + Duyệt Cộng Ví
                   </button>
                   <button
                     type="button"
                     onClick={() => setProcessAction('REJECTED')}
-                    className={`py-2 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
-                      processAction === 'REJECTED' ? 'bg-red-600 text-white shadow' : 'text-slate-400 hover:text-white'
-                    }`}
+                    className={`py-2 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${processAction === 'REJECTED' ? 'bg-red-600 text-white shadow' : 'text-slate-400 hover:text-white'
+                      }`}
                   >
                     Từ Chối
                   </button>
                   <button
                     type="button"
                     onClick={() => setProcessAction('RESOLVED')}
-                    className={`py-2 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
-                      processAction === 'RESOLVED' ? 'bg-blue-600 text-white shadow' : 'text-slate-400 hover:text-white'
-                    }`}
+                    className={`py-2 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${processAction === 'RESOLVED' ? 'bg-blue-600 text-white shadow' : 'text-slate-400 hover:text-white'
+                      }`}
                   >
                     Đã Giải Quyết
                   </button>
@@ -1687,13 +1669,12 @@ function AdminDashboardContent() {
                           Số tiền cộng ví chính (VNĐ) *
                         </label>
                         <input
-                          type="number"
-                          value={processAmount}
-                          onChange={(e) => setProcessAmount(e.target.value)}
-                          placeholder="VD: 50000"
+                          type="text"
+                          inputMode="numeric"
+                          value={processAmount ? Number(processAmount.replace(/\D/g, '')).toLocaleString('vi-VN').replace(/,/g, '.') : ''}
+                          onChange={(e) => setProcessAmount(e.target.value.replace(/\D/g, ''))}
+                          placeholder="VD: 50.000"
                           className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white font-mono font-extrabold focus:outline-none focus:border-emerald-500"
-                          min={1000}
-                          step={1000}
                         />
                       </div>
                       <div>
@@ -1701,13 +1682,12 @@ function AdminDashboardContent() {
                           Thưởng khuyến mãi thêm (Ví KM)
                         </label>
                         <input
-                          type="number"
-                          value={processBonusAmount}
-                          onChange={(e) => setProcessBonusAmount(e.target.value)}
-                          placeholder="VD: 5000 (Tùy chọn)"
+                          type="text"
+                          inputMode="numeric"
+                          value={processBonusAmount ? Number(processBonusAmount.replace(/\D/g, '')).toLocaleString('vi-VN').replace(/,/g, '.') : ''}
+                          onChange={(e) => setProcessBonusAmount(e.target.value.replace(/\D/g, ''))}
+                          placeholder="VD: 5.000 (Tùy chọn)"
                           className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white font-mono font-bold focus:outline-none focus:border-orange-500"
-                          min={0}
-                          step={1000}
                         />
                       </div>
                     </div>
@@ -1726,8 +1706,8 @@ function AdminDashboardContent() {
                       processAction === 'APPROVED'
                         ? "VD: Admin đã kiểm tra chứng từ CK thành công và cộng 50.000đ vào ví."
                         : processAction === 'REJECTED'
-                        ? "VD: Không tìm thấy giao dịch 50k nào vào thời điểm nêu trên. Vui lòng kiểm tra lại."
-                        : "VD: Đã tiếp nhận và khắc phục xong lỗi giao diện."
+                          ? "VD: Không tìm thấy giao dịch 50k nào vào thời điểm nêu trên. Vui lòng kiểm tra lại."
+                          : "VD: Đã tiếp nhận và khắc phục xong lỗi giao diện."
                     }
                     rows={3}
                     className="w-full bg-slate-955 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-orange-500 resize-none"
@@ -1746,10 +1726,9 @@ function AdminDashboardContent() {
                   <button
                     type="submit"
                     disabled={processLoading}
-                    className={`flex-1 py-2.5 rounded-xl text-white font-bold text-xs transition-all shadow-md cursor-pointer ${
-                      processAction === 'APPROVED' ? 'bg-emerald-600 hover:bg-emerald-500' :
-                      processAction === 'REJECTED' ? 'bg-red-600 hover:bg-red-500' : 'bg-blue-600 hover:bg-blue-500'
-                    }`}
+                    className={`flex-1 py-2.5 rounded-xl text-white font-bold text-xs transition-all shadow-md cursor-pointer ${processAction === 'APPROVED' ? 'bg-emerald-600 hover:bg-emerald-500' :
+                        processAction === 'REJECTED' ? 'bg-red-600 hover:bg-red-500' : 'bg-blue-600 hover:bg-blue-500'
+                      }`}
                   >
                     {processLoading ? 'Đang xử lý...' : processAction === 'APPROVED' ? 'Xác Nhận & Cộng Tiền Ví' : processAction === 'REJECTED' ? 'Xác Nhận Từ Chối' : 'Xác Nhận Đã Giải Quyết'}
                   </button>
@@ -1768,17 +1747,17 @@ function AdminDashboardContent() {
 
   // DEDICATED CEO EXECUTIVE DASHBOARD VIEW
   if (activeCard === 'CEO') {
-    const selectedRevenue = 
+    const selectedRevenue =
       timeframe === 'TODAY' ? periodStats.todayRevenue :
-      timeframe === 'MONTH' ? periodStats.monthRevenue :
-      timeframe === 'YEAR' ? periodStats.yearRevenue :
-      periodStats.allRevenue;
+        timeframe === 'MONTH' ? periodStats.monthRevenue :
+          timeframe === 'YEAR' ? periodStats.yearRevenue :
+            periodStats.allRevenue;
 
-    const selectedCount = 
+    const selectedCount =
       timeframe === 'TODAY' ? periodStats.todayCount :
-      timeframe === 'MONTH' ? periodStats.monthCount :
-      timeframe === 'YEAR' ? periodStats.yearCount :
-      periodStats.allCount;
+        timeframe === 'MONTH' ? periodStats.monthCount :
+          timeframe === 'YEAR' ? periodStats.yearCount :
+            periodStats.allCount;
 
     return (
       <div className="space-y-6 pb-12">
@@ -1804,11 +1783,10 @@ function AdminDashboardContent() {
               <button
                 key={tf}
                 onClick={() => setTimeframe(tf)}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
-                  timeframe === tf
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 ${timeframe === tf
                     ? 'bg-orange-600 text-white shadow-md shadow-orange-600/25'
                     : 'text-slate-400 hover:text-white hover:bg-slate-900'
-                }`}
+                  }`}
               >
                 {getTimeframeLabel(tf)}
               </button>
@@ -1877,7 +1855,7 @@ function AdminDashboardContent() {
 
         {/* 1. KEY EXECUTIVE METRIC CARDS */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          
+
           <div className="p-5 rounded-2xl bg-slate-900/80 border border-emerald-500/30 backdrop-blur-xl shadow-lg relative overflow-hidden">
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Doanh Thu Phí Dịch Vụ</span>
@@ -1970,7 +1948,7 @@ function AdminDashboardContent() {
 
         {/* 3. TOP PERFORMERS LEADERBOARDS GRID */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          
+
           {/* Top 5 Students */}
           <div className="bg-slate-900/80 backdrop-blur-xl p-5 rounded-3xl border border-slate-800 shadow-xl space-y-4">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
@@ -2200,15 +2178,14 @@ function AdminDashboardContent() {
       {/* INTERACTIVE APP METRIC CARDS (CHẠM TRỰC TIẾP VÀO CÁC Ô ĐỂ XEM MỤC TƯƠNG ỨNG) */}
       {stats && activeCard !== 'REPORTS' && (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
-          
+
           {/* 1. TỔNG ĐƠN CARD */}
           <div
             onClick={() => setActiveCard(activeCard === 'REQUESTS' ? 'ALL' : 'REQUESTS')}
-            className={`relative p-4 rounded-2xl border backdrop-blur-xl transition-all duration-200 cursor-pointer select-none active:scale-95 hover:scale-[1.02] ${
-              activeCard === 'REQUESTS'
+            className={`relative p-4 rounded-2xl border backdrop-blur-xl transition-all duration-200 cursor-pointer select-none active:scale-95 hover:scale-[1.02] ${activeCard === 'REQUESTS'
                 ? 'bg-orange-500/10 border-orange-500 ring-2 ring-orange-500/40 shadow-lg shadow-orange-500/10'
                 : 'bg-slate-900/60 border-slate-800 hover:border-slate-700 shadow-md'
-            }`}
+              }`}
           >
             <div className="flex items-center justify-between">
               <div className="w-9 h-9 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-500 shrink-0">
@@ -2233,11 +2210,10 @@ function AdminDashboardContent() {
           {/* 2. TỔNG THU NHẬP CARD */}
           <div
             onClick={() => setActiveCard(activeCard === 'REVENUE' ? 'ALL' : 'REVENUE')}
-            className={`relative p-4 rounded-2xl border backdrop-blur-xl transition-all duration-200 cursor-pointer select-none active:scale-95 hover:scale-[1.02] ${
-              activeCard === 'REVENUE'
+            className={`relative p-4 rounded-2xl border backdrop-blur-xl transition-all duration-200 cursor-pointer select-none active:scale-95 hover:scale-[1.02] ${activeCard === 'REVENUE'
                 ? 'bg-emerald-500/10 border-emerald-500 ring-2 ring-emerald-500/40 shadow-lg shadow-emerald-500/10'
                 : 'bg-slate-900/60 border-slate-800 hover:border-slate-700 shadow-md'
-            }`}
+              }`}
           >
             <div className="flex items-center justify-between">
               <div className="w-9 h-9 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 shrink-0">
@@ -2265,11 +2241,10 @@ function AdminDashboardContent() {
               setActiveCard('USERS');
               setUserRoleFilter('RECEIVER');
             }}
-            className={`relative p-4 rounded-2xl border backdrop-blur-xl transition-all duration-200 cursor-pointer select-none active:scale-95 hover:scale-[1.02] ${
-              activeCard === 'USERS' && userRoleFilter === 'RECEIVER'
+            className={`relative p-4 rounded-2xl border backdrop-blur-xl transition-all duration-200 cursor-pointer select-none active:scale-95 hover:scale-[1.02] ${activeCard === 'USERS' && userRoleFilter === 'RECEIVER'
                 ? 'bg-blue-500/10 border-blue-500 ring-2 ring-blue-500/40 shadow-lg shadow-blue-500/10'
                 : 'bg-slate-900/60 border-slate-800 hover:border-slate-700 shadow-md'
-            }`}
+              }`}
           >
             <div className="flex items-center justify-between">
               <div className="w-9 h-9 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400 shrink-0">
@@ -2297,11 +2272,10 @@ function AdminDashboardContent() {
               setActiveCard('USERS');
               setUserRoleFilter('ALL');
             }}
-            className={`relative p-4 rounded-2xl border backdrop-blur-xl transition-all duration-200 cursor-pointer select-none active:scale-95 hover:scale-[1.02] ${
-              activeCard === 'USERS' && userRoleFilter === 'ALL'
+            className={`relative p-4 rounded-2xl border backdrop-blur-xl transition-all duration-200 cursor-pointer select-none active:scale-95 hover:scale-[1.02] ${activeCard === 'USERS' && userRoleFilter === 'ALL'
                 ? 'bg-purple-500/10 border-purple-500 ring-2 ring-purple-500/40 shadow-lg shadow-purple-500/10'
                 : 'bg-slate-900/60 border-slate-800 hover:border-slate-700 shadow-md'
-            }`}
+              }`}
           >
             <div className="flex items-center justify-between">
               <div className="w-9 h-9 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400 shrink-0">
@@ -2326,11 +2300,10 @@ function AdminDashboardContent() {
           {/* 5. VÍ & QUẢN LÝ TIỀN CARD */}
           <div
             onClick={() => setActiveCard(activeCard === 'TRANSACTIONS' ? 'ALL' : 'TRANSACTIONS')}
-            className={`relative p-4 rounded-2xl border backdrop-blur-xl transition-all duration-200 cursor-pointer select-none active:scale-95 hover:scale-[1.02] ${
-              activeCard === 'TRANSACTIONS'
+            className={`relative p-4 rounded-2xl border backdrop-blur-xl transition-all duration-200 cursor-pointer select-none active:scale-95 hover:scale-[1.02] ${activeCard === 'TRANSACTIONS'
                 ? 'bg-orange-500/10 border-orange-500 ring-2 ring-orange-500/40 shadow-lg shadow-orange-500/10'
                 : 'bg-slate-900/60 border-slate-800 hover:border-slate-700 shadow-md'
-            }`}
+              }`}
           >
             <div className="flex items-center justify-between">
               <div className="w-9 h-9 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-400 shrink-0">
@@ -2357,11 +2330,10 @@ function AdminDashboardContent() {
           {/* 6. ĐÁNH GIÁ TB CARD */}
           <div
             onClick={() => setActiveCard(activeCard === 'FEEDBACKS' ? 'ALL' : 'FEEDBACKS')}
-            className={`relative p-4 rounded-2xl border backdrop-blur-xl transition-all duration-200 cursor-pointer select-none active:scale-95 hover:scale-[1.02] ${
-              activeCard === 'FEEDBACKS'
+            className={`relative p-4 rounded-2xl border backdrop-blur-xl transition-all duration-200 cursor-pointer select-none active:scale-95 hover:scale-[1.02] ${activeCard === 'FEEDBACKS'
                 ? 'bg-yellow-500/10 border-yellow-500 ring-2 ring-yellow-500/40 shadow-lg shadow-yellow-500/10'
                 : 'bg-slate-900/60 border-slate-800 hover:border-slate-700 shadow-md'
-            }`}
+              }`}
           >
             <div className="flex items-center justify-between">
               <div className="w-9 h-9 rounded-xl bg-yellow-500/10 flex items-center justify-center text-yellow-500 shrink-0">
@@ -2404,33 +2376,29 @@ function AdminDashboardContent() {
             <div className="flex items-center gap-1.5 bg-slate-955 p-1 rounded-xl border border-slate-800 self-start sm:self-auto overflow-x-auto max-w-full">
               <button
                 onClick={() => setTimeframe('TODAY')}
-                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap shrink-0 ${
-                  timeframe === 'TODAY' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'
-                }`}
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap shrink-0 ${timeframe === 'TODAY' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'
+                  }`}
               >
                 Hôm nay
               </button>
               <button
                 onClick={() => setTimeframe('MONTH')}
-                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap shrink-0 ${
-                  timeframe === 'MONTH' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'
-                }`}
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap shrink-0 ${timeframe === 'MONTH' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'
+                  }`}
               >
                 Tháng này
               </button>
               <button
                 onClick={() => setTimeframe('YEAR')}
-                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap shrink-0 ${
-                  timeframe === 'YEAR' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'
-                }`}
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap shrink-0 ${timeframe === 'YEAR' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'
+                  }`}
               >
                 Năm nay
               </button>
               <button
                 onClick={() => setTimeframe('ALL')}
-                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap shrink-0 ${
-                  timeframe === 'ALL' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'
-                }`}
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap shrink-0 ${timeframe === 'ALL' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'
+                  }`}
               >
                 Tất cả
               </button>
@@ -2440,7 +2408,7 @@ function AdminDashboardContent() {
           {/* Revenue Cards Grid by Timeframe (Clickable for Detail Modal) */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
             {/* Today Card */}
-            <div 
+            <div
               onClick={() => openRevenueModal('TODAY')}
               className={`p-4 rounded-2xl border transition-all cursor-pointer hover:scale-[1.02] active:scale-95 ${timeframe === 'TODAY' ? 'bg-emerald-500/10 border-emerald-500/40 ring-1 ring-emerald-500/30' : 'bg-slate-955 border-slate-800'}`}
             >
@@ -2456,7 +2424,7 @@ function AdminDashboardContent() {
             </div>
 
             {/* Month Card */}
-            <div 
+            <div
               onClick={() => openRevenueModal('MONTH')}
               className={`p-4 rounded-2xl border transition-all cursor-pointer hover:scale-[1.02] active:scale-95 ${timeframe === 'MONTH' ? 'bg-emerald-500/10 border-emerald-500/40 ring-1 ring-emerald-500/30' : 'bg-slate-955 border-slate-800'}`}
             >
@@ -2472,7 +2440,7 @@ function AdminDashboardContent() {
             </div>
 
             {/* Year Card */}
-            <div 
+            <div
               onClick={() => openRevenueModal('YEAR')}
               className={`p-4 rounded-2xl border transition-all cursor-pointer hover:scale-[1.02] active:scale-95 ${timeframe === 'YEAR' ? 'bg-emerald-500/10 border-emerald-500/40 ring-1 ring-emerald-500/30' : 'bg-slate-955 border-slate-800'}`}
             >
@@ -2488,7 +2456,7 @@ function AdminDashboardContent() {
             </div>
 
             {/* All Time Card */}
-            <div 
+            <div
               onClick={() => openRevenueModal('ALL')}
               className={`p-4 rounded-2xl border transition-all cursor-pointer hover:scale-[1.02] active:scale-95 ${timeframe === 'ALL' ? 'bg-emerald-500/10 border-emerald-500/40 ring-1 ring-emerald-500/30' : 'bg-slate-955 border-slate-800'}`}
             >
@@ -2687,33 +2655,29 @@ function AdminDashboardContent() {
             <div className="flex items-center gap-1 bg-slate-955 p-1 rounded-xl border border-slate-800 self-start sm:self-auto overflow-x-auto max-w-full">
               <button
                 onClick={() => setUserRoleFilter('ALL')}
-                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap shrink-0 ${
-                  userRoleFilter === 'ALL' ? 'bg-orange-600 text-white shadow' : 'text-slate-400 hover:text-white'
-                }`}
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap shrink-0 ${userRoleFilter === 'ALL' ? 'bg-orange-600 text-white shadow' : 'text-slate-400 hover:text-white'
+                  }`}
               >
                 Tất cả ({users.length})
               </button>
               <button
                 onClick={() => setUserRoleFilter('RECEIVER')}
-                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap shrink-0 ${
-                  userRoleFilter === 'RECEIVER' ? 'bg-blue-600 text-white shadow' : 'text-slate-400 hover:text-white'
-                }`}
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap shrink-0 ${userRoleFilter === 'RECEIVER' ? 'bg-blue-600 text-white shadow' : 'text-slate-400 hover:text-white'
+                  }`}
               >
                 Nhận hộ ({users.filter(u => u.role === 'RECEIVER').length})
               </button>
               <button
                 onClick={() => setUserRoleFilter('STUDENT')}
-                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap shrink-0 ${
-                  userRoleFilter === 'STUDENT' ? 'bg-orange-600 text-white shadow' : 'text-slate-400 hover:text-white'
-                }`}
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap shrink-0 ${userRoleFilter === 'STUDENT' ? 'bg-orange-600 text-white shadow' : 'text-slate-400 hover:text-white'
+                  }`}
               >
                 Sinh viên ({users.filter(u => u.role === 'STUDENT').length})
               </button>
               <button
                 onClick={() => setUserRoleFilter('ADMIN')}
-                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap shrink-0 ${
-                  userRoleFilter === 'ADMIN' ? 'bg-red-600 text-white shadow' : 'text-slate-400 hover:text-white'
-                }`}
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap shrink-0 ${userRoleFilter === 'ADMIN' ? 'bg-red-600 text-white shadow' : 'text-slate-400 hover:text-white'
+                  }`}
               >
                 Quản trị ({users.filter(u => u.role === 'ADMIN').length})
               </button>
@@ -2749,13 +2713,12 @@ function AdminDashboardContent() {
                     const studentStat = studentStatsMap.get(u.id);
 
                     return (
-                      <tr 
-                        key={u.id} 
-                        className={`transition-colors ${
-                          isSelf 
-                            ? 'bg-orange-500/10 border-l-4 border-l-orange-500 font-medium' 
+                      <tr
+                        key={u.id}
+                        className={`transition-colors ${isSelf
+                            ? 'bg-orange-500/10 border-l-4 border-l-orange-500 font-medium'
                             : 'hover:bg-slate-800/10'
-                        }`}
+                          }`}
                       >
                         <td className="px-4 py-3.5">
                           <div className="flex items-center gap-2">
@@ -2893,28 +2856,14 @@ function AdminDashboardContent() {
                             )}
                           </span>
                         </td>
-                        <td className="px-4 py-3.5 text-right">
-                          <div className="flex items-center justify-end gap-1.5">
+                        <td className="px-4 py-3.5 text-right whitespace-nowrap">
+                          <div className="flex items-center justify-end gap-1.5 whitespace-nowrap">
                             <button
                               onClick={() => setUserTxModal(u)}
                               className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 border border-blue-500/20 transition-all cursor-pointer whitespace-nowrap"
                               title="Xem chi tiết lịch sử nạp tiền & giao dịch của thành viên"
                             >
                               Lịch Sử
-                            </button>
-                            <button
-                              onClick={() => openAdjustModal(u, 'ADD')}
-                              className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/20 transition-all cursor-pointer whitespace-nowrap"
-                              title="Cộng tiền vào ví thành viên"
-                            >
-                              + Cộng Tiền
-                            </button>
-                            <button
-                              onClick={() => openAdjustModal(u, 'SUBTRACT')}
-                              className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20 transition-all cursor-pointer whitespace-nowrap"
-                              title="Trừ tiền khỏi ví thành viên"
-                            >
-                              - Trừ Tiền
                             </button>
                             {isSelf ? (
                               <span className="text-[10px] text-slate-500 font-semibold italic whitespace-nowrap">
@@ -2924,11 +2873,10 @@ function AdminDashboardContent() {
                               <button
                                 onClick={() => handleToggleStatus(u.id, u.status)}
                                 disabled={btnLoading === u.id}
-                                className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer whitespace-nowrap ${
-                                  u.status === 'ACTIVE'
+                                className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer whitespace-nowrap ${u.status === 'ACTIVE'
                                     ? 'bg-slate-800 text-slate-400 hover:text-red-400 hover:bg-red-500/10 border border-slate-700'
                                     : 'bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/20'
-                                }`}
+                                  }`}
                               >
                                 {btnLoading === u.id ? '...' : u.status === 'ACTIVE' ? 'Khóa' : 'Mở khóa'}
                               </button>
@@ -2994,7 +2942,7 @@ function AdminDashboardContent() {
                     </div>
 
                     <div className="grid grid-cols-2 gap-2 text-center text-[10px]">
-                      <div 
+                      <div
                         onClick={() => {
                           if (u.role === 'STUDENT' || u.role === 'RECEIVER') {
                             setUserOrdersModal({ user: u, role: u.role as 'STUDENT' | 'RECEIVER' });
@@ -3016,40 +2964,31 @@ function AdminDashboardContent() {
                       </div>
                     </div>
 
-                    <div className="flex flex-wrap items-center justify-between gap-1.5 pt-1 border-t border-slate-850 text-xs">
-                      <div className="flex items-center gap-1">
-                        <button
-                          onClick={() => setUserTxModal(u)}
-                          className="px-2 py-1 rounded-lg text-[10px] font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20"
-                        >
-                          Lịch sử
-                        </button>
-                        <button
-                          onClick={() => openAdjustModal(u, 'ADD')}
-                          className="px-2 py-1 rounded-lg text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                        >
-                          + Cộng
-                        </button>
-                        <button
-                          onClick={() => openAdjustModal(u, 'SUBTRACT')}
-                          className="px-2 py-1 rounded-lg text-[10px] font-bold bg-red-500/10 text-red-400 border border-red-500/20"
-                        >
-                          - Trừ
-                        </button>
+                    <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-850 text-xs">
+                      <button
+                        onClick={() => setUserTxModal(u)}
+                        className="px-3 py-1.5 rounded-lg text-[10px] font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20 transition-all whitespace-nowrap"
+                      >
+                        Lịch sử
+                      </button>
+                      <div>
+                        {isSelf ? (
+                          <span className="text-[10px] text-slate-500 font-semibold italic whitespace-nowrap">
+                            Đang dùng
+                          </span>
+                        ) : (
+                          <button
+                            onClick={() => handleToggleStatus(u.id, u.status)}
+                            disabled={btnLoading === u.id}
+                            className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer whitespace-nowrap ${u.status === 'ACTIVE'
+                                ? 'bg-slate-800 text-slate-400 hover:text-red-400 border border-slate-700'
+                                : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                              }`}
+                          >
+                            {btnLoading === u.id ? '...' : u.status === 'ACTIVE' ? 'Khóa' : 'Mở khóa'}
+                          </button>
+                        )}
                       </div>
-                      {!isSelf && (
-                        <button
-                          onClick={() => handleToggleStatus(u.id, u.status)}
-                          disabled={btnLoading === u.id}
-                          className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
-                            u.status === 'ACTIVE'
-                              ? 'bg-slate-800 text-slate-400 hover:text-red-400 border border-slate-700'
-                              : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                          }`}
-                        >
-                          {btnLoading === u.id ? '...' : u.status === 'ACTIVE' ? 'Khóa' : 'Mở khóa'}
-                        </button>
-                      )}
                     </div>
                   </div>
                 );
@@ -3106,9 +3045,9 @@ function AdminDashboardContent() {
                     .filter(u => u.role === 'STUDENT')
                     .filter(u => {
                       const q = searchQuery.toLowerCase().trim();
-                      return !q || 
-                        u.fullName.toLowerCase().includes(q) || 
-                        u.email.toLowerCase().includes(q) || 
+                      return !q ||
+                        u.fullName.toLowerCase().includes(q) ||
+                        u.email.toLowerCase().includes(q) ||
                         (u.mssv && u.mssv.toLowerCase().includes(q));
                     })
                     .length === 0 ? (
@@ -3122,9 +3061,9 @@ function AdminDashboardContent() {
                       .filter(u => u.role === 'STUDENT')
                       .filter(u => {
                         const q = searchQuery.toLowerCase().trim();
-                        return !q || 
-                          u.fullName.toLowerCase().includes(q) || 
-                          u.email.toLowerCase().includes(q) || 
+                        return !q ||
+                          u.fullName.toLowerCase().includes(q) ||
+                          u.email.toLowerCase().includes(q) ||
                           (u.mssv && u.mssv.toLowerCase().includes(q));
                       })
                       .map((u) => {
@@ -3191,9 +3130,9 @@ function AdminDashboardContent() {
                 .filter(u => u.role === 'STUDENT')
                 .filter(u => {
                   const q = searchQuery.toLowerCase().trim();
-                  return !q || 
-                    u.fullName.toLowerCase().includes(q) || 
-                    u.email.toLowerCase().includes(q) || 
+                  return !q ||
+                    u.fullName.toLowerCase().includes(q) ||
+                    u.email.toLowerCase().includes(q) ||
                     (u.mssv && u.mssv.toLowerCase().includes(q));
                 })
                 .length === 0 ? (
@@ -3205,9 +3144,9 @@ function AdminDashboardContent() {
                   .filter(u => u.role === 'STUDENT')
                   .filter(u => {
                     const q = searchQuery.toLowerCase().trim();
-                    return !q || 
-                      u.fullName.toLowerCase().includes(q) || 
-                      u.email.toLowerCase().includes(q) || 
+                    return !q ||
+                      u.fullName.toLowerCase().includes(q) ||
+                      u.email.toLowerCase().includes(q) ||
                       (u.mssv && u.mssv.toLowerCase().includes(q));
                   })
                   .map((u) => {
@@ -3331,10 +3270,9 @@ function AdminDashboardContent() {
                         <div key={tx.id} className="p-3.5 bg-slate-900 border border-slate-800 rounded-2xl space-y-2">
                           <div className="flex justify-between items-start gap-2 border-b border-slate-800/80 pb-2">
                             <div>
-                              <span className={`text-[9px] font-bold px-2 py-0.5 rounded-md inline-block ${
-                                tx.type === 'DEPOSIT' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
-                                'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                              }`}>
+                              <span className={`text-[9px] font-bold px-2 py-0.5 rounded-md inline-block ${tx.type === 'DEPOSIT' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
+                                  'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                                }`}>
                                 {tx.type === 'DEPOSIT' ? 'NẠP TIỀN TỰ ĐỘNG' : 'ADMIN ĐIỀU CHỈNH'}
                               </span>
                               <p className="font-mono font-bold text-white text-xs mt-1">#{tx.transactionCode}</p>
@@ -3349,7 +3287,7 @@ function AdminDashboardContent() {
                                   Chờ duyệt
                                 </span>
                               ) : (
-                                <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/20 whitespace-nowrap inline-block">
+                                <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-red-500/15 text-red-500 border border-red-500/30 whitespace-nowrap inline-block">
                                   Từ chối
                                 </span>
                               )}
@@ -3362,7 +3300,9 @@ function AdminDashboardContent() {
                               <p className="text-[10px] text-slate-400 font-mono">{tx.user?.email} {tx.user?.mssv ? `• ${tx.user.mssv}` : ''}</p>
                             </div>
                             <div className="text-right font-mono shrink-0 whitespace-nowrap">
-                              <p className="font-extrabold text-sm text-emerald-400 whitespace-nowrap">+{tx.amount.toLocaleString('vi-VN')}đ</p>
+                              <p className={`font-black text-sm whitespace-nowrap ${tx.amount < 0 ? 'text-red-500' : 'text-emerald-400'}`}>
+                                {tx.amount < 0 ? '-' : '+'}{Math.abs(tx.amount).toLocaleString('vi-VN')}đ
+                              </p>
                               {tx.bonusAmount > 0 && (
                                 <p className="text-[10px] text-orange-400 font-bold whitespace-nowrap">+{tx.bonusAmount.toLocaleString('vi-VN')}đ KM</p>
                               )}
@@ -3404,16 +3344,17 @@ function AdminDashboardContent() {
                                 <p className="text-[10px] text-slate-400">{tx.user?.email} {tx.user?.mssv ? `• ${tx.user.mssv}` : ''}</p>
                               </td>
                               <td className="px-4 py-3.5">
-                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
-                                  tx.type === 'DEPOSIT' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
-                                  'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                                }`}>
+                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${tx.type === 'DEPOSIT' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
+                                    'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                                  }`}>
                                   {tx.type === 'DEPOSIT' ? 'NẠP TIỀN TỰ ĐỘNG' : 'ADMIN ĐIỀU CHỈNH'}
                                 </span>
                                 <p className="text-[10px] text-slate-500 mt-0.5 max-w-xs truncate" title={tx.note || tx.paymentMethod}>{tx.note || tx.paymentMethod || 'VietQR / Bank'}</p>
                               </td>
                               <td className="px-4 py-3.5 text-right font-mono shrink-0 whitespace-nowrap">
-                                <p className="font-extrabold text-sm text-emerald-400 whitespace-nowrap">+{tx.amount.toLocaleString('vi-VN')}đ</p>
+                                <p className={`font-black text-sm whitespace-nowrap ${tx.amount < 0 ? 'text-red-500' : 'text-emerald-400'}`}>
+                                  {tx.amount < 0 ? '-' : '+'}{Math.abs(tx.amount).toLocaleString('vi-VN')}đ
+                                </p>
                                 {tx.bonusAmount > 0 && (
                                   <p className="text-[10px] text-orange-400 font-bold whitespace-nowrap">+{tx.bonusAmount.toLocaleString('vi-VN')}đ KM</p>
                                 )}
@@ -3428,7 +3369,7 @@ function AdminDashboardContent() {
                                     Chờ duyệt
                                   </span>
                                 ) : (
-                                  <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/20 whitespace-nowrap inline-block">
+                                  <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-red-500/15 text-red-500 border border-red-500/30 whitespace-nowrap inline-block">
                                     Từ chối
                                   </span>
                                 )}
@@ -3464,25 +3405,22 @@ function AdminDashboardContent() {
             <div className="flex items-center gap-1 bg-slate-955 p-1 rounded-xl border border-slate-800 self-start sm:self-auto overflow-x-auto max-w-full">
               <button
                 onClick={() => setReportStatusFilter('ALL')}
-                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
-                  reportStatusFilter === 'ALL' ? 'bg-orange-600 text-white shadow' : 'text-slate-400 hover:text-white'
-                }`}
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${reportStatusFilter === 'ALL' ? 'bg-orange-600 text-white shadow' : 'text-slate-400 hover:text-white'
+                  }`}
               >
                 Tất cả ({adminReports.length})
               </button>
               <button
                 onClick={() => setReportStatusFilter('PENDING')}
-                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
-                  reportStatusFilter === 'PENDING' ? 'bg-amber-600 text-white shadow' : 'text-slate-400 hover:text-white'
-                }`}
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${reportStatusFilter === 'PENDING' ? 'bg-amber-600 text-white shadow' : 'text-slate-400 hover:text-white'
+                  }`}
               >
                 Đang chờ ({adminReports.filter(r => r.status === 'PENDING').length})
               </button>
               <button
                 onClick={() => setReportStatusFilter('DEPOSIT_ERROR')}
-                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
-                  reportStatusFilter === 'DEPOSIT_ERROR' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'
-                }`}
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${reportStatusFilter === 'DEPOSIT_ERROR' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'
+                  }`}
               >
                 Lỗi nạp tiền ({adminReports.filter(r => r.type === 'DEPOSIT_ERROR').length})
               </button>
@@ -3532,9 +3470,8 @@ function AdminDashboardContent() {
                           )}
                         </td>
                         <td className="px-4 py-3.5">
-                          <span className={`text-[9px] font-bold px-2 py-0.5 rounded-md ${
-                            item.type === 'DEPOSIT_ERROR' ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30' : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
-                          }`}>
+                          <span className={`text-[9px] font-bold px-2 py-0.5 rounded-md ${item.type === 'DEPOSIT_ERROR' ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30' : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                            }`}>
                             {item.type === 'DEPOSIT_ERROR' ? 'LỖI NẠP TIỀN' : 'LỖI HỆ THỐNG'}
                           </span>
                           <p className="font-bold text-white text-xs mt-1">{item.title}</p>
@@ -3587,11 +3524,10 @@ function AdminDashboardContent() {
                               </button>
                             </div>
                           ) : (
-                            <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${
-                              item.status === 'APPROVED' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
-                              item.status === 'REJECTED' ? 'bg-red-500/10 text-red-400 border border-red-500/20' :
-                              'bg-blue-500/10 text-blue-400 border border-blue-500/20'
-                            }`}>
+                            <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${item.status === 'APPROVED' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
+                                item.status === 'REJECTED' ? 'bg-red-500/10 text-red-400 border border-red-500/20' :
+                                  'bg-blue-500/10 text-blue-400 border border-blue-500/20'
+                              }`}>
                               {item.status === 'APPROVED' ? 'Đã cộng tiền ví' : item.status === 'REJECTED' ? 'Đã từ chối' : 'Đã giải quyết'}
                             </span>
                           )}
@@ -3629,9 +3565,8 @@ function AdminDashboardContent() {
                         <p className="font-extrabold text-xs text-white">{item.user?.fullName}</p>
                         <p className="text-[10px] text-slate-400">{item.user?.email} {item.user?.mssv ? `• ${item.user.mssv}` : ''}</p>
                       </div>
-                      <span className={`text-[9px] font-bold px-2 py-0.5 rounded ${
-                        item.type === 'DEPOSIT_ERROR' ? 'bg-orange-500/20 text-orange-400' : 'bg-blue-500/20 text-blue-400'
-                      }`}>
+                      <span className={`text-[9px] font-bold px-2 py-0.5 rounded ${item.type === 'DEPOSIT_ERROR' ? 'bg-orange-500/20 text-orange-400' : 'bg-blue-500/20 text-blue-400'
+                        }`}>
                         {item.type === 'DEPOSIT_ERROR' ? 'Lỗi nạp tiền' : 'Lỗi hệ thống'}
                       </span>
                     </div>
@@ -3693,7 +3628,7 @@ function AdminDashboardContent() {
         <div className="bg-slate-900/60 backdrop-blur-xl border border-slate-800 p-5 rounded-3xl shadow-xl space-y-4">
           <h2 className="text-md font-bold text-white flex items-center gap-2">
             <Star className="text-yellow-500 fill-yellow-500" size={18} />
-            Đánh Giá Dịch Vụ Từ Sinh Viên ({feedbacks.length})
+            Đánh Giá Dịch Vụ Từ Khách Hàng ({feedbacks.length})
           </h2>
 
           {feedbacks.length === 0 ? (
@@ -3707,10 +3642,10 @@ function AdminDashboardContent() {
                       <span className="text-xs font-bold text-slate-200">{f.student?.fullName || 'Sinh viên'}</span>
                       <div className="flex items-center gap-0.5">
                         {[1, 2, 3, 4, 5].map((s) => (
-                          <Star 
-                            key={s} 
-                            size={12} 
-                            className={s <= f.rating ? 'text-yellow-500 fill-yellow-500' : 'text-slate-800'} 
+                          <Star
+                            key={s}
+                            size={12}
+                            className={s <= f.rating ? 'text-yellow-500 fill-yellow-500' : 'text-slate-800'}
                           />
                         ))}
                       </div>
@@ -3731,20 +3666,20 @@ function AdminDashboardContent() {
 
       {/* FULLSCREEN IMAGE OVERLAY */}
       {fullscreenImage && (
-        <div 
+        <div
           className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4"
           onClick={() => setFullscreenImage(null)}
         >
-          <button 
+          <button
             className="absolute top-4 right-4 text-white hover:text-slate-300 p-2 cursor-pointer bg-slate-900/50 rounded-full"
             onClick={() => setFullscreenImage(null)}
           >
             <X size={24} />
           </button>
           <div className="relative max-w-full max-h-[85vh] flex items-center justify-center">
-            <img 
-              src={fullscreenImage} 
-              alt="Ảnh đơn hàng phóng to" 
+            <img
+              src={fullscreenImage}
+              alt="Ảnh đơn hàng phóng to"
               className="max-w-full max-h-[85vh] object-contain rounded-2xl border border-slate-800 shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             />

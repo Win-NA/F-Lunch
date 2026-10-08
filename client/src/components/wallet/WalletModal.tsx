@@ -730,17 +730,17 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
                       ? 'rgba(16, 185, 129, 0.2)'
                       : isPending
                       ? 'rgba(245, 158, 11, 0.2)'
-                      : 'rgba(239, 68, 68, 0.2)';
+                      : 'rgba(239, 68, 68, 0.25)';
                     const badgeColor = isApproved
                       ? '#34d399'
                       : isPending
                       ? '#fcd34d'
-                      : '#fca5a5';
+                      : '#ef4444';
                     const badgeBorder = isApproved
                       ? 'rgba(16, 185, 129, 0.4)'
                       : isPending
                       ? 'rgba(245, 158, 11, 0.4)'
-                      : 'rgba(239, 68, 68, 0.5)';
+                      : 'rgba(239, 68, 68, 0.6)';
                     const statusText = isApproved ? 'Thành công' : isPending ? 'Chờ duyệt' : (tx.type === 'DEPOSIT' ? 'Đã hủy' : 'Từ chối');
 
                     return (
@@ -782,7 +782,7 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
 
                         <div className="text-right shrink-0 whitespace-nowrap">
                           <p
-                            style={{ color: isPositive ? '#34d399' : '#f8fafc' }}
+                            style={{ color: isPositive ? '#34d399' : '#ef4444' }}
                             className="font-mono font-black text-base sm:text-xl whitespace-nowrap"
                           >
                             {isPositive ? '+' : '-'}{tx.amount.toLocaleString('vi-VN')} đ
