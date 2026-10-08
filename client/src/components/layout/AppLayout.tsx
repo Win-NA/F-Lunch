@@ -166,7 +166,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <div className="w-8 h-8 rounded-lg bg-orange-600 flex items-center justify-center font-bold text-base text-white shadow-md shadow-orange-600/25">
               FL
             </div>
-            <span className="font-extrabold text-sm tracking-wide text-white">F-LUNCH</span>
+            <div>
+              <span className="font-extrabold text-sm tracking-wide text-white block leading-tight">F-LUNCH</span>
+              {user.role !== 'STUDENT' && (
+                <span className="text-[9px] uppercase font-bold text-orange-500 tracking-wider block leading-none mt-0.5">
+                  {user.role === 'ADMIN' ? 'QUẢN TRỊ' : 'NGƯỜI NHẬN HỘ'}
+                </span>
+              )}
+            </div>
           </Link>
 
           <div className="flex items-center gap-2">
