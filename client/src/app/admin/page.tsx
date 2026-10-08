@@ -1295,9 +1295,14 @@ function AdminDashboardContent() {
                     {userTxModal.fullName}
                   </h3>
                 </div>
-                <p className="text-xs text-slate-400 mt-1">
-                  {userTxModal.email} {userTxModal.mssv ? `• MSSV: ${userTxModal.mssv}` : ''}
-                </p>
+                <div className="text-xs text-slate-400 mt-1 leading-normal">
+                  <span className="break-all">{userTxModal.email}</span>
+                  {userTxModal.mssv && (
+                    <span className="block text-[11px] text-slate-500 font-mono mt-0.5">
+                      MSSV: {userTxModal.mssv}
+                    </span>
+                  )}
+                </div>
               </div>
 
               {(() => {
@@ -1432,16 +1437,16 @@ function AdminDashboardContent() {
                           </div>
                         ) : (
                           adminActions.map((tx: any) => (
-                            <div key={tx.id} className="p-3 bg-slate-955 rounded-xl border border-slate-800 flex items-center justify-between text-xs hover:border-slate-700 transition-colors">
-                              <div>
-                                <div className="flex items-center gap-2">
-                                  <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                            <div key={tx.id} className="p-3 bg-slate-955 rounded-xl border border-slate-800 flex items-center justify-between text-xs hover:border-slate-700 transition-colors gap-2">
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 shrink-0 whitespace-nowrap">
                                     ADMIN ĐIỀU CHỈNH
                                   </span>
-                                  <span className="font-mono text-[10px] text-slate-400">#{tx.transactionCode}</span>
+                                  <span className="font-mono text-[10px] text-slate-400 shrink-0 whitespace-nowrap">#{tx.transactionCode}</span>
                                 </div>
-                                <p className="text-[10px] text-slate-300 mt-1 font-medium">{tx.note || 'Điều chỉnh số dư thành viên'}</p>
-                                <p className="text-[9px] text-slate-500 font-mono">{new Date(tx.createdAt).toLocaleString('vi-VN')}</p>
+                                <p className="text-[10px] text-slate-300 mt-1 font-medium break-words">{tx.note || 'Điều chỉnh số dư thành viên'}</p>
+                                <p className="text-[9px] text-slate-500 mt-0.5 font-mono">{new Date(tx.createdAt).toLocaleString('vi-VN')}</p>
                               </div>
                               <div className="text-right font-mono shrink-0 whitespace-nowrap pl-2">
                                 <p className={`font-black text-sm whitespace-nowrap ${tx.amount < 0 ? 'text-red-500' : 'text-emerald-400'}`}>
@@ -1553,10 +1558,10 @@ function AdminDashboardContent() {
                         return searchedUserTxs.map((tx: any) => {
                           const isNegative = tx.type === 'ORDER_PAYMENT';
                           return (
-                            <div key={tx.id} className="p-3 bg-slate-955 rounded-xl border border-slate-800 flex items-center justify-between text-xs hover:border-slate-700 transition-colors">
-                              <div>
-                                <div className="flex items-center gap-2">
-                                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${tx.type === 'DEPOSIT' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
+                            <div key={tx.id} className="p-3 bg-slate-955 rounded-xl border border-slate-800 flex items-center justify-between text-xs hover:border-slate-700 transition-colors gap-2">
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded shrink-0 whitespace-nowrap ${tx.type === 'DEPOSIT' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
                                       tx.type === 'ORDER_REFUND' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' :
                                         tx.type === 'ORDER_PAYMENT' ? 'bg-red-500/15 text-red-500 border border-red-500/30 font-bold' :
                                           'bg-amber-500/10 text-amber-400 border border-amber-500/20'
@@ -1566,9 +1571,9 @@ function AdminDashboardContent() {
                                         tx.type === 'ORDER_REFUND' ? 'HOÀN PHÍ HỦY ĐƠN' :
                                           tx.type === 'ADMIN_ADJUST' ? 'ADMIN ĐIỀU CHỈNH' : tx.type}
                                   </span>
-                                  <span className="font-mono text-[10px] text-slate-400">#{tx.transactionCode}</span>
+                                  <span className="font-mono text-[10px] text-slate-400 shrink-0 whitespace-nowrap">#{tx.transactionCode}</span>
                                 </div>
-                                <p className="text-[10px] text-slate-300 mt-1 font-medium">{tx.note || `Thực hiện qua ${tx.paymentMethod}`}</p>
+                                <p className="text-[10px] text-slate-300 mt-1 font-medium break-words">{tx.note || `Thực hiện qua ${tx.paymentMethod}`}</p>
                                 <p className="text-[9px] text-slate-500 mt-0.5 font-mono">{new Date(tx.createdAt).toLocaleString('vi-VN')}</p>
                               </div>
                               <div className="text-right font-mono shrink-0 whitespace-nowrap pl-2">
@@ -2905,27 +2910,30 @@ function AdminDashboardContent() {
 
                 return (
                   <div key={u.id} className="p-4 bg-slate-955 border border-slate-800 rounded-2xl space-y-3 shadow-sm">
-                    <div className="flex items-center justify-between border-b border-slate-850 pb-2.5">
-                      <div className="flex items-center gap-2.5">
+                    <div className="flex items-center justify-between gap-2 border-b border-slate-850 pb-2.5">
+                      <div className="flex items-center gap-2.5 min-w-0 flex-1">
                         <div className="w-8 h-8 rounded-full bg-orange-600/10 border border-orange-500/20 flex items-center justify-center font-bold text-xs text-orange-500 shrink-0">
                           {u.fullName ? u.fullName[0] : 'U'}
                         </div>
-                        <div>
-                          <p className="font-extrabold text-xs text-white flex items-center gap-1.5">
+                        <div className="min-w-0 flex-1">
+                          <p className="font-extrabold text-xs text-white flex items-center gap-1.5 truncate">
                             {u.fullName}
                             {isSelf && (
-                              <span className="px-1.5 py-0.2 text-[8px] bg-orange-600 text-white font-extrabold rounded-full">
+                              <span className="px-1.5 py-0.2 text-[8px] bg-orange-600 text-white font-extrabold rounded-full shrink-0 whitespace-nowrap">
                                 Bạn
                               </span>
                             )}
                           </p>
-                          <p className="text-[10px] text-slate-400">{u.email} {u.mssv ? `• MSSV: ${u.mssv}` : ''}</p>
+                          <div className="text-[10px] text-slate-400 mt-0.5 leading-tight">
+                            <span className="block truncate">{u.email}</span>
+                            {u.mssv && <span className="block text-[9.5px] text-slate-500 font-mono">MSSV: {u.mssv}</span>}
+                          </div>
                         </div>
                       </div>
 
-                      <div>
+                      <div className="shrink-0 ml-1">
                         {isSelf ? (
-                          <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-red-500/10 text-red-400 border border-red-500/20">
+                          <span className="text-[9px] font-bold px-2 py-1 rounded bg-red-500/15 text-red-500 border border-red-500/30 whitespace-nowrap inline-block">
                             QUẢN TRỊ
                           </span>
                         ) : (
@@ -2933,7 +2941,7 @@ function AdminDashboardContent() {
                             value={u.role}
                             onChange={(e) => handleRoleChange(u.id, e.target.value)}
                             disabled={btnLoading === u.id}
-                            className="bg-slate-955 border border-slate-800 rounded-lg px-2 py-1 text-[10px] font-bold text-slate-200 cursor-pointer"
+                            className="bg-slate-955 border border-slate-800 rounded-lg px-2 py-1 text-[10px] font-bold text-slate-200 cursor-pointer whitespace-nowrap"
                           >
                             <option value="STUDENT">SINH VIÊN</option>
                             <option value="RECEIVER">NHẬN HỘ</option>
@@ -3158,12 +3166,15 @@ function AdminDashboardContent() {
 
                     return (
                       <div key={u.id} className="p-4 bg-slate-955 border border-slate-800 rounded-2xl space-y-3 shadow-sm">
-                        <div className="flex items-center justify-between border-b border-slate-850 pb-2">
-                          <div>
-                            <p className="font-extrabold text-xs text-white">{u.fullName}</p>
-                            <p className="text-[10px] text-slate-400">{u.email} {u.mssv ? `• ${u.mssv}` : ''}</p>
+                        <div className="flex items-center justify-between border-b border-slate-850 pb-2 gap-2">
+                          <div className="min-w-0 flex-1">
+                            <p className="font-extrabold text-xs text-white truncate">{u.fullName}</p>
+                            <div className="text-[10px] text-slate-400 mt-0.5 leading-tight">
+                              <span className="block truncate">{u.email}</span>
+                              {u.mssv && <span className="block text-[9.5px] text-slate-500 font-mono">MSSV: {u.mssv}</span>}
+                            </div>
                           </div>
-                          <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-orange-500/20 text-orange-400 border border-orange-500/30">
+                          <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-orange-500/20 text-orange-400 border border-orange-500/30 shrink-0 whitespace-nowrap">
                             {getRoleLabel(u.role)}
                           </span>
                         </div>
