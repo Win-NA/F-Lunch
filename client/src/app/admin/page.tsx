@@ -1298,9 +1298,9 @@ function AdminDashboardContent() {
                     userTxModal.role === 'RECEIVER' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' :
                     'bg-red-500/10 text-red-400 border border-red-500/20'
                   }`}>
-                    {userTxModal.role === 'STUDENT' ? '🎓 Lịch Sử Sinh Viên (Nạp Ví & Phí Đơn)' :
-                     userTxModal.role === 'RECEIVER' ? '🛵 Lịch Sử Nhận Hộ (Giao Đơn & KPI)' :
-                     '🛡️ Nhật Ký Thao Tác Quản Trị Viên'}
+                    {userTxModal.role === 'STUDENT' ? 'Lịch sử Giao dịch Khách hàng' :
+                     userTxModal.role === 'RECEIVER' ? 'Lịch sử Giao nhận' :
+                     'Nhật ký Quản trị'}
                   </span>
                   <h3 className="text-base sm:text-lg font-extrabold text-white">
                     {userTxModal.fullName}
@@ -1518,7 +1518,7 @@ function AdminDashboardContent() {
                             userTxTypeFilter === 'DEPOSIT' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'
                           }`}
                         >
-                          💳 Nạp tiền & KM ({userTxs.filter(t => t.type === 'DEPOSIT' || t.type === 'ADMIN_ADJUST').length})
+                          Nạp tiền & KM ({userTxs.filter(t => t.type === 'DEPOSIT' || t.type === 'ADMIN_ADJUST').length})
                         </button>
                         <button
                           type="button"
@@ -1527,7 +1527,7 @@ function AdminDashboardContent() {
                             userTxTypeFilter === 'ORDER_PAYMENT' ? 'bg-rose-600 text-white shadow' : 'text-slate-400 hover:text-white'
                           }`}
                         >
-                          🍱 Phí thanh toán đơn ({orderPaymentCount})
+                          Phí thanh toán ({orderPaymentCount})
                         </button>
                       </div>
                       <div className="relative min-w-[180px]">
@@ -1631,7 +1631,7 @@ function AdminDashboardContent() {
               <div className="border-b border-slate-800 pb-3 pr-8 shrink-0">
                 <div className="flex items-center gap-2">
                   <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-orange-500/20 text-orange-400 border border-orange-500/30">
-                    {processReportModal.type === 'DEPOSIT_ERROR' ? '💳 Lỗi nạp tiền' : '🐛 Lỗi hệ thống'}
+                    {processReportModal.type === 'DEPOSIT_ERROR' ? 'Lỗi nạp tiền' : 'Lỗi hệ thống'}
                   </span>
                   <span className="text-[10px] text-slate-500 font-mono">#{processReportModal.id.slice(0, 8)}</span>
                 </div>
@@ -1662,7 +1662,7 @@ function AdminDashboardContent() {
                       processAction === 'REJECTED' ? 'bg-red-600 text-white shadow' : 'text-slate-400 hover:text-white'
                     }`}
                   >
-                    ❌ Từ Chối
+                    Từ Chối
                   </button>
                   <button
                     type="button"
@@ -1671,7 +1671,7 @@ function AdminDashboardContent() {
                       processAction === 'RESOLVED' ? 'bg-blue-600 text-white shadow' : 'text-slate-400 hover:text-white'
                     }`}
                   >
-                    🟢 Đã Giải Quyết
+                    Đã Giải Quyết
                   </button>
                 </div>
 
@@ -2900,7 +2900,7 @@ function AdminDashboardContent() {
                               className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 border border-blue-500/20 transition-all cursor-pointer whitespace-nowrap"
                               title="Xem chi tiết lịch sử nạp tiền & giao dịch của thành viên"
                             >
-                              📋 Lịch Sử
+                              Lịch Sử
                             </button>
                             <button
                               onClick={() => openAdjustModal(u, 'ADD')}
@@ -3022,7 +3022,7 @@ function AdminDashboardContent() {
                           onClick={() => setUserTxModal(u)}
                           className="px-2 py-1 rounded-lg text-[10px] font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20"
                         >
-                          📋 Lịch sử
+                          Lịch sử
                         </button>
                         <button
                           onClick={() => openAdjustModal(u, 'ADD')}
@@ -3173,7 +3173,7 @@ function AdminDashboardContent() {
                                   className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/20 transition-all cursor-pointer whitespace-nowrap"
                                   title="Xem lịch sử nạp tiền"
                                 >
-                                  📋 Lịch Sử
+                                  Lịch Sử
                                 </button>
                               </div>
                             </td>
@@ -3256,7 +3256,7 @@ function AdminDashboardContent() {
                               onClick={() => setUserTxModal(u)}
                               className="px-2 py-1 rounded-lg text-[10px] font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20"
                             >
-                              📋 Lịch sử
+                              Lịch sử
                             </button>
                           </div>
                           <span className="text-xs font-black text-white font-mono">
@@ -3342,15 +3342,15 @@ function AdminDashboardContent() {
                             <div className="text-right shrink-0 whitespace-nowrap">
                               {tx.status === 'APPROVED' ? (
                                 <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 whitespace-nowrap inline-block">
-                                  ✅ Thành công
+                                  Thành công
                                 </span>
                               ) : tx.status === 'PENDING' ? (
                                 <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 whitespace-nowrap inline-block">
-                                  ⏳ Chờ duyệt
+                                  Chờ duyệt
                                 </span>
                               ) : (
                                 <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/20 whitespace-nowrap inline-block">
-                                  ❌ Từ chối
+                                  Từ chối
                                 </span>
                               )}
                             </div>
@@ -3421,15 +3421,15 @@ function AdminDashboardContent() {
                               <td className="px-4 py-3.5 text-right shrink-0 whitespace-nowrap">
                                 {tx.status === 'APPROVED' ? (
                                   <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 whitespace-nowrap inline-block">
-                                    ✅ Thành công
+                                    Thành công
                                   </span>
                                 ) : tx.status === 'PENDING' ? (
                                   <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 whitespace-nowrap inline-block">
-                                    ⏳ Chờ duyệt
+                                    Chờ duyệt
                                   </span>
                                 ) : (
                                   <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/20 whitespace-nowrap inline-block">
-                                    ❌ Từ chối
+                                    Từ chối
                                   </span>
                                 )}
                               </td>
@@ -3535,7 +3535,7 @@ function AdminDashboardContent() {
                           <span className={`text-[9px] font-bold px-2 py-0.5 rounded-md ${
                             item.type === 'DEPOSIT_ERROR' ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30' : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
                           }`}>
-                            {item.type === 'DEPOSIT_ERROR' ? '💳 LỖI NẠP TIỀN' : '🐛 LỖI HỆ THỐNG'}
+                            {item.type === 'DEPOSIT_ERROR' ? 'LỖI NẠP TIỀN' : 'LỖI HỆ THỐNG'}
                           </span>
                           <p className="font-bold text-white text-xs mt-1">{item.title}</p>
                           <p className="text-[9px] text-slate-500 font-mono">{new Date(item.createdAt).toLocaleString('vi-VN')}</p>
@@ -3562,7 +3562,7 @@ function AdminDashboardContent() {
                               onClick={() => setFullscreenImage(item.proofImage!)}
                               className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-orange-500/10 text-orange-400 border border-orange-500/20 hover:bg-orange-500/20 transition-all cursor-pointer inline-flex items-center gap-1"
                             >
-                              🔍 Xem ảnh CK
+                              Xem chứng từ
                             </button>
                           ) : (
                             <span className="text-[10px] text-slate-500 italic">Không có ảnh</span>
@@ -3576,14 +3576,14 @@ function AdminDashboardContent() {
                                 className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 transition-all cursor-pointer whitespace-nowrap"
                                 title="Duyệt chứng từ & Cộng tiền ví"
                               >
-                                ✅ Duyệt Cộng Tiền
+                                Duyệt Cộng Tiền
                               </button>
                               <button
                                 onClick={() => openProcessReportModal(item, 'REJECTED')}
                                 className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 transition-all cursor-pointer whitespace-nowrap"
                                 title="Từ chối khiếu nại"
                               >
-                                ❌ Từ chối
+                                Từ chối
                               </button>
                             </div>
                           ) : (
@@ -3632,7 +3632,7 @@ function AdminDashboardContent() {
                       <span className={`text-[9px] font-bold px-2 py-0.5 rounded ${
                         item.type === 'DEPOSIT_ERROR' ? 'bg-orange-500/20 text-orange-400' : 'bg-blue-500/20 text-blue-400'
                       }`}>
-                        {item.type === 'DEPOSIT_ERROR' ? '💳 Lỗi nạp tiền' : '🐛 Lỗi hệ thống'}
+                        {item.type === 'DEPOSIT_ERROR' ? 'Lỗi nạp tiền' : 'Lỗi hệ thống'}
                       </span>
                     </div>
 
@@ -3654,7 +3654,7 @@ function AdminDashboardContent() {
                           onClick={() => setFullscreenImage(item.proofImage!)}
                           className="px-2 py-1 rounded text-[10px] font-bold bg-orange-500/10 text-orange-400 border border-orange-500/20"
                         >
-                          🔍 Xem ảnh CK
+                          Xem chứng từ
                         </button>
                       ) : (
                         <span className="text-[10px] text-slate-500 italic">Không có ảnh</span>
@@ -3677,7 +3677,7 @@ function AdminDashboardContent() {
                         </div>
                       ) : (
                         <span className="text-[10px] font-bold text-slate-400">
-                          {item.status === 'APPROVED' ? '✅ Đã cộng tiền' : '❌ Từ chối'}
+                          {item.status === 'APPROVED' ? 'Đã cộng tiền' : 'Từ chối'}
                         </span>
                       )}
                     </div>

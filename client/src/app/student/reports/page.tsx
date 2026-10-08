@@ -318,7 +318,7 @@ export default function StudentReportsPage() {
                         <span className={`text-[9px] font-bold px-2 py-0.5 rounded ${
                           item.type === 'DEPOSIT_ERROR' ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30' : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
                         }`}>
-                          {item.type === 'DEPOSIT_ERROR' ? '💳 Lỗi nạp tiền' : '🐛 Lỗi hệ thống'}
+                          {item.type === 'DEPOSIT_ERROR' ? 'Lỗi nạp tiền' : 'Lỗi hệ thống'}
                         </span>
                         <span className="text-[10px] text-slate-500">#{item.id.slice(0, 8)}</span>
                       </div>

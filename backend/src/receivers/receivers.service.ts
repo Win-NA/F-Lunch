@@ -86,7 +86,7 @@ export class ReceiversService {
       data: {
         userId: request.studentId,
         requestId,
-        title: 'Đơn hàng đã được tiếp nhận! 🤝',
+        title: 'Đơn hàng đã được tiếp nhận',
         message: `Người nhận hộ ${receiver.fullName} đã nhận đơn ${request.foodPlatform} của bạn và đang di chuyển tới ${request.pickupLocation}.`,
         type: NotificationType.SUCCESS,
       },
@@ -97,7 +97,7 @@ export class ReceiversService {
       data: {
         userId: receiverId,
         requestId,
-        title: 'Nhận đơn thành công! 🚴',
+        title: 'Tiếp nhận đơn hàng thành công',
         message: `Bạn đã nhận thành công đơn ${request.foodPlatform} của sinh viên ${updated.student.fullName}. Vui lòng tới ${request.pickupLocation} để lấy đồ từ tài xế.`,
         type: NotificationType.SUCCESS,
       },
@@ -143,11 +143,11 @@ export class ReceiversService {
     let title = '';
     let message = '';
     if (status === RequestStatus.RECEIVED) {
-      title = 'Đã lấy đồ ăn từ tài xế 🛵';
+      title = 'Đã tiếp nhận đồ ăn từ tài xế';
       message = `Người nhận hộ ${request.receiver?.fullName || 'Người nhận'} đã lấy đồ ăn ${request.foodPlatform} từ tài xế shipper thành công.`;
     } else if (status === RequestStatus.READY_FOR_PICKUP) {
-      title = 'Đã về tới sảnh - Hãy ra nhận đồ! 🥡';
-      message = `Đồ ăn của bạn đã về tới ${request.dropoffLocation || 'Sảnh Trống Đồng'}. Vui lòng mở ứng dụng và đưa mã QR cho người nhận hộ để lấy đồ nhé!`;
+      title = 'Đơn hàng đã về tới điểm hẹn';
+      message = `Đồ ăn của bạn đã về tới ${request.dropoffLocation || 'Sảnh Trống Đồng'}. Vui lòng mở ứng dụng và đưa mã QR cho người nhận hộ để lấy đồ.`;
     }
 
     await this.prisma.notification.create({
@@ -238,7 +238,7 @@ export class ReceiversService {
       data: {
         userId: request.studentId,
         requestId: request.id,
-        title: 'Đơn hàng đã hoàn thành! 🎉',
+        title: 'Đơn hàng đã hoàn thành',
         message: `Đơn nhận hộ ${request.foodPlatform} đã bàn giao thành công. Cảm ơn bạn đã sử dụng F-Lunch! Hãy để lại đánh giá dịch vụ nhé.`,
         type: NotificationType.SUCCESS,
       },
@@ -250,7 +250,7 @@ export class ReceiversService {
       data: {
         userId: receiverId,
         requestId: request.id,
-        title: 'Giao đơn thành công! 💰',
+        title: 'Giao đơn thành công',
         message: `Bạn đã hoàn thành đơn thứ ${currentOrderNum} trong ngày cho sinh viên ${request.student.fullName}. Thu nhập +${earningAmount.toLocaleString('vi-VN')}đ${bonusNotice} đã được cộng vào ví.`,
         type: NotificationType.SUCCESS,
       },
@@ -339,7 +339,7 @@ export class ReceiversService {
         data: {
           userId: request.studentId,
           requestId,
-          title: 'Đơn nhận hộ đã bị từ chối / hủy ❌',
+          title: 'Đơn nhận hộ đã bị hủy',
           message: `Người nhận hộ ${receiverName} đã từ chối nhận đơn ${request.foodPlatform} của bạn. Phí 5.000đ đã được hoàn lại vào Ví chính!`,
           type: NotificationType.WARNING,
         },
@@ -350,7 +350,7 @@ export class ReceiversService {
         data: {
           userId: receiverId,
           requestId,
-          title: 'Đã hủy / từ chối đơn thành công 🚫',
+          title: 'Đã hủy đơn thành công',
           message: `Bạn đã từ chối / hủy đơn hàng ${request.foodPlatform} (#${request.orderCode || request.id.slice(0, 8)}). Phí 5.000đ đã được hoàn lại cho sinh viên.`,
           type: NotificationType.SYSTEM,
         },

@@ -59,7 +59,7 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
         const newTotalBal = (res.data.realBalance || 0) + (res.data.bonusBalance || 0);
         if (prevBalanceRef.current !== null && newTotalBal > prevBalanceRef.current) {
           const added = newTotalBal - prevBalanceRef.current;
-          toast.success(`🎉 Nạp tiền thành công! +${added.toLocaleString('vi-VN')} đ`);
+          toast.success(`Giao dịch thành công. Số dư ví đã được cộng +${added.toLocaleString('vi-VN')} đ`);
           fetchHistory();
         }
         prevBalanceRef.current = newTotalBal;
@@ -567,7 +567,7 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
                             }} 
                             className="px-3.5 py-2 rounded-2xl border-2 text-xs sm:text-sm font-black flex items-center gap-1.5 whitespace-nowrap w-full sm:w-auto justify-center"
                           >
-                            <span>⚠️ Đã hết hạn</span>
+                            <span>Đã hết hạn</span>
                           </div>
                         )}
                       </div>

@@ -838,10 +838,10 @@ export default function RequestDetailPage() {
                 </div>
                 <div>
                   <h3 className="text-sm sm:text-base font-black text-orange-400 uppercase tracking-wide">
-                    ĐÃ CÓ NGƯỜI NHẬN HỘ ĐƠN HÀNG!
+                    Đã phân công người nhận hộ
                   </h3>
                   <p className="text-[11px] text-slate-300 font-medium">
-                    Vui lòng thực hiện bước hướng dẫn quan trọng dưới đây
+                    Hướng dẫn liên hệ tài xế giao hàng
                   </p>
                 </div>
               </div>
@@ -854,20 +854,20 @@ export default function RequestDetailPage() {
             </div>
 
             <div className="space-y-3 text-xs sm:text-sm text-slate-200 leading-relaxed">
-              <div className="p-3.5 bg-slate-950 border border-orange-500/40 rounded-2xl space-y-1.5">
+              <div className="p-3.5 bg-slate-955 border border-orange-500/40 rounded-2xl space-y-1.5">
                 <p className="font-extrabold text-orange-400 text-xs sm:text-sm">
-                  👤 Người nhận hộ: <span className="text-white font-black">{request.receiver.fullName}</span>
+                  Người nhận hộ: <span className="text-white font-black">{request.receiver.fullName}</span>
                 </p>
                 <p className="font-semibold text-slate-200 text-xs">
-                  📞 Số điện thoại: <span className="text-orange-400 font-bold">{request.receiver.phoneNumber || 'Chưa cập nhật'}</span>
+                  Số điện thoại: <span className="text-orange-400 font-bold">{request.receiver.phoneNumber || 'Chưa cập nhật'}</span>
                 </p>
                 <p className="text-xs text-slate-300">
-                  📍 Vị trí giao: <span className="text-orange-400 font-bold">{request.pickupLocation || 'Cổng 1 FPT'}</span>
+                  Địa điểm giao: <span className="text-orange-400 font-bold">{request.pickupLocation || 'Cổng 1 FPT'}</span>
                 </p>
               </div>
 
               <p className="font-medium text-slate-200">
-                ⚠️ <strong className="text-amber-400">Lưu ý bắt buộc:</strong> Tài xế <strong className="text-white">{request.foodPlatform}</strong> không sử dụng ứng dụng F-Lunch. Bạn cần <strong className="text-orange-400 underline">gửi tin nhắn bên dưới cho tài xế</strong> để tài xế liên hệ trực tiếp cho người nhận hộ khi tới nơi!
+                <strong className="text-amber-400">Lưu ý:</strong> Tài xế <strong className="text-white">{request.foodPlatform}</strong> không sử dụng ứng dụng F-Lunch. Bạn cần gửi tin nhắn mẫu bên dưới cho tài xế để tài xế chủ động liên hệ với người nhận hộ khi tới điểm giao.
               </p>
 
               {/* Highlighted Message Box */}

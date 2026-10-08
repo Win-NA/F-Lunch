@@ -611,7 +611,7 @@ export default function StudentDashboard() {
                       </p>
                       {aiPowered && (
                         <div className="inline-flex items-center gap-1 bg-emerald-500/15 text-emerald-400 px-2 py-0.5 rounded text-[9px] font-medium border border-emerald-500/20 mt-0.5">
-                          🤖 Kiểm duyệt bởi AI Gemini Vision
+                          Kiểm duyệt tự động Gemini Vision
                         </div>
                       )}
                     </div>
@@ -632,15 +632,15 @@ export default function StudentDashboard() {
                 </div>
               </div>
 
-              <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 text-[10px] space-y-1.5">
+              <div className="bg-slate-955 p-3 rounded-xl border border-slate-800 text-[10px] space-y-1.5">
                 <div className="flex justify-between items-center text-slate-300">
                   <span className="flex items-center gap-1 font-medium">
                     <Wallet size={12} className="text-orange-500" /> Phí nhận hộ:
                   </span>
-                  <span className="font-mono font-black text-orange-400 text-xs">5.000 đ</span>
+                  <span className="font-mono font-black text-orange-400 text-xs">5.000 VNĐ</span>
                 </div>
                 <p className="text-[9.5px] text-slate-400 leading-normal border-t border-slate-900 pt-1.5">
-                  💡 <span className="text-orange-400 font-semibold">Ưu tiên trừ Ví Khuyến Mãi trước</span>. Trường hợp số dư Ví KM không đủ 5.000đ, phần còn thiếu sẽ tự động trừ vào Ví Chính.
+                  <span className="text-orange-400 font-semibold">Hệ thống ưu tiên tự động trừ Ví Khuyến Mãi trước</span>, sau đó mới trừ Ví Chính.
                 </p>
               </div>
 

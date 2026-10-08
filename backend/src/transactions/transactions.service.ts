@@ -133,7 +133,7 @@ export class TransactionsService {
       await tx.notification.create({
         data: {
           userId,
-          title: 'Nạp tiền thành công! 🎉',
+          title: 'Giao dịch nạp tiền thành công',
           message: `Tài khoản vừa được cộng ${dto.amount.toLocaleString('vi-VN')}đ${bonusText}. Mã GD: ${transactionCode}`,
           type: NotificationType.SUCCESS,
         },
@@ -326,7 +326,7 @@ export class TransactionsService {
       await tx.notification.create({
         data: {
           userId: targetUserId,
-          title: 'Nạp tiền thành công! 🎉',
+          title: 'Giao dịch nạp tiền thành công',
           message: `Tài khoản vừa được cộng ${amount.toLocaleString('vi-VN')}đ${bonusText} qua VietinBank/MoMo. Mã GD: ${transactionCode}`,
           type: NotificationType.SUCCESS,
         },
@@ -482,7 +482,7 @@ export class TransactionsService {
         await tx.notification.create({
           data: {
             userId: transaction.userId,
-            title: 'Nạp tiền thành công! 🎉',
+            title: 'Giao dịch nạp tiền thành công',
             message: `Tài khoản của bạn đã được cộng ${transaction.amount.toLocaleString()}đ${bonusText}. Mã GD: ${transaction.transactionCode}`,
             type: NotificationType.SUCCESS,
           },
@@ -491,7 +491,7 @@ export class TransactionsService {
         await tx.notification.create({
           data: {
             userId: transaction.userId,
-            title: 'Rút tiền thành công! ✅',
+            title: 'Giao dịch rút tiền thành công',
             message: `Yêu cầu rút ${transaction.amount.toLocaleString()}đ về ${transaction.bankName} (${transaction.accountNumber}) đã được chuyển hoàn tất.`,
             type: NotificationType.SUCCESS,
           },
@@ -534,7 +534,7 @@ export class TransactionsService {
       await tx.notification.create({
         data: {
           userId: transaction.userId,
-          title: 'Giao dịch bị từ chối ⚠️',
+          title: 'Giao dịch bị từ chối',
           message: `Yêu cầu ${transaction.type === TransactionType.DEPOSIT ? 'nạp tiền' : 'rút tiền'} (${transaction.transactionCode}) đã bị từ chối. ${reason ? `Lý do: ${reason}` : ''}`,
           type: NotificationType.WARNING,
         },
@@ -576,7 +576,7 @@ export class TransactionsService {
       await tx.notification.create({
         data: {
           userId: dto.targetUserId,
-          title: 'Thay đổi số dư tài khoản 🔔',
+          title: 'Thay đổi số dư tài khoản',
           message: `Số dư ví của bạn vừa được điều chỉnh ${dto.amount > 0 ? '+' : ''}${dto.amount.toLocaleString()}đ (${dto.balanceType === 'REAL' ? 'Ví chính' : 'Ví KM'}). ${dto.note ? `Ghi chú: ${dto.note}` : ''}`,
           type: NotificationType.SYSTEM,
         },

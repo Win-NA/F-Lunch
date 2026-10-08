@@ -138,7 +138,7 @@ export class RequestsService {
         data: {
           userId: studentId,
           requestId: request.id,
-          title: 'Đơn hàng mới đã được tạo 🍱',
+          title: 'Đơn hàng mới đã được khởi tạo',
           message: `Đơn nhận hộ ${request.foodPlatform} (Mã: ${request.orderCode || 'N/A'}) đã tạo thành công. Phí dịch vụ 5.000đ.`,
           type: NotificationType.REQUEST,
         },
@@ -153,7 +153,7 @@ export class RequestsService {
           data: {
             userId: receiver.id,
             requestId: request.id,
-            title: '🍱 Đơn nhận hộ mới vừa đăng!',
+            title: 'Có đơn nhận hộ mới trên hệ thống',
             message: `Có đơn nhận hộ ${request.foodPlatform} mới tại ${request.pickupLocation}. Hãy vào Bàn làm việc để nhận đơn ngay!`,
             type: NotificationType.REQUEST,
           },

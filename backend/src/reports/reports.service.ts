@@ -53,7 +53,7 @@ export class ReportsService {
     await this.prisma.notification.create({
       data: {
         userId,
-        title: 'Đã gửi báo cáo sự cố 📩',
+        title: 'Yêu cầu hỗ trợ đã được ghi nhận',
         message: `Yêu cầu phản ánh #${report.id.slice(0, 8)} của bạn đã được ghi nhận. Ban quản trị sẽ đối chiếu chứng từ và phản hồi sớm nhất!`,
         type: NotificationType.SYSTEM,
       },
@@ -65,8 +65,8 @@ export class ReportsService {
       await this.prisma.notification.create({
         data: {
           userId: admin.id,
-          title: '📢 Khiếu nại / Báo cáo mới từ Sinh viên',
-          message: `Sinh viên ${user.fullName} vừa gửi phản ánh #${report.id.slice(0, 8)} (${report.type === 'DEPOSIT_ERROR' ? 'Lỗi nạp tiền' : 'Lỗi hệ thống'}). Hãy vào mục Duyệt Khiếu Nại để kiểm tra!`,
+          title: 'Báo cáo khiếu nại mới',
+          message: `Thành viên ${user.fullName} vừa gửi phản ánh #${report.id.slice(0, 8)} (${report.type === 'DEPOSIT_ERROR' ? 'Lỗi nạp tiền' : 'Lỗi hệ thống'}).`,
           type: NotificationType.WARNING,
         },
       });
@@ -173,7 +173,7 @@ export class ReportsService {
         await tx.notification.create({
           data: {
             userId: report.userId,
-            title: '🎉 Báo cáo nạp tiền đã được duyệt & Cộng tiền!',
+            title: 'Yêu cầu nạp tiền đã được phê duyệt',
             message: `Admin đã xác minh chứng từ nạp tiền của bạn ${report.transactionCode ? `(Mã CK: ${report.transactionCode})` : ''}. Số tiền ${creditAmount.toLocaleString('vi-VN')}đ đã được cộng vào ví chính.${extraBonus > 0 ? ` Tiền thưởng: ${extraBonus.toLocaleString('vi-VN')}đ.` : ''}`,
             type: NotificationType.SUCCESS,
           },
@@ -194,7 +194,7 @@ export class ReportsService {
         await tx.notification.create({
           data: {
             userId: report.userId,
-            title: '⚠️ Báo cáo sự cố bị từ chối',
+            title: 'Yêu cầu hỗ trợ bị từ chối',
             message: `Báo cáo #${report.id.slice(0, 8)} của bạn đã bị từ chối. Lý do từ Admin: ${updatedReport.adminNote}`,
             type: NotificationType.WARNING,
           },
@@ -216,7 +216,7 @@ export class ReportsService {
         await tx.notification.create({
           data: {
             userId: report.userId,
-            title: '✅ Sự cố hệ thống đã được giải quyết',
+            title: 'Sự cố đã được giải quyết',
             message: `Báo cáo #${report.id.slice(0, 8)} của bạn đã được giải quyết: ${updatedReport.adminNote}`,
             type: NotificationType.SUCCESS,
           },
