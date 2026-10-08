@@ -6,7 +6,7 @@ export class AdminService {
   constructor(private prisma: PrismaService) {}
 
   async getStats() {
-    const [totalRequests, totalUsers, totalReceivers, statusCounts, avgRatingResult] = await Promise.all([
+    const [totalRequests, totalUsers, totalReceivers, statusCounts, avgRatingResult, categoryCounts] = await Promise.all([
       this.prisma.receivingRequest.count(),
       this.prisma.user.count(),
       this.prisma.user.count({ where: { role: 'RECEIVER', status: 'ACTIVE' } }),
@@ -19,10 +19,19 @@ export class AdminService {
           rating: true,
         },
       }),
+      this.prisma.user.groupBy({
+        by: ['userCategory'],
+        _count: true,
+      }),
     ]);
 
     const statusDistribution = statusCounts.reduce((acc, curr) => {
       acc[curr.status] = curr._count;
+      return acc;
+    }, {} as Record<string, number>);
+
+    const categoryDistribution = categoryCounts.reduce((acc, curr) => {
+      acc[curr.userCategory] = curr._count;
       return acc;
     }, {} as Record<string, number>);
 
@@ -31,12 +40,13 @@ export class AdminService {
       totalUsers,
       activeReceivers: totalReceivers,
       statusDistribution,
+      categoryDistribution,
       averageRating: avgRatingResult._avg.rating || 0,
     };
   }
 
   async getAllRequests() {
-    return this.prisma.receivingRequest.findMany({
+    const requests = await this.prisma.receivingRequest.findMany({
       include: {
         student: {
           select: {
@@ -44,7 +54,8 @@ export class AdminService {
             fullName: true,
             email: true,
             phoneNumber: true,
-            mssv: true,
+            userCode: true,
+            userCategory: true,
           },
         },
         receiver: {
@@ -53,13 +64,20 @@ export class AdminService {
             fullName: true,
             email: true,
             phoneNumber: true,
-            mssv: true,
+            userCode: true,
+            userCategory: true,
           },
         },
         feedback: true,
       },
       orderBy: { createdAt: 'desc' },
     });
+
+    return requests.map((r) => ({
+      ...r,
+      student: r.student ? { ...r.student, mssv: r.student.userCode } : null,
+      receiver: r.receiver ? { ...r.receiver, mssv: r.receiver.userCode } : null,
+    }));
   }
 
   async getAllFeedbacks() {
@@ -90,7 +108,7 @@ export class AdminService {
         fullName: true,
         email: true,
         phoneNumber: true,
-        mssv: true,
+        userCode: true,
         status: true,
         realBalance: true,
         createdAt: true,

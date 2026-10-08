@@ -9,6 +9,11 @@ datasource db {
   provider = "postgresql"
 }
 
+enum UserCategory {
+  STUDENT
+  STAFF
+}
+
 enum UserRole {
   STUDENT
   RECEIVER
@@ -78,19 +83,20 @@ enum ReportStatus {
 }
 
 model User {
-  id           String     @id @default(uuid())
+  id           String       @id @default(uuid())
   fullName     String
-  email        String     @unique
+  email        String       @unique
   password     String
   phoneNumber  String?
   avatar       String?
-  mssv         String?
+  userCode     String?      @map("mssv")
+  userCategory UserCategory @default(STUDENT)
   role         UserRole
-  status       UserStatus @default(ACTIVE)
-  realBalance  Int        @default(0)
-  bonusBalance Int        @default(0)
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
+  status       UserStatus   @default(ACTIVE)
+  realBalance  Int          @default(0)
+  bonusBalance Int          @default(0)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
 
   studentRequests  ReceivingRequest[] @relation("StudentRequests")
   receiverRequests ReceivingRequest[] @relation("ReceiverRequests")

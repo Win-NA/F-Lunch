@@ -8,6 +8,8 @@ export interface User {
   role: 'STUDENT' | 'RECEIVER' | 'ADMIN';
   phoneNumber?: string | null;
   avatar?: string | null;
+  userCode?: string | null;
+  userCategory?: 'STUDENT' | 'STAFF';
   mssv?: string | null;
   realBalance?: number;
   bonusBalance?: number;

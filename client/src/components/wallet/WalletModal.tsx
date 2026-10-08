@@ -21,6 +21,9 @@ import {
   Search
 } from 'lucide-react';
 
+import { isProfileComplete } from '@/lib/profileGuard';
+import IncompleteProfileModal from '../profile/IncompleteProfileModal';
+
 interface WalletModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -248,6 +251,17 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
   }, [isOpen]);
 
   if (!isOpen || !user) return null;
+
+  if (!isProfileComplete(user)) {
+    return (
+      <IncompleteProfileModal
+        isOpen={isOpen}
+        onClose={onClose}
+        title="Yêu cầu Cập nhật Hồ sơ trước khi Nạp tiền"
+        message="Vui lòng cập nhật đầy đủ Số điện thoại, Chức vụ và Mã định danh (MSSV / Mã Cán bộ) để có thể khởi tạo mã QR Nạp tiền vào ví!"
+      />
+    );
+  }
 
   const realBal = user.realBalance || 0;
   const bonusBal = user.bonusBalance || 0;

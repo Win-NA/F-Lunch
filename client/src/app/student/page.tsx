@@ -23,6 +23,9 @@ import {
   MessageSquare
 } from 'lucide-react';
 
+import { isProfileComplete } from '@/lib/profileGuard';
+import IncompleteProfileModal from '@/components/profile/IncompleteProfileModal';
+
 interface RequestItem {
   id: string;
   foodPlatform: string;
@@ -46,6 +49,7 @@ export default function StudentDashboard() {
   const [loading, setLoading] = useState(true);
   const [activeSearchQuery, setActiveSearchQuery] = useState('');
   const [historySearchQuery, setHistorySearchQuery] = useState('');
+  const [isIncompleteProfileModalOpen, setIsIncompleteProfileModalOpen] = useState(false);
 
   const totalBal = user ? (user.realBalance || 0) + (user.bonusBalance || 0) : 0;
 
@@ -282,6 +286,10 @@ export default function StudentDashboard() {
 
   const handleCreateRequest = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isProfileComplete(user)) {
+      setIsIncompleteProfileModalOpen(true);
+      return;
+    }
     if (!pickupHour || !pickupMinute) {
       toast.error('Vui lòng chọn thời gian giao hàng');
       return;
@@ -878,6 +886,12 @@ export default function StudentDashboard() {
           </div>
         </div>
       </div>
+      <IncompleteProfileModal
+        isOpen={isIncompleteProfileModalOpen}
+        onClose={() => setIsIncompleteProfileModalOpen(false)}
+        title="Yêu cầu Cập nhật Hồ sơ trước khi Tạo đơn"
+        message="Vui lòng cập nhật đầy đủ Số điện thoại, Chức vụ và Mã định danh (MSSV / Mã Cán bộ) để có thể đăng đơn nhờ nhận hộ!"
+      />
     </div>
   );
 }

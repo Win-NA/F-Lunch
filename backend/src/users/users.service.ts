@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { UserStatus, UserRole } from '@prisma/client';
+import { UserStatus, UserRole, UserCategory } from '@prisma/client';
 
 @Injectable()
 export class UsersService {
@@ -14,10 +14,24 @@ export class UsersService {
       throw new NotFoundException('User not found');
     }
     const { password, ...result } = user;
-    return result;
+    return {
+      ...result,
+      mssv: user.userCode,
+    };
   }
 
-  async updateProfile(userId: string, dto: { fullName?: string; email?: string; phoneNumber?: string; avatar?: string; mssv?: string }) {
+  async updateProfile(
+    userId: string,
+    dto: {
+      fullName?: string;
+      email?: string;
+      phoneNumber?: string;
+      avatar?: string;
+      userCode?: string;
+      userCategory?: UserCategory;
+      mssv?: string;
+    },
+  ) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
     });
@@ -34,16 +48,17 @@ export class UsersService {
       }
     }
 
-    if (dto.mssv) {
-      const mssvUpper = dto.mssv.trim().toUpperCase();
-      const existingMssv = await this.prisma.user.findFirst({
+    const codeToUpdate = dto.userCode || dto.mssv;
+    if (codeToUpdate) {
+      const codeUpper = codeToUpdate.trim().toUpperCase();
+      const existingCode = await this.prisma.user.findFirst({
         where: {
-          mssv: mssvUpper,
+          userCode: codeUpper,
           id: { not: userId },
         },
       });
-      if (existingMssv) {
-        throw new BadRequestException('Mã số sinh viên (MSSV) này đã được sử dụng bởi tài khoản khác');
+      if (existingCode) {
+        throw new BadRequestException('Mã định danh (MSSV / Mã Cán bộ) này đã được sử dụng bởi tài khoản khác');
       }
     }
 
@@ -54,22 +69,27 @@ export class UsersService {
         email: dto.email,
         phoneNumber: dto.phoneNumber,
         avatar: dto.avatar,
-        mssv: dto.mssv,
+        userCode: codeToUpdate ? codeToUpdate.trim().toUpperCase() : undefined,
+        userCategory: dto.userCategory,
       },
     });
 
     const { password, ...result } = updated;
-    return result;
+    return {
+      ...result,
+      mssv: updated.userCode,
+    };
   }
 
   async findAll() {
-    return this.prisma.user.findMany({
+    const users = await this.prisma.user.findMany({
       select: {
         id: true,
         fullName: true,
         email: true,
         phoneNumber: true,
-        mssv: true,
+        userCode: true,
+        userCategory: true,
         role: true,
         status: true,
         realBalance: true,
@@ -79,6 +99,11 @@ export class UsersService {
       },
       orderBy: { createdAt: 'desc' },
     });
+
+    return users.map((u) => ({
+      ...u,
+      mssv: u.userCode,
+    }));
   }
 
   async toggleUserStatus(userId: string, status: UserStatus) {

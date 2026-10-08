@@ -18,7 +18,7 @@ export class UsersController {
   @Patch('profile')
   updateProfile(
     @Request() req: any,
-    @Body() dto: { fullName?: string; email?: string; phoneNumber?: string; avatar?: string; mssv?: string },
+    @Body() dto: { fullName?: string; email?: string; phoneNumber?: string; avatar?: string; userCode?: string; userCategory?: any; mssv?: string },
   ) {
     return this.usersService.updateProfile(req.user.id, dto);
   }

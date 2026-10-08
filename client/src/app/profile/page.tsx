@@ -30,7 +30,8 @@ export default function ProfilePage() {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [mssv, setMssv] = useState('');
+  const [userCategory, setUserCategory] = useState<'STUDENT' | 'STAFF'>('STUDENT');
+  const [userCode, setUserCode] = useState('');
   const [avatar, setAvatar] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -41,7 +42,8 @@ export default function ProfilePage() {
       setFullName(res.data.fullName || '');
       setEmail(res.data.email || '');
       setPhoneNumber(res.data.phoneNumber || '');
-      setMssv(res.data.mssv || '');
+      setUserCategory(res.data.userCategory || 'STUDENT');
+      setUserCode(res.data.userCode || res.data.mssv || '');
       setAvatar(res.data.avatar || null);
     } catch (err: any) {
       if (err.response && err.response.status !== 401 && err.response.status !== 403 && useAuthStore.getState().accessToken) {
@@ -67,7 +69,7 @@ export default function ProfilePage() {
   const getRoleLabel = (r: string) => {
     if (r === 'ADMIN') return 'QUẢN TRỊ VIÊN';
     if (r === 'RECEIVER') return 'NGƯỜI NHẬN HỘ';
-    return 'SINH VIÊN';
+    return 'NGƯỜI ĐẶT HÀNG';
   };
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -95,22 +97,26 @@ export default function ProfilePage() {
       toast.error('Email không được để trống');
       return;
     }
-    if (mssv.trim()) {
-      const mssvUpper = mssv.trim().toUpperCase();
-      const regex = /^[A-Z]{2}\d{6}$/;
-      if (!regex.test(mssvUpper)) {
-        toast.error('Mã số sinh viên (MSSV) không đúng định dạng (Ví dụ: SE123456, HE181234...)');
-        return;
-      }
+    if (!phoneNumber.trim() || phoneNumber.trim().length < 8) {
+      toast.error('Vui lòng nhập số điện thoại hợp lệ');
+      return;
     }
+    if (!userCode.trim()) {
+      toast.error('Mã định danh (MSSV / Mã Cán bộ) không được để trống');
+      return;
+    }
+
+    const cleanCode = userCode.trim().toUpperCase();
 
     setSaving(true);
     try {
       const res = await api.patch('/users/profile', {
         fullName,
         email,
-        phoneNumber: phoneNumber || null,
-        mssv: mssv ? mssv.toUpperCase() : null,
+        phoneNumber: phoneNumber.trim(),
+        userCategory,
+        userCode: cleanCode,
+        mssv: cleanCode,
         avatar,
       });
       updateUser(res.data);
@@ -208,24 +214,37 @@ export default function ProfilePage() {
 
               <div>
                 <label className="block text-[9px] font-semibold uppercase tracking-wider text-slate-550 mb-1">
-                  {user.role === 'ADMIN'
-                    ? 'Mã số Quản trị (Admin ID)'
-                    : user.role === 'RECEIVER'
-                    ? 'Mã số Sinh viên / Định danh'
-                    : 'Mã số Sinh viên (MSSV)'}
+                  Chức vụ / Đối tượng *
                 </label>
-                <input
-                  type="text"
-                  value={mssv}
-                  onChange={(e) => setMssv(e.target.value)}
-                  placeholder={user.role === 'ADMIN' ? 'Ví dụ: AD001, ADMIN...' : 'Ví dụ: SE123456, HE181234...'}
-                  className="w-full bg-slate-955 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-orange-500"
-                />
+                <select
+                  value={userCategory}
+                  onChange={(e) => setUserCategory(e.target.value as 'STUDENT' | 'STAFF')}
+                  className="w-full bg-slate-955 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-orange-500 cursor-pointer"
+                >
+                  <option value="STUDENT">Sinh viên Trường</option>
+                  <option value="STAFF">Cán bộ / Giảng viên / Nhân viên</option>
+                </select>
               </div>
 
               <div>
                 <label className="block text-[9px] font-semibold uppercase tracking-wider text-slate-550 mb-1">
-                  Số điện thoại
+                  {userCategory === 'STAFF' ? 'Mã Cán bộ / Giảng viên (User Code) *' : 'Mã số Sinh viên (MSSV) *'}
+                </label>
+                <input
+                  type="text"
+                  value={userCode}
+                  onChange={(e) => setUserCode(e.target.value)}
+                  placeholder={userCategory === 'STAFF' ? 'Ví dụ: NguyenTT, NguyenTT6, NamNV...' : 'Ví dụ: SE181234, HE170000...'}
+                  className="w-full bg-slate-955 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-orange-500 uppercase font-mono"
+                />
+                <p className="text-[9px] text-slate-500 mt-1">
+                  Mã này dùng làm cú pháp nạp tiền tự động: <span className="text-orange-400 font-mono font-bold">FLUNCH {userCode.trim().toUpperCase() || 'MÃ_SỐ'}</span>
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-[9px] font-semibold uppercase tracking-wider text-slate-550 mb-1">
+                  Số điện thoại liên hệ *
                 </label>
                 <input
                   type="text"
@@ -267,9 +286,14 @@ export default function ProfilePage() {
               </div>
               <div>
                 <h2 className="text-base font-bold text-white leading-tight">{user.fullName}</h2>
-                <span className="inline-block px-2.5 py-0.5 text-[9px] font-bold uppercase rounded-md bg-orange-500/10 text-orange-500 border border-orange-500/20 mt-1.5">
-                  {getRoleLabel(user.role)}
-                </span>
+                <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                  <span className="inline-block px-2.5 py-0.5 text-[9px] font-bold uppercase rounded-md bg-orange-500/10 text-orange-500 border border-orange-500/20">
+                    {getRoleLabel(user.role)}
+                  </span>
+                  <span className="inline-block px-2.5 py-0.5 text-[9px] font-bold uppercase rounded-md bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                    {user.userCategory === 'STAFF' ? 'CÁN BỘ / GIẢNG VIÊN' : 'SINH VIÊN'}
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -287,13 +311,9 @@ export default function ProfilePage() {
                 <IdCard className="text-slate-550 shrink-0" size={16} />
                 <div>
                   <p className="text-[9px] text-slate-550 font-semibold uppercase tracking-wider">
-                    {user.role === 'ADMIN'
-                      ? 'Mã số Quản trị'
-                      : user.role === 'RECEIVER'
-                      ? 'Mã số Sinh viên / Mã định danh'
-                      : 'Mã số Sinh viên (MSSV)'}
+                    Mã định danh (MSSV / Mã Cán bộ)
                   </p>
-                  <p className="text-xs font-semibold text-white mt-0.5">{user.mssv || 'Chưa cập nhật'}</p>
+                  <p className="text-xs font-semibold text-white mt-0.5">{user.userCode || user.mssv || 'Chưa cập nhật'}</p>
                 </div>
               </div>
 

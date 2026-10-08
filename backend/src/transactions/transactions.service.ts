@@ -212,10 +212,10 @@ export class TransactionsService {
     let targetUserId: string | null = null;
     let pendingTx: any = null;
 
-    // 1. ƯU TIÊN 1: Tìm Sinh viên theo đầy đủ MSSV (bao gồm cả chữ và số, ví dụ HE192402)
+    // 1. ƯU TIÊN 1: Tìm Người dùng theo Mã định danh userCode (MSSV hoặc Mã Cán bộ)
     let matchedUser = users.find(u => {
-      const mssvClean = u.mssv ? removeAccents(u.mssv) : '';
-      return mssvClean.length >= 3 && rawCleanMemo.includes(mssvClean);
+      const codeClean = u.userCode ? removeAccents(u.userCode) : '';
+      return codeClean.length >= 3 && rawCleanMemo.includes(codeClean);
     });
 
     if (matchedUser) {
@@ -442,7 +442,8 @@ export class TransactionsService {
             fullName: true,
             email: true,
             phoneNumber: true,
-            mssv: true,
+            userCode: true,
+            userCategory: true,
             realBalance: true,
             bonusBalance: true,
           },
