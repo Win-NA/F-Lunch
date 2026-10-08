@@ -237,9 +237,6 @@ export default function ProfilePage() {
                   placeholder={userCategory === 'STAFF' ? 'Ví dụ: NguyenTT, NguyenTT6, NamNV...' : 'Ví dụ: SE181234, HE170000...'}
                   className="w-full bg-slate-955 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-orange-500 uppercase font-mono"
                 />
-                <p className="text-[9px] text-slate-500 mt-1">
-                  Mã này dùng làm cú pháp nạp tiền tự động: <span className="text-orange-400 font-mono font-bold">FLUNCH {userCode.trim().toUpperCase() || 'MÃ_SỐ'}</span>
-                </p>
               </div>
 
               <div>
@@ -287,9 +284,11 @@ export default function ProfilePage() {
               <div>
                 <h2 className="text-base font-bold text-white leading-tight">{user.fullName}</h2>
                 <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
-                  <span className="inline-block px-2.5 py-0.5 text-[9px] font-bold uppercase rounded-md bg-orange-500/10 text-orange-500 border border-orange-500/20">
-                    {getRoleLabel(user.role)}
-                  </span>
+                  {user.role !== 'STUDENT' && (
+                    <span className="inline-block px-2.5 py-0.5 text-[9px] font-bold uppercase rounded-md bg-orange-500/10 text-orange-500 border border-orange-500/20">
+                      {getRoleLabel(user.role)}
+                    </span>
+                  )}
                   <span className="inline-block px-2.5 py-0.5 text-[9px] font-bold uppercase rounded-md bg-blue-500/10 text-blue-400 border border-blue-500/20">
                     {user.userCategory === 'STAFF' ? 'CÁN BỘ / GIẢNG VIÊN' : 'SINH VIÊN'}
                   </span>

@@ -108,7 +108,9 @@ export default function Sidebar({ onOpenWallet }: { onOpenWallet?: () => void })
           </div>
           <div>
             <h1 className="font-extrabold text-lg leading-tight text-white tracking-wide">F-LUNCH</h1>
-            <span className="text-[10px] uppercase font-bold text-orange-500 tracking-widest">{getRoleLabel(role)}</span>
+            {role !== 'STUDENT' && (
+              <span className="text-[10px] uppercase font-bold text-orange-500 tracking-widest">{getRoleLabel(role)}</span>
+            )}
           </div>
         </Link>
 
