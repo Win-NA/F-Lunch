@@ -1794,7 +1794,7 @@ function AdminDashboardContent() {
               </h1>
             </div>
             <p className="text-slate-400 text-xs pl-10">
-              Tổng hợp chỉ số doanh thu tài chính, thị phần nền tảng giao hàng, KPI người nhận hộ & hành vi đặt đơn của sinh viên
+              Tổng quan chỉ số hoạt động, doanh thu và quản lý đơn hàng tại FPTU.
             </p>
           </div>
 
@@ -2180,7 +2180,7 @@ function AdminDashboardContent() {
               <Shield className="text-orange-500" size={24} />
               Bảng Điều Khiển Quản Trị
             </h1>
-            <p className="text-slate-400 text-xs">Chạm trực tiếp vào các ô chỉ số bên dưới để xem mục tương ứng & kiểm soát KPI</p>
+            <p className="text-slate-400 text-xs">Tổng quan chỉ số hoạt động, doanh thu và quản lý đơn hàng tại FPTU.</p>
           </div>
 
           {activeCard !== 'ALL' && (
@@ -2220,12 +2220,12 @@ function AdminDashboardContent() {
                 </span>
               ) : (
                 <span className="text-[9px] text-slate-500 font-semibold group-hover:text-orange-400 flex items-center gap-0.5">
-                  Chạm xem <ChevronRight size={10} />
+                  Xem chi tiết <ChevronRight size={10} />
                 </span>
               )}
             </div>
             <div className="mt-3">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tổng Đơn Đã Đặt</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tổng Đơn Hàng</p>
               <p className="text-xl font-extrabold text-white mt-0.5">{stats.totalRequests}</p>
             </div>
           </div>
@@ -2249,7 +2249,7 @@ function AdminDashboardContent() {
                 </span>
               ) : (
                 <span className="text-[9px] text-slate-500 font-semibold group-hover:text-emerald-400 flex items-center gap-0.5">
-                  Chạm xem <ChevronRight size={10} />
+                  Báo cáo <ChevronRight size={10} />
                 </span>
               )}
             </div>
@@ -2281,7 +2281,7 @@ function AdminDashboardContent() {
                 </span>
               ) : (
                 <span className="text-[9px] text-slate-500 font-semibold group-hover:text-blue-400 flex items-center gap-0.5">
-                  KPI & Đơn <ChevronRight size={10} />
+                  Bảng lương <ChevronRight size={10} />
                 </span>
               )}
             </div>
@@ -2313,7 +2313,7 @@ function AdminDashboardContent() {
                 </span>
               ) : (
                 <span className="text-[9px] text-slate-500 font-semibold group-hover:text-purple-400 flex items-center gap-0.5">
-                  Chạm xem <ChevronRight size={10} />
+                  Danh sách thành viên <ChevronRight size={10} />
                 </span>
               )}
             </div>
@@ -2342,7 +2342,7 @@ function AdminDashboardContent() {
                 </span>
               ) : (
                 <span className="text-[9px] text-slate-500 font-semibold group-hover:text-orange-400 flex items-center gap-0.5">
-                  Lịch Sử & ±Tiền <ChevronRight size={10} />
+                  Quản lý số dư <ChevronRight size={10} />
                 </span>
               )}
             </div>
@@ -2373,7 +2373,7 @@ function AdminDashboardContent() {
                 </span>
               ) : (
                 <span className="text-[9px] text-slate-500 font-semibold group-hover:text-yellow-400 flex items-center gap-0.5">
-                  Chạm xem <ChevronRight size={10} />
+                  Phản hồi khách hàng <ChevronRight size={10} />
                 </span>
               )}
             </div>
@@ -2522,7 +2522,7 @@ function AdminDashboardContent() {
             <div>
               <h2 className="text-md font-bold text-white flex items-center gap-2">
                 <FileText className="text-orange-500" size={18} />
-                Danh Sách Tất Cả Đơn Hàng ({filteredRequests.length})
+                Danh sách Đơn hàng Toàn hệ thống ({filteredRequests.length})
               </h2>
               <p className="text-[11px] text-slate-400 mt-0.5">Xem chi tiết từng đơn hàng, trạng thái, người gửi, người nhận hộ và ảnh chụp</p>
             </div>
@@ -2562,7 +2562,7 @@ function AdminDashboardContent() {
               <thead className="text-[10px] text-slate-400 uppercase border-b border-slate-800 bg-slate-900/80">
                 <tr>
                   <th className="px-4 py-3.5 font-bold">Mã đơn / Ứng dụng</th>
-                  <th className="px-4 py-3.5 font-bold">Sinh viên gửi</th>
+                  <th className="px-4 py-3.5 font-bold">NGƯỜI ĐẶT</th>
                   <th className="px-4 py-3.5 font-bold">Người nhận hộ</th>
                   <th className="px-4 py-3.5 font-bold">Địa điểm</th>
                   <th className="px-4 py-3.5 font-bold">Giờ giao dự kiến</th>
@@ -2678,9 +2678,9 @@ function AdminDashboardContent() {
             <div>
               <h2 className="text-md font-bold text-white flex items-center gap-2">
                 <Users size={18} className="text-orange-500" />
-                Kiểm Duyệt Thành Viên, Đơn Đã Đặt (Sinh Viên) & KPI (Nhận Hộ) ({filteredUsers.length})
+                Danh sách Thành viên Hệ thống ({filteredUsers.length})
               </h2>
-              <p className="text-[11px] text-slate-400 mt-0.5">Thống kê số đơn sinh viên đã đặt & số đơn người nhận hộ đã làm để báo cáo CEO</p>
+              <p className="text-[11px] text-slate-400 mt-0.5">Quản lý vai trò, trạng thái và lịch sử hoạt động của thành viên.</p>
             </div>
 
             {/* Sub-filter by Role */}
@@ -3068,10 +3068,10 @@ function AdminDashboardContent() {
               <div>
                 <h2 className="text-md sm:text-lg font-extrabold text-white flex items-center gap-2">
                   <DollarSign className="text-orange-500" size={20} />
-                  Quản Lý Ví & Số Dư Sinh Viên ({users.filter(u => u.role === 'STUDENT').length})
+                  Quản lý Số dư Thành viên ({users.filter(u => u.role === 'STUDENT').length})
                 </h2>
                 <p className="text-[11px] sm:text-xs text-slate-400 mt-0.5">
-                  Danh sách tất cả sinh viên trong hệ thống (kể cả chưa có giao dịch). Admin có thể cộng/trừ tiền hoặc xem lịch sử ví cho từng sinh viên.
+                  Danh sách số dư tài khoản thành viên trong hệ thống.
                 </p>
               </div>
 
@@ -3453,10 +3453,10 @@ function AdminDashboardContent() {
             <div>
               <h2 className="text-md sm:text-lg font-extrabold text-white flex items-center gap-2">
                 <AlertTriangle className="text-orange-500" size={20} />
-                Duyệt Khiếu Nại Nạp Tiền & Báo Cáo Sự Cố ({adminReports.filter(r => r.status === 'PENDING').length} Đang Chờ)
+                Quản lý Báo cáo & Khiếu nại ({adminReports.filter(r => r.status === 'PENDING').length} Đang Chờ)
               </h2>
               <p className="text-[11px] sm:text-xs text-slate-400 mt-0.5">
-                Xem và duyệt ảnh chứng từ chuyển khoản sai nội dung của sinh viên để tự động cộng tiền vào ví chính.
+                Tiếp nhận và xử lý khiếu nại giao dịch, sự cố hệ thống.
               </p>
             </div>
 

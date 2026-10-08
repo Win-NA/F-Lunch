@@ -412,8 +412,8 @@ export default function StudentDashboard() {
   return (
     <div className="space-y-6 pb-6">
       <div>
-        <h1 className="text-2xl font-extrabold tracking-tight text-white font-sans">Trang Sinh viên</h1>
-        <p className="text-slate-450 text-xs mt-1">Quản lý và theo dõi các yêu cầu nhận hộ đơn hàng của bạn</p>
+        <h1 className="text-2xl font-extrabold tracking-tight text-white font-sans">Dịch vụ Nhận hộ F-Lunch</h1>
+        <p className="text-slate-450 text-xs mt-1">Tạo yêu cầu và theo dõi tiến độ giao nhận đồ ăn tại FPTU.</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -421,7 +421,7 @@ export default function StudentDashboard() {
         <div className="bg-slate-900/60 backdrop-blur-xl border border-slate-800 p-5 rounded-3xl shadow-xl h-fit">
           <h2 className="text-md font-bold text-white mb-4 flex items-center gap-2">
             <Plus className="text-orange-500" size={18} />
-            Tạo yêu cầu mới
+            Tạo đơn nhận hộ mới
           </h2>
 
           {hasActiveUnstoredRequest ? (
@@ -658,7 +658,7 @@ export default function StudentDashboard() {
                     ? 'Không thể gửi đơn KHÔNG PHẢI ĐỒ ĂN'
                     : paymentStatus === 'UNPAID'
                       ? 'Không thể gửi đơn Tiền mặt (COD)'
-                      : 'Gửi yêu cầu nhận hộ'}
+                      : 'Xác nhận Tạo đơn nhận hộ'}
               </button>
             </form>
           )}
@@ -669,7 +669,7 @@ export default function StudentDashboard() {
           {/* Active Requests */}
           <div className="bg-slate-900/60 backdrop-blur-xl border border-slate-800 p-5 rounded-3xl shadow-xl space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <h2 className="text-md font-bold text-white">Yêu cầu đang hoạt động ({activeRequests.length})</h2>
+              <h2 className="text-md font-bold text-white">Đơn hàng đang xử lý ({activeRequests.length})</h2>
               {activeRequests.length > 0 && (
                 <div className="relative w-full sm:w-64">
                   <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
@@ -697,7 +697,7 @@ export default function StudentDashboard() {
             ) : activeRequests.length === 0 ? (
               <div className="text-center py-10 border border-dashed border-slate-800 rounded-2xl">
                 <Pizza className="mx-auto text-slate-600 mb-2" size={28} />
-                <p className="text-slate-500 text-xs">Không có yêu cầu nào đang hoạt động. Hãy tạo đơn mới nhé!</p>
+                <p className="text-slate-500 text-xs">Hiện chưa có đơn hàng nào đang xử lý.</p>
               </div>
             ) : (
               (() => {

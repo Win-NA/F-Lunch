@@ -188,7 +188,7 @@ export default function ReceiverDashboard() {
     <div className="space-y-6 pb-12">
       <div>
         <h1 className="text-2xl font-extrabold tracking-tight text-white font-sans">Bàn làm việc Người nhận hộ</h1>
-        <p className="text-slate-400 text-xs mt-1">Chấp nhận nhận hộ và hoàn thành các đơn hàng của sinh viên</p>
+        <p className="text-slate-400 text-xs mt-1">Tiếp nhận và quản lý tiến độ giao nhận các đơn hàng tại FPTU.</p>
       </div>
 
       {/* Receiver Statistics Panel */}
@@ -250,7 +250,7 @@ export default function ReceiverDashboard() {
             ) : !activeTask ? (
               <div className="text-center py-10 border border-dashed border-slate-800 rounded-2xl">
                 <ClipboardList className="mx-auto text-slate-700 mb-2" size={32} />
-                <p className="text-slate-500 text-xs">Hiện tại chưa nhận nhiệm vụ nào. Nhanh tay nhận các đơn mới nhé!</p>
+                <p className="text-slate-500 text-xs">Bạn chưa nhận nhiệm vụ nào.</p>
               </div>
             ) : (
               <div className="space-y-6">
@@ -361,7 +361,7 @@ export default function ReceiverDashboard() {
           {/* Lịch sử nhận hộ đơn hàng */}
           <div ref={historySectionRef} className="bg-slate-900/60 backdrop-blur-xl border border-slate-800 p-5 rounded-3xl shadow-xl space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <h2 className="text-md font-bold text-white">Lịch sử đơn nhận hộ ({historyRequests.length})</h2>
+              <h2 className="text-md font-bold text-white">Lịch sử nhận hộ ({historyRequests.length})</h2>
               {historyRequests.length > 0 && (
                 <div className="relative w-full sm:w-64">
                   <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
@@ -369,8 +369,8 @@ export default function ReceiverDashboard() {
                     type="text"
                     value={historySearchQuery}
                     onChange={(e) => setHistorySearchQuery(e.target.value)}
-                    placeholder="Tìm sinh viên, mã đơn..."
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-orange-500"
+                    placeholder="Tìm người đặt, mã đơn..."
+                    className="w-full bg-slate-955 border border-slate-800 rounded-xl pl-9 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-orange-500"
                   />
                   {historySearchQuery && (
                     <button
@@ -423,7 +423,7 @@ export default function ReceiverDashboard() {
                               )}
                             </div>
                             <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-slate-450">
-                              <span>Sinh viên: {req.student.fullName}</span>
+                              <span>Người đặt: {req.student.fullName}</span>
                               <span>•</span>
                               <span>Lấy: {req.pickupLocation} → Giao: {req.dropoffLocation || 'Sảnh Trống Đồng'}</span>
                             </div>
@@ -458,7 +458,7 @@ export default function ReceiverDashboard() {
         <div className="space-y-6">
           <div className="bg-slate-900/60 backdrop-blur-xl border border-slate-800 p-5 rounded-3xl shadow-xl h-fit space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <h2 className="text-md font-bold text-white">Đơn hàng chờ nhận hộ ({pendingRequests.length})</h2>
+              <h2 className="text-md font-bold text-white">Đơn hàng chờ nhận ({pendingRequests.length})</h2>
               {pendingRequests.length > 0 && (
                 <div className="relative w-full sm:w-48">
                   <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
@@ -486,7 +486,7 @@ export default function ReceiverDashboard() {
             ) : pendingRequests.length === 0 ? (
               <div className="text-center py-6">
                 <Inbox className="mx-auto text-slate-700 mb-2" size={24} />
-                <p className="text-slate-500 text-xs">Không có yêu cầu chờ nhận hộ nào trống.</p>
+                <p className="text-slate-500 text-xs">Hiện chưa có đơn hàng mới nào cần nhận hộ.</p>
               </div>
             ) : (
               (() => {
