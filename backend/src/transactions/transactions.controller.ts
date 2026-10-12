@@ -50,9 +50,9 @@ export class TransactionsController {
     // Kiểm tra Chữ ký bảo mật HMAC-SHA256 từ SePay Webhook
     const sepaySignature = headers['x-sepay-signature'] || headers['X-Sepay-Signature'] || '';
     const sepayTimestamp = headers['x-sepay-timestamp'] || headers['X-Sepay-Timestamp'] || '';
-    const secret = process.env.SEPAY_WEBHOOK_SECRET || 'whsec_eiZmc5uYYPsgkBWDnB5Z1LHkPrKzYgjG';
+    const secret = process.env.SEPAY_WEBHOOK_SECRET;
 
-    if (sepaySignature && sepayTimestamp) {
+    if (secret && sepaySignature && sepayTimestamp) {
       const payload = JSON.stringify(body);
       const expected = 'sha256=' + crypto.createHmac('sha256', secret)
         .update(sepayTimestamp + '.' + payload).digest('hex');
