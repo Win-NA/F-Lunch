@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useSearchParams, useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth.store';
 import { api } from '@/lib/api';
@@ -101,15 +102,22 @@ export default function Sidebar({ onOpenWallet }: { onOpenWallet?: () => void })
       <div className="flex-1 overflow-y-auto pr-1">
         <Link
           href={role === 'RECEIVER' ? '/receiver' : role === 'ADMIN' ? '/admin' : '/student'}
-          className="flex items-center gap-3 px-3 py-4 mb-4 hover:opacity-90 active:scale-[0.98] transition-all cursor-pointer"
+          className="flex items-center gap-3 px-3 py-3 mb-4 hover:opacity-90 active:scale-[0.98] transition-all cursor-pointer rounded-2xl bg-white/[0.03] border border-white/5 hover:border-orange-500/30 group"
         >
-          <div className="w-10 h-10 rounded-xl bg-orange-600 flex items-center justify-center font-bold text-xl text-white shadow-lg shadow-orange-600/30">
-            FL
-          </div>
+          <Image
+            src="/logoF-Lunch-icon.png"
+            alt="F-Lunch"
+            width={40}
+            height={40}
+            className="w-10 h-10 rounded-xl object-contain shadow-lg shadow-orange-600/25 group-hover:scale-105 transition-transform"
+            priority
+          />
           <div>
             <h1 className="font-extrabold text-lg leading-tight text-white tracking-wide">F-LUNCH</h1>
-            {role !== 'STUDENT' && (
+            {role !== 'STUDENT' ? (
               <span className="text-[10px] uppercase font-bold text-orange-500 tracking-widest">{getRoleLabel(role)}</span>
+            ) : (
+              <span className="text-[10px] text-slate-400 font-medium">Campus Food Delivery</span>
             )}
           </div>
         </Link>

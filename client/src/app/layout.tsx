@@ -17,6 +17,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "F-Lunch | Campus Food Receiving Platform",
   description: "Secure and timely campus food receiving and storage platform for FPT students.",
+  icons: {
+    icon: "/logoF-Lunch-icon.png",
+    shortcut: "/logoF-Lunch-icon.png",
+    apple: "/logoF-Lunch-icon.png",
+  },
 };
 
 export default function RootLayout({

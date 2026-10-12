@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import Script from 'next/script';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth.store';
@@ -138,8 +139,15 @@ export default function RegisterPage() {
 
       <div className="w-full max-w-md bg-slate-900/60 backdrop-blur-xl border border-slate-800 p-8 rounded-3xl shadow-2xl relative z-10">
         <div className="text-center mb-6">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-orange-600 font-extrabold text-2xl text-white mb-3 shadow-lg shadow-orange-600/20">
-            FL
+          <div className="inline-flex items-center justify-center p-2.5 rounded-2xl bg-white/5 border border-white/10 shadow-lg shadow-orange-600/10 mb-3 backdrop-blur-sm">
+            <Image
+              src="/logoF-Lunch.png"
+              alt="F-Lunch Logo"
+              width={160}
+              height={55}
+              className="h-11 w-auto object-contain"
+              priority
+            />
           </div>
           <h2 className="text-2xl font-extrabold tracking-tight text-white">Đăng Ký Tài Khoản</h2>
           <p className="text-sm text-slate-400 mt-1">Trở thành thành viên của cộng đồng F-Lunch</p>

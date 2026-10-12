@@ -3,6 +3,7 @@
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth.store';
 import Link from 'next/link';
+import Image from 'next/image';
 import Sidebar from './Sidebar';
 import BottomNav from './BottomNav';
 import { useEffect, useState } from 'react';
@@ -161,11 +162,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <header className="md:hidden flex items-center justify-between px-4 py-3 bg-slate-955/80 backdrop-blur-lg border-b border-slate-800 sticky top-0 z-30">
           <Link
             href={user.role === 'RECEIVER' ? '/receiver' : user.role === 'ADMIN' ? '/admin' : '/student'}
-            className="flex items-center gap-2 hover:opacity-90 active:scale-[0.98] transition-all cursor-pointer"
+            className="flex items-center gap-2.5 hover:opacity-90 active:scale-[0.98] transition-all cursor-pointer"
           >
-            <div className="w-8 h-8 rounded-lg bg-orange-600 flex items-center justify-center font-bold text-base text-white shadow-md shadow-orange-600/25">
-              FL
-            </div>
+            <Image
+              src="/logoF-Lunch-icon.png"
+              alt="F-Lunch"
+              width={32}
+              height={32}
+              className="w-8 h-8 rounded-lg object-contain shadow-md shadow-orange-600/20"
+              priority
+            />
             <div>
               <span className="font-extrabold text-sm tracking-wide text-white block leading-tight">F-LUNCH</span>
               {user.role !== 'STUDENT' && (
