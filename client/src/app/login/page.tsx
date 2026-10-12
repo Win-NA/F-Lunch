@@ -150,18 +150,18 @@ export default function LoginPage() {
       <div className="absolute w-96 h-96 rounded-full bg-blue-600/10 blur-[100px] -bottom-20 -right-20 pointer-events-none" />
 
       <div className="w-full max-w-md bg-slate-900/60 backdrop-blur-xl border border-slate-800 p-6 sm:p-8 rounded-3xl shadow-2xl relative z-10">
-        <div className="text-center mb-6">
-          <div className="inline-flex items-center justify-center p-2.5 rounded-2xl bg-white/5 border border-white/10 shadow-lg shadow-orange-600/10 mb-3 backdrop-blur-sm">
+        <div className="text-center mb-5 flex flex-col items-center">
+          <div className="mb-2 transition-transform hover:scale-105 duration-300">
             <Image
               src="/logoF-Lunch.png"
               alt="F-Lunch Logo"
-              width={160}
-              height={55}
-              className="h-11 w-auto object-contain"
+              width={200}
+              height={70}
+              className="h-16 sm:h-[70px] w-auto object-contain drop-shadow-[0_4px_16px_rgba(249,115,22,0.18)]"
               priority
             />
           </div>
-          <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight text-white font-sans">Đăng nhập F-Lunch</h2>
+          <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight text-white font-sans">Đăng nhập tài khoản</h2>
           <p className="text-xs sm:text-sm text-slate-400 mt-1">Cổng nhận hộ đơn hàng Campus FPT</p>
         </div>
 

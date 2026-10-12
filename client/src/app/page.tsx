@@ -30,9 +30,9 @@ export default function Home() {
           <Image
             src="/logoF-Lunch.png"
             alt="F-Lunch"
-            width={160}
-            height={55}
-            className="h-12 w-auto object-contain animate-pulse"
+            width={200}
+            height={70}
+            className="h-16 w-auto object-contain animate-pulse drop-shadow-[0_4px_16px_rgba(249,115,22,0.2)]"
             priority
           />
         </div>
