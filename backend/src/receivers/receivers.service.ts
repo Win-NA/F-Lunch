@@ -189,13 +189,12 @@ export class ReceiversService {
       throw new NotFoundException('Request not found or invalid code');
     }
 
-    if (request.receiverId !== receiverId) {
-      throw new BadRequestException('You are not assigned to this request');
-    }
-
     if (request.status !== RequestStatus.READY_FOR_PICKUP) {
       throw new BadRequestException('Request must be READY_FOR_PICKUP to complete');
     }
+
+    // Tiền công thuộc về Người nhận hộ ban đầu đã nhận việc & đi lấy hàng
+    const assignedReceiverId = request.receiverId || receiverId;
 
     // Calculate current daily completed orders for this receiver to determine progressive tier payout
     const startOfToday = new Date();
@@ -203,7 +202,7 @@ export class ReceiversService {
 
     const todayCompletedCount = await this.prisma.receivingRequest.count({
       where: {
-        receiverId,
+        receiverId: assignedReceiverId,
         status: RequestStatus.COMPLETED,
         updatedAt: { gte: startOfToday },
       },
@@ -224,7 +223,7 @@ export class ReceiversService {
       });
 
       await tx.user.update({
-        where: { id: receiverId },
+        where: { id: assignedReceiverId },
         data: {
           realBalance: { increment: earningAmount },
         },
@@ -233,7 +232,7 @@ export class ReceiversService {
       return req;
     });
 
-    // Notify student
+    // Notify student / customer
     await this.prisma.notification.create({
       data: {
         userId: request.studentId,
@@ -244,17 +243,30 @@ export class ReceiversService {
       },
     });
 
-    // Notify receiver
+    // Notify assigned receiver (người nhận việc ban đầu)
     const bonusNotice = currentOrderNum > 20 ? ' (Bậc 3: 3.800đ/đơn)' : currentOrderNum > 10 ? ' (Bậc 2: 3.500đ/đơn)' : ' (Bậc 1: 3.000đ/đơn)';
     await this.prisma.notification.create({
       data: {
-        userId: receiverId,
+        userId: assignedReceiverId,
         requestId: request.id,
         title: 'Giao đơn thành công',
-        message: `Bạn đã hoàn thành đơn thứ ${currentOrderNum} trong ngày cho sinh viên ${request.student.fullName}. Thu nhập +${earningAmount.toLocaleString('vi-VN')}đ${bonusNotice} đã được cộng vào ví.`,
+        message: `Đơn hàng cho khách hàng ${request.student.fullName} đã hoàn tất. Thu nhập +${earningAmount.toLocaleString('vi-VN')}đ${bonusNotice} đã được cộng vào ví.`,
         type: NotificationType.SUCCESS,
       },
     });
+
+    // Nếu là Receiver khác quét hộ xác thực bàn giao tại quầy/sảnh:
+    if (receiverId !== assignedReceiverId) {
+      await this.prisma.notification.create({
+        data: {
+          userId: receiverId,
+          requestId: request.id,
+          title: 'Xác thực thành công',
+          message: `Xác thực thành công, hoàn thành giao đơn hàng cho khách hàng ${request.student.fullName}.`,
+          type: NotificationType.SUCCESS,
+        },
+      });
+    }
 
     return updated;
   }
