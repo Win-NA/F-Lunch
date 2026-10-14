@@ -130,13 +130,13 @@ export default function ReceiverDashboard() {
   };
 
   const handleCancelOrder = async (requestId: string) => {
-    if (!confirm('Bạn có chắc chắn muốn từ chối / hủy đơn hàng này không? Đơn hàng sẽ bị HỦY và 5.000đ phí dịch vụ sẽ được hoàn lại cho sinh viên.')) {
+    if (!confirm('Bạn có chắc chắn muốn từ chối / hủy đơn hàng này không? Đơn hàng sẽ bị HỦY và 5.000đ phí dịch vụ sẽ được hoàn lại cho khách hàng.')) {
       return;
     }
     setBtnLoading(true);
     try {
       await api.post(`/receivers/cancel/${requestId}`);
-      toast.success('Đã từ chối / hủy đơn thành công. Đơn hàng đã được hoàn tiền lại cho sinh viên.');
+      toast.success('Đã từ chối / hủy đơn thành công. Đơn hàng đã được hoàn tiền lại cho khách hàng.');
       fetchData();
     } catch (err: any) {
       const msg = err.response?.data?.message || 'Không thể hủy đơn';
@@ -266,7 +266,7 @@ export default function ReceiverDashboard() {
                     <p className="text-[10px] text-slate-500 mt-1">Gửi lúc: {new Date(activeTask.createdAt).toLocaleString()}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-[10px] text-slate-500">Sinh viên</p>
+                    <p className="text-[10px] text-slate-500">Khách hàng</p>
                     <p className="text-xs font-bold text-white">{activeTask.student.fullName}</p>
                     {activeTask.student.phoneNumber && (
                       <p className="text-[10px] text-slate-450 mt-0.5">{activeTask.student.phoneNumber}</p>

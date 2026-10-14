@@ -116,7 +116,7 @@ export default function ScannerPage() {
         ) : (
           <div className="py-8 border border-dashed border-slate-800 rounded-2xl flex flex-col items-center justify-center space-y-3">
             <Camera className="text-slate-650" size={32} />
-            <p className="text-slate-500 text-[10px] max-w-[240px]">Đưa camera quét mã QR trên điện thoại của sinh viên để xác thực bàn giao đơn hàng.</p>
+            <p className="text-slate-500 text-[10px] max-w-[240px]">Đưa camera quét mã QR trên điện thoại của khách hàng để xác thực bàn giao đơn hàng.</p>
             <button
               onClick={() => setScannerActive(true)}
               className="bg-orange-600 hover:bg-orange-500 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition-colors cursor-pointer"
@@ -133,7 +133,7 @@ export default function ScannerPage() {
           <QrCode size={14} className="text-orange-500" />
           Nhập mã OTP thủ công
         </h2>
-        <p className="text-[10px] text-slate-550">Nếu camera không quét được, hãy nhập mã bàn giao 6 ký tự hiển thị trên máy của sinh viên.</p>
+        <p className="text-[10px] text-slate-550">Nếu camera không quét được, hãy nhập mã bàn giao 6 ký tự hiển thị trên máy của khách hàng.</p>
         
         <form onSubmit={handleManualSubmit} className="space-y-4">
           <input

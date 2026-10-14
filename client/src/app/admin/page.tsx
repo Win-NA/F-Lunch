@@ -46,6 +46,7 @@ interface UserItem {
   email: string;
   phoneNumber?: string;
   mssv?: string;
+  userCategory?: string;
   role: string;
   status: string;
   realBalance?: number;
@@ -281,7 +282,7 @@ function AdminDashboardContent() {
 
       toast.success(
         processAction === 'APPROVED'
-          ? 'Đã duyệt báo cáo & cộng tiền thành công vào ví sinh viên!'
+          ? 'Đã duyệt báo cáo & cộng tiền thành công vào ví khách hàng!'
           : processAction === 'REJECTED'
             ? 'Đã từ chối khiếu nại báo cáo!'
             : 'Đã cập nhật trạng thái giải quyết sự cố!'
@@ -379,7 +380,7 @@ function AdminDashboardContent() {
   const getRoleLabel = (role: string) => {
     if (role === 'ADMIN') return 'QUẢN TRỊ';
     if (role === 'RECEIVER') return 'NHẬN HỘ';
-    return 'SINH VIÊN';
+    return 'KHÁCH HÀNG';
   };
 
   const getStatusBadge = (status: string) => {
@@ -606,7 +607,7 @@ function AdminDashboardContent() {
         const u = users.find(user => user.id === id);
         return {
           id,
-          fullName: u?.fullName || 'Sinh viên',
+          fullName: u?.fullName || 'Khách hàng',
           email: u?.email || '',
           mssv: u?.mssv || '',
           ...stat
@@ -765,7 +766,7 @@ function AdminDashboardContent() {
                           <tr>
                             <th className="pb-3 font-semibold">Đơn hàng / Mã</th>
                             <th className="pb-3 font-semibold">Người nhận hộ (Thu nhập)</th>
-                            <th className="pb-3 font-semibold">Sinh viên người dùng</th>
+                            <th className="pb-3 font-semibold">Khách hàng đặt món</th>
                             <th className="pb-3 font-semibold">Thời gian hoàn thành</th>
                             <th className="pb-3 font-semibold text-right">Phí dịch vụ</th>
                           </tr>
@@ -824,7 +825,7 @@ function AdminDashboardContent() {
                               </span>
                             </div>
                             <div className="flex items-start justify-between gap-2">
-                              <span className="text-[10px] text-slate-400 shrink-0">Sinh viên đặt:</span>
+                              <span className="text-[10px] text-slate-400 shrink-0">Khách hàng đặt:</span>
                               <span className="font-bold text-slate-200 text-right text-xs break-all">
                                 {req.student?.fullName} ({req.student?.email})
                               </span>
@@ -875,7 +876,7 @@ function AdminDashboardContent() {
                 <div className="flex flex-wrap items-center gap-2">
                   <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider ${userOrdersModal.role === 'STUDENT' ? 'bg-orange-500/10 text-orange-400 border border-orange-500/20' : 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
                     }`}>
-                    {userOrdersModal.role === 'STUDENT' ? 'Sinh Viên Đặt Đơn' : 'Người Nhận Hộ'}
+                    {userOrdersModal.role === 'STUDENT' ? 'Khách Hàng Đặt Đơn' : 'Người Nhận Hộ'}
                   </span>
                   <h3 className="text-base sm:text-lg font-extrabold text-white">
                     Lịch Sử Đơn Hàng: {userOrdersModal.user.fullName}
@@ -972,7 +973,7 @@ function AdminDashboardContent() {
                                   </p>
                                 ) : (
                                   <p className="text-[10px] text-slate-400">
-                                    <span className="font-semibold text-slate-300">Sinh viên đặt:</span>{' '}
+                                    <span className="font-semibold text-slate-300">Khách hàng đặt:</span>{' '}
                                     <span className="text-slate-200 font-bold">{req.student?.fullName}</span>
                                   </p>
                                 )}
@@ -1032,7 +1033,7 @@ function AdminDashboardContent() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {/* Student info */}
                   <div className="bg-slate-955 p-3.5 rounded-2xl border border-slate-800 space-y-1.5">
-                    <p className="text-[9px] font-bold uppercase tracking-wider text-orange-400">Người gửi (Sinh viên)</p>
+                    <p className="text-[9px] font-bold uppercase tracking-wider text-orange-400">Người gửi (Khách hàng)</p>
                     <p className="text-xs font-bold text-white">{selectedRequestDetail.student.fullName}</p>
                     <p className="text-[10px] text-slate-400 break-all">{selectedRequestDetail.student.email}</p>
                     {selectedRequestDetail.student.phoneNumber && (
@@ -1084,7 +1085,7 @@ function AdminDashboardContent() {
                 {/* Note if present */}
                 {selectedRequestDetail.note && (
                   <div className="bg-slate-955 p-3.5 rounded-2xl border border-slate-800">
-                    <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400 mb-1">Ghi chú của sinh viên</p>
+                    <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400 mb-1">Ghi chú của khách hàng</p>
                     <p className="text-xs text-slate-300">{selectedRequestDetail.note}</p>
                   </div>
                 )}
@@ -1108,7 +1109,7 @@ function AdminDashboardContent() {
                 {/* Feedback if completed */}
                 {selectedRequestDetail.feedback && (
                   <div className="bg-slate-955 p-3.5 rounded-2xl border border-slate-800 space-y-1.5">
-                    <p className="text-[9px] font-bold uppercase tracking-wider text-yellow-400">Đánh giá của sinh viên</p>
+                    <p className="text-[9px] font-bold uppercase tracking-wider text-yellow-400">Đánh giá của khách hàng</p>
                     <div className="flex items-center gap-1">
                       {[1, 2, 3, 4, 5].map((s) => (
                         <Star
@@ -1388,7 +1389,7 @@ function AdminDashboardContent() {
                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
                                 <div>
                                   <p className="text-[10px] text-slate-400">
-                                    <span className="font-semibold text-slate-300">Sinh viên đặt:</span>{' '}
+                                    <span className="font-semibold text-slate-300">Khách hàng đặt:</span>{' '}
                                     <strong className="text-white">{req.student?.fullName}</strong> ({req.student?.email})
                                   </p>
                                   <p className="text-[10px] text-slate-400">
@@ -1631,7 +1632,7 @@ function AdminDashboardContent() {
                   Xử Lý Phản Ánh: {processReportModal.title}
                 </h3>
                 <p className="text-xs text-slate-400 mt-1">
-                  Sinh viên: <strong className="text-white">{processReportModal.user.fullName}</strong> ({processReportModal.user.email} {processReportModal.user.mssv ? `• ${processReportModal.user.mssv}` : ''})
+                  Khách hàng: <strong className="text-white">{processReportModal.user.fullName}</strong> ({processReportModal.user.email} {processReportModal.user.mssv ? `• ${processReportModal.user.mssv}` : ''})
                 </p>
               </div>
 
@@ -1668,7 +1669,7 @@ function AdminDashboardContent() {
                 {processAction === 'APPROVED' && (
                   <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl space-y-3">
                     <p className="text-[11px] font-bold text-emerald-400">
-                      Cộng tiền trực tiếp vào Ví Chính của sinh viên
+                      Cộng tiền trực tiếp vào Ví Chính của khách hàng
                     </p>
                     <div className="grid grid-cols-2 gap-3">
                       <div>
@@ -1704,7 +1705,7 @@ function AdminDashboardContent() {
                 {/* Admin Note Input */}
                 <div>
                   <label className="block text-[10px] font-semibold uppercase text-slate-400 mb-1">
-                    Ghi chú phản hồi cho Sinh viên {processAction === 'REJECTED' ? '(Bắt buộc ghi lý do từ chối)' : ''}
+                    Ghi chú phản hồi cho Khách hàng {processAction === 'REJECTED' ? '(Bắt buộc ghi lý do từ chối)' : ''}
                   </label>
                   <textarea
                     value={processAdminNote}
@@ -1809,7 +1810,7 @@ function AdminDashboardContent() {
                 <DollarSign className="text-emerald-400" size={22} />
                 Báo Cáo Dòng Tiền Nạp Vào Ví (CEO Executive Deposit Dashboard)
               </h2>
-              <p className="text-xs text-slate-400 mt-0.5">Theo dõi chi tiết số tiền sinh viên nạp vào ví theo ngày, tháng & tổng tích lũy</p>
+              <p className="text-xs text-slate-400 mt-0.5">Theo dõi chi tiết số tiền khách hàng nạp vào ví theo ngày, tháng & tổng tích lũy</p>
             </div>
           </div>
 
@@ -1892,7 +1893,7 @@ function AdminDashboardContent() {
 
           <div className="p-5 rounded-2xl bg-slate-900/80 border border-purple-500/30 backdrop-blur-xl shadow-lg relative overflow-hidden">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Trung Bình Đơn / Sinh Viên</span>
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Trung Bình Đơn / Khách Hàng</span>
               <div className="w-8 h-8 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400">
                 <ShoppingBag size={18} />
               </div>
@@ -1901,7 +1902,7 @@ function AdminDashboardContent() {
               {(requests.length / (users.filter(u => u.role === 'STUDENT').length || 1)).toFixed(1)} đơn
             </p>
             <p className="text-[11px] text-slate-400 mt-1">
-              Tần suất nhu cầu của {users.filter(u => u.role === 'STUDENT').length} sinh viên
+              Tần suất nhu cầu của {users.filter(u => u.role === 'STUDENT').length} khách hàng
             </p>
           </div>
 
@@ -1926,7 +1927,7 @@ function AdminDashboardContent() {
         <div className="bg-slate-900/80 backdrop-blur-xl border border-slate-800 p-5 rounded-3xl shadow-xl space-y-4">
           <div className="flex items-center justify-between border-b border-slate-800 pb-3">
             <h2 className="text-sm font-extrabold text-purple-400 uppercase tracking-wider flex items-center gap-2">
-              <PieChart size={16} /> Thị Phần Nền Tảng Đồ Ăn Sinh Viên Đặt Nhiều Nhất
+              <PieChart size={16} /> Thị Phần Nền Tảng Đồ Ăn Khách Hàng Đặt Nhiều Nhất
             </h2>
             <span className="text-xs font-semibold text-slate-400">Tổng cộng {requests.length} đơn</span>
           </div>
@@ -1960,7 +1961,7 @@ function AdminDashboardContent() {
           <div className="bg-slate-900/80 backdrop-blur-xl p-5 rounded-3xl border border-slate-800 shadow-xl space-y-4">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <h3 className="text-sm font-extrabold text-orange-400 uppercase tracking-wider flex items-center gap-2">
-                <ShoppingBag size={16} /> Top 5 Sinh Viên Đặt Đơn Nhiều Nhất
+                <ShoppingBag size={16} /> Top 5 Khách Hàng Đặt Đơn Nhiều Nhất
               </h3>
               <span className="text-[10px] font-bold text-orange-400 bg-orange-500/10 px-2 py-0.5 rounded-full border border-orange-500/20">
                 Nhu Cầu Cao
@@ -1969,7 +1970,7 @@ function AdminDashboardContent() {
 
             <div className="divide-y divide-slate-800">
               {ceoAnalytics.topStudents.length === 0 ? (
-                <p className="text-xs text-slate-500 py-3">Chưa có dữ liệu sinh viên đặt đơn</p>
+                <p className="text-xs text-slate-500 py-3">Chưa có dữ liệu khách hàng đặt đơn</p>
               ) : (
                 ceoAnalytics.topStudents.map((s, idx) => {
                   const targetUser = users.find(u => u.id === s.id || u.email.toLowerCase() === s.email.toLowerCase()) || {
@@ -2121,7 +2122,7 @@ function AdminDashboardContent() {
                 Chỉ Số Hài Lòng Khách Hàng (CSAT)
               </h4>
               <p className="text-xs text-slate-400 mt-0.5">
-                Đánh giá trung bình đạt {stats?.averageRating.toFixed(1)} / 5.0⭐ dựa trên {feedbacks.length} lượt phản hồi thực tế từ sinh viên
+                Đánh giá trung bình đạt {stats?.averageRating.toFixed(1)} / 5.0⭐ dựa trên {feedbacks.length} lượt phản hồi thực tế từ khách hàng
               </p>
             </div>
           </div>
@@ -2154,7 +2155,7 @@ function AdminDashboardContent() {
               </h1>
             </div>
             <p className="text-slate-400 text-xs pl-10">
-              Xem và đối chiếu chứng từ chuyển khoản sai nội dung của sinh viên để tự động cộng tiền vào ví chính hoặc xử lý sự cố hệ thống
+              Xem và đối chiếu chứng từ chuyển khoản sai nội dung của khách hàng để tự động cộng tiền vào ví chính hoặc xử lý sự cố hệ thống
             </p>
           </div>
         </div>
@@ -2617,7 +2618,7 @@ function AdminDashboardContent() {
 
                   <div className="grid grid-cols-2 gap-2 text-[11px]">
                     <div>
-                      <span className="text-[9px] text-slate-500 uppercase font-bold block">Sinh viên gửi</span>
+                      <span className="text-[9px] text-slate-500 uppercase font-bold block">Khách hàng gửi</span>
                       <p className="font-bold text-white truncate">{req.student?.fullName}</p>
                       <p className="text-[9px] text-slate-400 truncate">{req.student?.email}</p>
                     </div>
@@ -2679,7 +2680,7 @@ function AdminDashboardContent() {
                 className={`px-3 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap shrink-0 ${userRoleFilter === 'STUDENT' ? 'bg-orange-600 text-white shadow' : 'text-slate-400 hover:text-white'
                   }`}
               >
-                Sinh viên ({users.filter(u => u.role === 'STUDENT').length})
+                Khách hàng ({users.filter(u => u.role === 'STUDENT').length})
               </button>
               <button
                 onClick={() => setUserRoleFilter('ADMIN')}
@@ -2696,7 +2697,7 @@ function AdminDashboardContent() {
             <table className="w-full text-left text-xs text-slate-350">
               <thead className="text-[10px] text-slate-400 uppercase border-b border-slate-800 bg-slate-900/80">
                 <tr>
-                  <th className="px-4 py-3.5 font-bold">Tên / Email / MSSV</th>
+                  <th className="px-4 py-3.5 font-bold">Tên / Email / Mã số</th>
                   <th className="px-4 py-3.5 font-bold">Vai trò</th>
                   <th className="px-4 py-3.5 font-bold text-center">Số đơn đặt / Nhận</th>
                   <th className="px-4 py-3.5 font-bold text-center">Hoàn thành / Đang làm</th>
@@ -2736,7 +2737,7 @@ function AdminDashboardContent() {
                               </span>
                             )}
                           </div>
-                          <p className="text-[10px] text-slate-400 mt-0.5">{u.email} {u.mssv ? `• MSSV: ${u.mssv}` : ''}</p>
+                          <p className="text-[10px] text-slate-400 mt-0.5">{u.email} {u.mssv ? `• ${u.userCategory === 'STAFF' ? 'MSNV' : 'MSSV'}: ${u.mssv}` : ''}</p>
                         </td>
 
                         <td className="px-4 py-3.5">
@@ -2751,7 +2752,7 @@ function AdminDashboardContent() {
                               disabled={btnLoading === u.id}
                               className="bg-slate-950 border border-slate-800 rounded-lg px-2 py-1 text-[10px] font-bold text-slate-200 focus:outline-none focus:border-orange-500 transition-colors cursor-pointer"
                             >
-                              <option value="STUDENT">SINH VIÊN</option>
+                              <option value="STUDENT">KHÁCH HÀNG</option>
                               <option value="RECEIVER">NHẬN HỘ</option>
                               <option value="ADMIN">QUẢN TRỊ</option>
                             </select>
@@ -2926,7 +2927,7 @@ function AdminDashboardContent() {
                           </p>
                           <div className="text-[10px] text-slate-400 mt-0.5 leading-tight">
                             <span className="block truncate">{u.email}</span>
-                            {u.mssv && <span className="block text-[9.5px] text-slate-500 font-mono">MSSV: {u.mssv}</span>}
+                            {u.mssv && <span className="block text-[9.5px] text-slate-500 font-mono">{u.userCategory === 'STAFF' ? 'MSNV' : 'MSSV'}: {u.mssv}</span>}
                           </div>
                         </div>
                       </div>
@@ -2943,7 +2944,7 @@ function AdminDashboardContent() {
                             disabled={btnLoading === u.id}
                             className="bg-slate-955 border border-slate-800 rounded-lg px-2 py-1 text-[10px] font-bold text-slate-200 cursor-pointer whitespace-nowrap"
                           >
-                            <option value="STUDENT">SINH VIÊN</option>
+                            <option value="STUDENT">KHÁCH HÀNG</option>
                             <option value="RECEIVER">NHẬN HỘ</option>
                             <option value="ADMIN">QUẢN TRỊ</option>
                           </select>
@@ -3042,7 +3043,7 @@ function AdminDashboardContent() {
               <table className="w-full text-left text-xs text-slate-350 min-w-[750px]">
                 <thead className="text-[10px] text-slate-400 uppercase border-b border-slate-800 bg-slate-900/80">
                   <tr>
-                    <th className="px-4 py-3.5 font-bold">Sinh viên / Email / MSSV</th>
+                    <th className="px-4 py-3.5 font-bold">Khách hàng / Email / Mã số</th>
                     <th className="px-4 py-3.5 font-bold">Vai trò</th>
                     <th className="px-4 py-3.5 font-bold text-right">Ví nạp chính</th>
                     <th className="px-4 py-3.5 font-bold text-right">Ví Khuyến mãi</th>
@@ -3063,7 +3064,7 @@ function AdminDashboardContent() {
                     .length === 0 ? (
                     <tr>
                       <td colSpan={6} className="text-center py-8 text-slate-500 text-xs">
-                        Không tìm thấy sinh viên nào phù hợp.
+                        Không tìm thấy khách hàng nào phù hợp.
                       </td>
                     </tr>
                   ) : (
@@ -3085,7 +3086,7 @@ function AdminDashboardContent() {
                           <tr key={u.id} className="hover:bg-slate-800/20 transition-colors">
                             <td className="px-4 py-3.5">
                               <p className="font-bold text-white text-xs">{u.fullName}</p>
-                              <p className="text-[10px] text-slate-400">{u.email} {u.mssv ? `• MSSV: ${u.mssv}` : ''}</p>
+                              <p className="text-[10px] text-slate-400">{u.email} {u.mssv ? `• ${u.userCategory === 'STAFF' ? 'MSNV' : 'MSSV'}: ${u.mssv}` : ''}</p>
                             </td>
                             <td className="px-4 py-3.5">
                               <span className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-orange-500/20 text-orange-400 border border-orange-500/30">
@@ -3147,7 +3148,7 @@ function AdminDashboardContent() {
                 })
                 .length === 0 ? (
                 <div className="text-center py-8 text-slate-500 text-xs bg-slate-955 border border-slate-800 rounded-2xl">
-                  Không tìm thấy sinh viên nào phù hợp.
+                  Không tìm thấy khách hàng nào phù hợp.
                 </div>
               ) : (
                 users
@@ -3445,7 +3446,7 @@ function AdminDashboardContent() {
             <table className="w-full text-left text-xs text-slate-350 min-w-[850px]">
               <thead className="text-[10px] text-slate-400 uppercase border-b border-slate-800 bg-slate-900/80">
                 <tr>
-                  <th className="px-4 py-3.5 font-bold">Sinh viên khiếu nại</th>
+                  <th className="px-4 py-3.5 font-bold">Khách hàng khiếu nại</th>
                   <th className="px-4 py-3.5 font-bold">Loại / Tiêu đề</th>
                   <th className="px-4 py-3.5 font-bold">Nội dung sự cố</th>
                   <th className="px-4 py-3.5 font-bold text-right">Số tiền khiếu nại / Mã CK</th>
@@ -3652,7 +3653,7 @@ function AdminDashboardContent() {
                 <div key={f.id} className="p-4 bg-slate-950 border border-slate-800 rounded-2xl space-y-2.5 flex flex-col justify-between">
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-slate-200">{f.student?.fullName || 'Sinh viên'}</span>
+                      <span className="text-xs font-bold text-slate-200">{f.student?.fullName || 'Khách hàng'}</span>
                       <div className="flex items-center gap-0.5">
                         {[1, 2, 3, 4, 5].map((s) => (
                           <Star

@@ -67,7 +67,7 @@ export default function Sidebar({ onOpenWallet }: { onOpenWallet?: () => void })
   const getRoleLabel = (r: string) => {
     if (r === 'ADMIN') return 'QUẢN TRỊ';
     if (r === 'RECEIVER') return 'NGƯỜI NHẬN HỘ';
-    return 'SINH VIÊN';
+    return 'KHÁCH HÀNG';
   };
 
   if (role === 'STUDENT') {
