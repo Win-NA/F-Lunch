@@ -168,6 +168,54 @@ export default function StudentDashboard() {
     return { status: 'UNKNOWN', method: null };
   };
 
+  const detectFoodPlatform = (rawText: string, extractedCode?: string | null): 'GRABFOOD' | 'SHOPEEFOOD' | 'BEFOOD' | null => {
+    const text = rawText.toLowerCase();
+
+    if (
+      text.includes('befood') ||
+      text.includes('be food') ||
+      text.includes('bepay') ||
+      text.includes('be group') ||
+      text.includes('ứng dụng be') ||
+      text.includes('tài xế be') ||
+      /\b(be)\b/i.test(text)
+    ) {
+      return 'BEFOOD';
+    }
+
+    if (
+      text.includes('shopeefood') ||
+      text.includes('shopee food') ||
+      text.includes('shopeepay') ||
+      text.includes('shopee') ||
+      text.includes('quán yêu thích') ||
+      /\bspf[-_\d]/i.test(text)
+    ) {
+      return 'SHOPEEFOOD';
+    }
+
+    if (
+      text.includes('grabfood') ||
+      text.includes('grab food') ||
+      text.includes('grabpay') ||
+      text.includes('grab') ||
+      text.includes('tài xế grab') ||
+      /\bgf[-_\d]/i.test(text)
+    ) {
+      return 'GRABFOOD';
+    }
+
+    // 2. Cấu trúc mã đơn hàng đặc trưng khi ảnh bị crop mất logo
+    if (extractedCode) {
+      const trimmed = extractedCode.trim();
+      if (/^gf[-_]/i.test(trimmed)) return 'GRABFOOD';
+      if (/^spf[-_]/i.test(trimmed) || trimmed.includes('-')) return 'SHOPEEFOOD';
+      if (/^\d{8}$/.test(trimmed)) return 'BEFOOD';
+    }
+
+    return null;
+  };
+
   const performOCR = async (base64: string) => {
     setOcrLoading(true);
     setIsFoodOrder(true);
@@ -189,7 +237,9 @@ export default function StudentDashboard() {
           setPaymentStatus(aiData.paymentStatus || 'UNKNOWN');
           setDetectedPaymentMethod(aiData.detectedPaymentMethod || null);
           if (aiData.orderCode) setExtractedOrderCode(aiData.orderCode);
-          if (aiData.foodPlatform) setFoodPlatform(aiData.foodPlatform);
+          if (aiData.foodPlatform && ['GRABFOOD', 'SHOPEEFOOD', 'BEFOOD'].includes(aiData.foodPlatform)) {
+            setFoodPlatform(aiData.foodPlatform);
+          }
 
           if (!aiData.isFoodOrder) {
             toast.error(`CẢNH BÁO AI: ${aiData.reasonText || 'Đơn hàng không phải đồ ăn!'}`);
@@ -211,6 +261,11 @@ export default function StudentDashboard() {
       const code = extractOrderCode(text);
       const paymentInfo = analyzePaymentStatus(text);
       const { isNonFood, matchedKeyword } = checkNonFoodKeywords(text);
+      const detectedPlatform = detectFoodPlatform(text, code);
+
+      if (detectedPlatform) {
+        setFoodPlatform(detectedPlatform);
+      }
 
       setPaymentStatus(paymentInfo.status);
       setDetectedPaymentMethod(paymentInfo.method);

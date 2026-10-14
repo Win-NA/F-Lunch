@@ -71,7 +71,21 @@ Quy tắc BẮT BUỘC:
 2. "paymentStatus":
    - Đặt PAID nếu đơn đã thanh toán trực tuyến (ShopeePay, GrabPay, MoMo, ZaloPay, Thẻ Visa/ATM, Tiền mặt: 0đ).
    - Đặt UNPAID nếu là Tiền mặt (COD), Thanh toán khi nhận hàng, Thu hộ tiền mặt > 0đ.
-   - Đặt UNKNOWN nếu không rõ.`;
+   - Đặt UNKNOWN nếu không rõ.
+3. "foodPlatform" (Quy tắc nhận dạng đa tầng, áp dụng cả khi ảnh bị cắt xén crop mất logo):
+   - Đặt "BEFOOD" nếu thỏa mãn BẤT KỲ tiêu chí nào:
+     + Chữ/logo: "be", "beFood", "bePay", "be Group", "Tài xế be", icon con ong hoặc chữ "be" bo tròn.
+     + Màu sắc: Tông vàng tươi (Yellow/Amber), sọc vàng đen, nút bấm hoặc chi tiết màu vàng.
+     + Cấu trúc mã đơn hàng: Dãy số nguyên 8 chữ số liên tiếp không có dấu gạch nối (Ví dụ: 78578259, 87654321...).
+   - Đặt "SHOPEEFOOD" nếu thỏa mãn BẤT KỲ tiêu chí nào:
+     + Chữ/logo: "ShopeeFood", "Shopee", "ShopeePay", "Now", "Quán Yêu Thích", "Giao bởi ShopeeFood".
+     + Màu sắc: Tông màu cam đặc trưng của Shopee, icon giỏ hàng/túi màu cam.
+     + Cấu trúc mã đơn hàng: Dạng ngày tháng có gạch ngang (Ví dụ: 241014-407387424, 03076-407387424) hoặc bắt đầu bằng "SPF".
+   - Đặt "GRABFOOD" nếu thỏa mãn BẤT KỲ tiêu chí nào:
+     + Chữ/logo: "Grab", "GrabFood", "GrabPay", "Tài xế Grab", "Chuyến đi Grab".
+     + Màu sắc: Tông màu xanh lá cây đặc trưng của Grab.
+     + Cấu trúc mã đơn hàng: Bắt đầu bằng "GF-" (Ví dụ: GF-123456) hoặc mã có tiền tố chữ cái kèm số.
+   - Đặt "OTHER": CHỈ khi ảnh hoàn toàn không có bất kỳ dấu hiệu nhận diện nào của 3 nền tảng trên.`;
 
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 

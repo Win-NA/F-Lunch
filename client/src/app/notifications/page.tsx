@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/stores/auth.store';
@@ -18,9 +19,11 @@ interface NotificationItem {
   type: string;
   isRead: boolean;
   createdAt: string;
+  requestId?: string | null;
 }
 
 export default function NotificationsPage() {
+  const router = useRouter();
   const { user } = useAuthStore();
   const role = user?.role || 'STUDENT';
 
@@ -63,6 +66,40 @@ export default function NotificationsPage() {
       fetchNotifications();
     } catch (err: any) {
       // Bỏ qua lỗi
+    }
+  };
+
+  const handleNotificationClick = async (n: NotificationItem) => {
+    if (!n.isRead) {
+      handleMarkAsRead(n.id);
+    }
+
+    if (n.requestId) {
+      if (role === 'STUDENT') {
+        router.push(`/student/request/${n.requestId}#qr-handover-card`);
+      } else if (role === 'RECEIVER') {
+        router.push('/receiver');
+      } else if (role === 'ADMIN') {
+        router.push('/admin');
+      }
+      return;
+    }
+
+    const titleLower = n.title.toLowerCase();
+    const msgLower = n.message.toLowerCase();
+    if (
+      titleLower.includes('số dư') ||
+      titleLower.includes('tiền') ||
+      titleLower.includes('ví') ||
+      msgLower.includes('số dư') ||
+      msgLower.includes('tiền') ||
+      msgLower.includes('ví')
+    ) {
+      if (role === 'STUDENT') {
+        router.push('/student');
+      } else if (role === 'RECEIVER') {
+        router.push('/receiver');
+      }
     }
   };
 
@@ -186,11 +223,11 @@ export default function NotificationsPage() {
           {displayedNotifications.map((n) => (
             <div
               key={n.id}
-              onClick={() => !n.isRead && handleMarkAsRead(n.id)}
-              className={`p-4 rounded-2xl border transition-all flex items-start gap-4 ${
+              onClick={() => handleNotificationClick(n)}
+              className={`p-4 rounded-2xl border transition-all flex items-start gap-4 cursor-pointer select-none ${
                 n.isRead
-                  ? 'bg-slate-900/30 border-slate-850 hover:bg-slate-900/50'
-                  : 'bg-slate-900/80 border-orange-500/20 hover:border-orange-500/30 cursor-pointer shadow-md'
+                  ? 'bg-slate-900/30 border-slate-850 hover:bg-slate-900/60 hover:border-slate-800'
+                  : 'bg-slate-900/80 border-orange-500/20 hover:border-orange-500/40 hover:bg-slate-900 shadow-md'
               }`}
             >
               {getIcon(n.type)}

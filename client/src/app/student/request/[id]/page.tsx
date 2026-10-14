@@ -106,6 +106,53 @@ export default function RequestDetailPage() {
     return null;
   };
 
+  const detectFoodPlatform = (rawText: string, extractedCode?: string | null): 'GRABFOOD' | 'SHOPEEFOOD' | 'BEFOOD' | null => {
+    const text = rawText.toLowerCase();
+
+    if (
+      text.includes('befood') ||
+      text.includes('be food') ||
+      text.includes('bepay') ||
+      text.includes('be group') ||
+      text.includes('ứng dụng be') ||
+      text.includes('tài xế be') ||
+      /\b(be)\b/i.test(text)
+    ) {
+      return 'BEFOOD';
+    }
+
+    if (
+      text.includes('shopeefood') ||
+      text.includes('shopee food') ||
+      text.includes('shopeepay') ||
+      text.includes('shopee') ||
+      text.includes('quán yêu thích') ||
+      /\bspf[-_\d]/i.test(text)
+    ) {
+      return 'SHOPEEFOOD';
+    }
+
+    if (
+      text.includes('grabfood') ||
+      text.includes('grab food') ||
+      text.includes('grabpay') ||
+      text.includes('grab') ||
+      text.includes('tài xế grab') ||
+      /\bgf[-_\d]/i.test(text)
+    ) {
+      return 'GRABFOOD';
+    }
+
+    if (extractedCode) {
+      const trimmed = extractedCode.trim();
+      if (/^gf[-_]/i.test(trimmed)) return 'GRABFOOD';
+      if (/^spf[-_]/i.test(trimmed) || trimmed.includes('-')) return 'SHOPEEFOOD';
+      if (/^\d{8}$/.test(trimmed)) return 'BEFOOD';
+    }
+
+    return null;
+  };
+
   const performEditOCR = async (base64: string) => {
     setEditOcrLoading(true);
     try {
@@ -113,6 +160,12 @@ export default function RequestDetailPage() {
       const text = ret.data.text;
 
       const code = extractOrderCode(text);
+      const detectedPlatform = detectFoodPlatform(text, code);
+
+      if (detectedPlatform) {
+        setEditFoodPlatform(detectedPlatform);
+      }
+
       if (code) {
         setEditExtractedOrderCode(code);
         toast.success(`Đã tự động nhận diện mã đơn mới: ${code}`);
@@ -252,6 +305,17 @@ export default function RequestDetailPage() {
     const interval = setInterval(fetchDetail, 4000);
     return () => clearInterval(interval);
   }, [requestId]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.location.hash === '#qr-handover-card') {
+      setTimeout(() => {
+        const el = document.getElementById('qr-handover-card');
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 500);
+    }
+  }, [request?.status]);
 
   const handleCancel = async () => {
     if (!confirm('Bạn có chắc chắn muốn hủy yêu cầu nhận hộ này không?')) return;
@@ -529,7 +593,7 @@ export default function RequestDetailPage() {
 
           {/* QR Handover Code card (if ready for pickup) */}
           {request.status === 'READY_FOR_PICKUP' && (
-            <div className="bg-slate-900/60 backdrop-blur-xl border border-orange-500/30 p-5 rounded-3xl shadow-xl text-center space-y-4">
+            <div id="qr-handover-card" className="bg-slate-900/60 backdrop-blur-xl border border-orange-500/30 p-5 rounded-3xl shadow-xl text-center space-y-4 scroll-mt-20">
               <h2 className="text-xs font-extrabold text-orange-500 uppercase tracking-wider">Bàn giao đơn hàng</h2>
               <p className="text-[10px] text-slate-400">Trình mã QR này cho người nhận hộ để lấy lại đơn hàng của bạn.</p>
 
