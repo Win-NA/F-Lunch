@@ -95,11 +95,10 @@ export default function NotificationsPage() {
       msgLower.includes('tiền') ||
       msgLower.includes('ví')
     ) {
-      if (role === 'STUDENT') {
-        router.push('/student');
-      } else if (role === 'RECEIVER') {
-        router.push('/receiver');
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('open-wallet'));
       }
+      return;
     }
   };
 

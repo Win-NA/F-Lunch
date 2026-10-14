@@ -27,6 +27,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     setMounted(true);
+    const handleOpenWallet = () => setIsWalletOpen(true);
+    window.addEventListener('open-wallet', handleOpenWallet);
+    return () => window.removeEventListener('open-wallet', handleOpenWallet);
   }, []);
 
   // Fetch initial profile & balance on mount, user change, or route change
