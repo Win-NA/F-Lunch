@@ -415,7 +415,23 @@ export class TransactionsService {
     return this.prisma.transaction.findMany({
       where: { userId },
       orderBy: { createdAt: 'desc' },
-      include: {
+      take: 50,
+      select: {
+        id: true,
+        userId: true,
+        requestId: true,
+        amount: true,
+        bonusAmount: true,
+        type: true,
+        status: true,
+        paymentMethod: true,
+        transactionCode: true,
+        bankName: true,
+        accountNumber: true,
+        accountName: true,
+        note: true,
+        createdAt: true,
+        updatedAt: true,
         request: {
           select: {
             id: true,
@@ -435,7 +451,24 @@ export class TransactionsService {
 
     return this.prisma.transaction.findMany({
       where,
-      include: {
+      orderBy: { createdAt: 'desc' },
+      take: 100,
+      select: {
+        id: true,
+        userId: true,
+        requestId: true,
+        amount: true,
+        bonusAmount: true,
+        type: true,
+        status: true,
+        paymentMethod: true,
+        transactionCode: true,
+        bankName: true,
+        accountNumber: true,
+        accountName: true,
+        note: true,
+        createdAt: true,
+        updatedAt: true,
         user: {
           select: {
             id: true,
@@ -449,7 +482,6 @@ export class TransactionsService {
           },
         },
       },
-      orderBy: { createdAt: 'desc' },
     });
   }
 

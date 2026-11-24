@@ -27,10 +27,9 @@ export default function BottomNav() {
 
   const fetchUnreadCount = async () => {
     try {
-      const res = await api.get('/notifications');
-      if (Array.isArray(res.data)) {
-        const count = res.data.filter((n: any) => !n.isRead).length;
-        setUnreadCount(count);
+      const res = await api.get('/notifications/unread-count');
+      if (res.data && typeof res.data.count === 'number') {
+        setUnreadCount(res.data.count);
       }
     } catch (err) {
       // silent catch
@@ -40,10 +39,10 @@ export default function BottomNav() {
   useEffect(() => {
     if (user) {
       fetchUnreadCount();
-      const interval = setInterval(fetchUnreadCount, 3000);
+      const interval = setInterval(fetchUnreadCount, 30000);
       return () => clearInterval(interval);
     }
-  }, [user]);
+  }, [user?.id, pathname]);
 
   if (!user) return null;
 

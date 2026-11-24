@@ -47,7 +47,20 @@ export class AdminService {
 
   async getAllRequests() {
     const requests = await this.prisma.receivingRequest.findMany({
-      include: {
+      select: {
+        id: true,
+        studentId: true,
+        receiverId: true,
+        foodPlatform: true,
+        orderCode: true,
+        pickupLocation: true,
+        dropoffLocation: true,
+        pickupTime: true,
+        status: true,
+        serviceFee: true,
+        note: true,
+        createdAt: true,
+        updatedAt: true,
         student: {
           select: {
             id: true,

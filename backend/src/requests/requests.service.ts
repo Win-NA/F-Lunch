@@ -167,7 +167,20 @@ export class RequestsService {
   async findAllForStudent(studentId: string) {
     return this.prisma.receivingRequest.findMany({
       where: { studentId },
-      include: {
+      select: {
+        id: true,
+        studentId: true,
+        receiverId: true,
+        foodPlatform: true,
+        orderCode: true,
+        pickupLocation: true,
+        dropoffLocation: true,
+        pickupTime: true,
+        status: true,
+        serviceFee: true,
+        note: true,
+        createdAt: true,
+        updatedAt: true,
         receiver: {
           select: {
             id: true,
@@ -176,6 +189,7 @@ export class RequestsService {
           },
         },
       },
+      take: 30,
       orderBy: { createdAt: 'desc' },
     });
   }

@@ -340,7 +340,7 @@ export default function StudentDashboard() {
 
   useEffect(() => {
     fetchRequests();
-    const interval = setInterval(fetchRequests, 5000);
+    const interval = setInterval(fetchRequests, 15000);
     return () => clearInterval(interval);
   }, []);
 

@@ -204,6 +204,19 @@ function AdminDashboardContent() {
   const [userOrdersModal, setUserOrdersModal] = useState<{ user: UserItem; role: 'STUDENT' | 'RECEIVER' } | null>(null);
   const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
 
+  // Lazy load image for selected request detail if needed
+  useEffect(() => {
+    if (selectedRequestDetail && !selectedRequestDetail.imageUrl) {
+      api.get(`/requests/${selectedRequestDetail.id}`)
+        .then((res) => {
+          if (res.data?.imageUrl) {
+            setSelectedRequestDetail(prev => prev && prev.id === res.data.id ? { ...prev, imageUrl: res.data.imageUrl } : prev);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [selectedRequestDetail?.id]);
+
   const openRevenueModal = (tf: TimeframeFilter) => {
     setRevenueModalTimeframe(tf);
     setShowRevenueModal(true);

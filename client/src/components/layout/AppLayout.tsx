@@ -93,7 +93,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     };
 
     pollNotifications();
-    const interval = setInterval(pollNotifications, 3000);
+    const interval = setInterval(pollNotifications, 25000);
 
     return () => clearInterval(interval);
   }, [user, mounted, router]);

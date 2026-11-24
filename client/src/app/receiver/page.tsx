@@ -95,7 +95,7 @@ export default function ReceiverDashboard() {
 
   useEffect(() => {
     fetchData();
-    const interval = setInterval(fetchData, 5000);
+    const interval = setInterval(fetchData, 15000);
     return () => clearInterval(interval);
   }, []);
 
@@ -532,20 +532,27 @@ export default function ReceiverDashboard() {
                           <p className="flex items-center gap-1.5"><User size={10} /> {job.student.fullName}</p>
                         </div>
 
-                        {job.imageUrl && (
-                          <div className="mt-2 bg-slate-950 p-2 border border-slate-850 rounded-xl">
-                            <p className="text-[8px] font-bold text-slate-550 uppercase tracking-wider mb-1">Ảnh đơn hàng đính kèm:</p>
-                            <div className="relative w-full max-h-24 rounded-lg overflow-hidden border border-slate-900 bg-slate-900 flex items-center justify-center">
-                              <img
-                                src={job.imageUrl}
-                                alt="Ảnh đơn hàng"
-                                className="max-h-24 max-w-full cursor-zoom-in object-contain rounded hover:scale-[1.02] transition-transform"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setFullscreenImage(job.imageUrl || null);
-                                }}
-                              />
-                            </div>
+                        {!job.orderCode && (
+                          <div className="mt-1">
+                            <button
+                              type="button"
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                try {
+                                  const res = await api.get(`/requests/${job.id}`);
+                                  if (res.data?.imageUrl) {
+                                    setFullscreenImage(res.data.imageUrl);
+                                  } else {
+                                    toast.info('Không có ảnh đính kèm');
+                                  }
+                                } catch {
+                                  toast.error('Không thể tải ảnh');
+                                }
+                              }}
+                              className="text-[10px] text-orange-400 hover:text-orange-300 underline font-medium cursor-pointer"
+                            >
+                              📷 Xem ảnh đơn đính kèm
+                            </button>
                           </div>
                         )}
 

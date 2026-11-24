@@ -40,16 +40,9 @@ export default function Sidebar({ onOpenWallet }: { onOpenWallet?: () => void })
 
   const fetchSyncData = async () => {
     try {
-      const [notifRes, profileRes] = await Promise.all([
-        api.get('/notifications').catch(() => null),
-        api.get('/users/profile').catch(() => null),
-      ]);
-      if (notifRes && Array.isArray(notifRes.data)) {
-        const count = notifRes.data.filter((n: any) => !n.isRead).length;
-        setUnreadCount(count);
-      }
-      if (profileRes && profileRes.data) {
-        updateUser(profileRes.data);
+      const res = await api.get('/notifications/unread-count');
+      if (res.data && typeof res.data.count === 'number') {
+        setUnreadCount(res.data.count);
       }
     } catch (err) {
       // silent catch
@@ -59,10 +52,10 @@ export default function Sidebar({ onOpenWallet }: { onOpenWallet?: () => void })
   useEffect(() => {
     if (user) {
       fetchSyncData();
-      const interval = setInterval(fetchSyncData, 3000);
+      const interval = setInterval(fetchSyncData, 30000);
       return () => clearInterval(interval);
     }
-  }, [user?.id]);
+  }, [user?.id, pathname]);
 
   if (!user) return null;
 

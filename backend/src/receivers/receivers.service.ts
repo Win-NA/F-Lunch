@@ -9,7 +9,20 @@ export class ReceiversService {
   async findPending() {
     return this.prisma.receivingRequest.findMany({
       where: { status: RequestStatus.PENDING },
-      include: {
+      select: {
+        id: true,
+        studentId: true,
+        receiverId: true,
+        foodPlatform: true,
+        orderCode: true,
+        pickupLocation: true,
+        dropoffLocation: true,
+        pickupTime: true,
+        status: true,
+        serviceFee: true,
+        note: true,
+        createdAt: true,
+        updatedAt: true,
         student: {
           select: {
             fullName: true,
@@ -17,6 +30,7 @@ export class ReceiversService {
           },
         },
       },
+      take: 30,
       orderBy: { createdAt: 'desc' },
     });
   }
@@ -278,7 +292,20 @@ export class ReceiversService {
         receiverId,
         status: RequestStatus.COMPLETED,
       },
-      include: {
+      select: {
+        id: true,
+        studentId: true,
+        receiverId: true,
+        foodPlatform: true,
+        orderCode: true,
+        pickupLocation: true,
+        dropoffLocation: true,
+        pickupTime: true,
+        status: true,
+        serviceFee: true,
+        note: true,
+        createdAt: true,
+        updatedAt: true,
         student: {
           select: {
             fullName: true,
@@ -292,6 +319,7 @@ export class ReceiversService {
           },
         },
       },
+      take: 30,
       orderBy: { updatedAt: 'desc' },
     });
   }
