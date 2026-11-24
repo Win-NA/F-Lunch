@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useAuthStore } from '@/stores/auth.store';
+import { useTranslation } from '@/lib/translations';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
 import { 
@@ -31,6 +32,7 @@ interface WalletModalProps {
 
 export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
   const { user, updateUser } = useAuthStore();
+  const { t, lang } = useTranslation();
   const [tab, setTab] = useState<'DEPOSIT' | 'HISTORY'>('DEPOSIT');
 
   // Deposit Form State
@@ -302,8 +304,10 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
               <Wallet size={26} />
             </div>
             <div>
-              <h3 style={{ color: '#ffffff' }} className="font-black text-2xl tracking-tight">Ví F-Lunch</h3>
-              <p style={{ color: '#cbd5e1' }} className="text-sm sm:text-base font-bold">Quản lý số dư &amp; Nạp tiền vào ví</p>
+              <h3 style={{ color: '#ffffff' }} className="font-black text-2xl tracking-tight">{t.wallet_modal_title}</h3>
+              <p style={{ color: '#cbd5e1' }} className="text-sm sm:text-base font-bold">
+                {lang === 'vi' ? 'Quản lý số dư & Nạp tiền vào ví' : 'Manage balance & Top up wallet'}
+              </p>
             </div>
           </div>
           <button
@@ -346,14 +350,14 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
             {/* Breakdown */}
             <div style={{ borderColor: '#334155' }} className="grid grid-cols-2 gap-3.5 pt-4 border-t-2">
               <div style={{ backgroundColor: '#0f172a', borderColor: '#334155' }} className="p-4 rounded-2xl border-2">
-                <p style={{ color: '#cbd5e1' }} className="text-xs sm:text-sm font-bold">Ví nạp chính</p>
+                <p style={{ color: '#cbd5e1' }} className="text-xs sm:text-sm font-bold">{t.wallet_balance_real}</p>
                 <p style={{ color: '#34d399' }} className="text-xl sm:text-2xl font-black font-mono mt-1">
                   {realBal.toLocaleString('vi-VN')} đ
                 </p>
               </div>
               <div style={{ backgroundColor: '#0f172a', borderColor: '#334155' }} className="p-4 rounded-2xl border-2">
                 <p style={{ color: '#cbd5e1' }} className="text-xs sm:text-sm font-bold flex items-center gap-1.5">
-                  Ví Khuyến mãi <Gift size={16} style={{ color: '#f97316' }} />
+                  {t.wallet_balance_bonus} <Gift size={16} style={{ color: '#f97316' }} />
                 </p>
                 <p style={{ color: '#fb923c' }} className="text-xl sm:text-2xl font-black font-mono mt-1">
                   {bonusBal.toLocaleString('vi-VN')} đ
@@ -372,7 +376,7 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
               }}
               className="flex-1 py-3.5 sm:py-4 rounded-xl text-sm sm:text-lg font-black transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md"
             >
-              <ArrowDownLeft size={22} /> Nạp tiền vào ví
+              <ArrowDownLeft size={22} /> {t.wallet_deposit_tab}
             </button>
             <button
               onClick={() => setTab('HISTORY')}
@@ -382,7 +386,7 @@ export default function WalletModal({ isOpen, onClose }: WalletModalProps) {
               }}
               className="flex-1 py-3.5 sm:py-4 rounded-xl text-sm sm:text-lg font-black transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md"
             >
-              <History size={22} /> Lịch sử giao dịch
+              <History size={22} /> {t.wallet_history_tab}
             </button>
           </div>
 

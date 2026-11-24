@@ -3,12 +3,14 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
+import { useTranslation } from '@/lib/translations';
 import { toast } from 'sonner';
 import { Html5QrcodeScanner } from 'html5-qrcode';
 import { ArrowLeft, Camera, QrCode } from 'lucide-react';
 
 export default function ScannerPage() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [manualId, setManualId] = useState('');
   const [loading, setLoading] = useState(false);
   const [scannerActive, setScannerActive] = useState(false);
@@ -83,17 +85,17 @@ export default function ScannerPage() {
   return (
     <div className="max-w-md mx-auto space-y-6 pb-12">
       <button onClick={() => router.back()} className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors cursor-pointer text-xs">
-        <ArrowLeft size={14} /> Quay lại bàn việc
+        <ArrowLeft size={14} /> {t.scan_back}
       </button>
 
       <div>
-        <h1 className="text-2xl font-extrabold text-white">Xác thực bàn giao</h1>
-        <p className="text-xs text-slate-400 mt-1">Xác nhận bàn giao đơn hàng bằng camera quét mã QR hoặc nhập thủ công</p>
+        <h1 className="text-2xl font-extrabold text-white">{t.scan_title}</h1>
+        <p className="text-xs text-slate-400 mt-1">{t.scan_sub}</p>
       </div>
 
       {/* Camera scanner wrapper */}
       <div className="bg-slate-900/60 backdrop-blur-xl border border-slate-800 p-5 rounded-3xl shadow-xl text-center space-y-4">
-        <h2 className="text-xs font-extrabold text-white uppercase tracking-wider">Quét bằng Camera</h2>
+        <h2 className="text-xs font-extrabold text-white uppercase tracking-wider">{t.scan_camera_title}</h2>
         
         {scannerActive ? (
           <div className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-950">
@@ -110,18 +112,18 @@ export default function ScannerPage() {
               }}
               className="mt-4 mb-4 text-xs font-semibold text-red-455 hover:text-red-400 cursor-pointer"
             >
-              Hủy Quét bằng Camera
+              {t.scan_camera_cancel}
             </button>
           </div>
         ) : (
           <div className="py-8 border border-dashed border-slate-800 rounded-2xl flex flex-col items-center justify-center space-y-3">
             <Camera className="text-slate-650" size={32} />
-            <p className="text-slate-500 text-[10px] max-w-[240px]">Đưa camera quét mã QR trên điện thoại của khách hàng để xác thực bàn giao đơn hàng.</p>
+            <p className="text-slate-500 text-[10px] max-w-[240px]">{t.scan_camera_desc}</p>
             <button
               onClick={() => setScannerActive(true)}
               className="bg-orange-600 hover:bg-orange-500 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition-colors cursor-pointer"
             >
-              Bật Camera Quét
+              {t.scan_camera_btn}
             </button>
           </div>
         )}
@@ -131,16 +133,16 @@ export default function ScannerPage() {
       <div className="bg-slate-900/60 backdrop-blur-xl border border-slate-800 p-5 rounded-3xl shadow-xl space-y-4">
         <h2 className="text-xs font-extrabold text-white uppercase tracking-wider flex items-center gap-2">
           <QrCode size={14} className="text-orange-500" />
-          Nhập mã OTP thủ công
+          {t.scan_manual_title}
         </h2>
-        <p className="text-[10px] text-slate-550">Nếu camera không quét được, hãy nhập mã bàn giao 6 ký tự hiển thị trên máy của khách hàng.</p>
+        <p className="text-[10px] text-slate-550">{t.scan_manual_desc}</p>
         
         <form onSubmit={handleManualSubmit} className="space-y-4">
           <input
             type="text"
             value={manualId}
             onChange={(e) => setManualId(e.target.value)}
-            placeholder="Nhập OTP 6 ký tự (ví dụ: EFA3BE)"
+            placeholder={t.scan_manual_placeholder}
             maxLength={6}
             className="w-full bg-slate-950 border border-slate-850 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-orange-500 uppercase tracking-[0.2em] text-center font-bold text-sm"
           />
@@ -150,7 +152,7 @@ export default function ScannerPage() {
             disabled={loading}
             className="w-full bg-orange-600 hover:bg-orange-500 disabled:bg-orange-300 text-white font-bold text-xs py-3 rounded-xl transition-all shadow-md shadow-orange-600/15 cursor-pointer"
           >
-            {loading ? 'Đang xác thực...' : 'Xác nhận Bàn giao'}
+            {loading ? '...' : t.scan_manual_btn}
           </button>
         </form>
       </div>

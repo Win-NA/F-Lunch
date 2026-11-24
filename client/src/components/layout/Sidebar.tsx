@@ -5,6 +5,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useSearchParams, useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth.store';
+import { useTranslation } from '@/lib/translations';
+import LanguageToggle from '@/components/common/LanguageToggle';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
 import { 
@@ -25,12 +27,13 @@ export default function Sidebar({ onOpenWallet }: { onOpenWallet?: () => void })
   const searchParams = useSearchParams();
   const router = useRouter();
   const { user, logout, updateUser } = useAuthStore();
+  const { t, lang } = useTranslation();
   const [unreadCount, setUnreadCount] = useState<number>(0);
 
   const handleLogout = () => {
     logout();
-    toast.success('Đăng xuất thành công');
-    router.replace('/login');
+    toast.success(t.logout_success);
+    router.replace('/');
   };
 
   const fetchSyncData = async () => {
@@ -65,32 +68,32 @@ export default function Sidebar({ onOpenWallet }: { onOpenWallet?: () => void })
   const menuItems = [];
 
   const getRoleLabel = (r: string) => {
-    if (r === 'ADMIN') return 'QUẢN TRỊ';
-    if (r === 'RECEIVER') return 'NGƯỜI NHẬN HỘ';
-    return 'KHÁCH HÀNG';
+    if (r === 'ADMIN') return t.role_admin;
+    if (r === 'RECEIVER') return t.role_receiver;
+    return t.role_student;
   };
 
   if (role === 'STUDENT') {
     menuItems.push(
-      { name: 'Bảng điều khiển', path: '/student', icon: Home },
-      { name: 'Thông báo', path: '/notifications', icon: Bell },
-      { name: 'Hồ sơ', path: '/profile', icon: User },
-      { name: 'Báo cáo sự cố', path: '/student/reports', icon: AlertTriangle }
+      { name: t.nav_dashboard, path: '/student', icon: Home },
+      { name: t.nav_notifications, path: '/notifications', icon: Bell },
+      { name: t.nav_profile, path: '/profile', icon: User },
+      { name: t.nav_reports, path: '/student/reports', icon: AlertTriangle }
     );
   } else if (role === 'RECEIVER') {
     menuItems.push(
-      { name: 'Bàn làm việc', path: '/receiver', icon: ClipboardList },
-      { name: 'Quét QR bàn giao', path: '/receiver/scan', icon: QrCode },
-      { name: 'Thông báo', path: '/notifications', icon: Bell },
-      { name: 'Hồ sơ', path: '/profile', icon: User }
+      { name: t.nav_receiverDesk, path: '/receiver', icon: ClipboardList },
+      { name: t.nav_receiverScan, path: '/receiver/scan', icon: QrCode },
+      { name: t.nav_notifications, path: '/notifications', icon: Bell },
+      { name: t.nav_profile, path: '/profile', icon: User }
     );
   } else if (role === 'ADMIN') {
     menuItems.push(
-      { name: 'Quản trị viên', path: '/admin', icon: Shield },
-      { name: 'Duyệt khiếu nại', path: '/admin?view=reports', icon: AlertTriangle },
-      { name: 'Báo cáo CEO', path: '/admin?view=ceo', icon: Crown },
-      { name: 'Thông báo', path: '/notifications', icon: Bell },
-      { name: 'Hồ sơ', path: '/profile', icon: User }
+      { name: t.nav_admin, path: '/admin', icon: Shield },
+      { name: t.nav_adminReports, path: '/admin?view=reports', icon: AlertTriangle },
+      { name: t.nav_adminCeo, path: '/admin?view=ceo', icon: Crown },
+      { name: t.nav_notifications, path: '/notifications', icon: Bell },
+      { name: t.nav_profile, path: '/profile', icon: User }
     );
   }
 
@@ -133,14 +136,14 @@ export default function Sidebar({ onOpenWallet }: { onOpenWallet?: () => void })
                 <Wallet size={16} />
               </div>
               <div>
-                <p className="text-[10px] text-slate-400 font-semibold uppercase">Ví F-Lunch</p>
+                <p className="text-[10px] text-slate-400 font-semibold uppercase">{t.wallet_title}</p>
                 <p className="text-xs font-extrabold text-white font-mono">
                   {totalBalance.toLocaleString('vi-VN')} đ
                 </p>
               </div>
             </div>
             <span className="text-[10px] font-bold px-2 py-1 rounded-lg bg-orange-600 text-white shadow-sm shadow-orange-600/20 hover:bg-orange-500 transition-colors">
-              Nạp
+              {t.wallet_topup}
             </span>
           </div>
         )}
@@ -190,8 +193,16 @@ export default function Sidebar({ onOpenWallet }: { onOpenWallet?: () => void })
         </nav>
       </div>
 
-      <div className="pt-4 border-t border-slate-800 shrink-0 mt-4">
-        <div className="px-3 mb-4 flex items-center gap-3">
+      <div className="pt-4 border-t border-slate-800 shrink-0 mt-4 space-y-3">
+        {/* Language Switcher in Sidebar */}
+        <div className="flex items-center justify-between px-3 py-1.5 bg-slate-900/80 rounded-xl border border-slate-800">
+          <span className="text-[11px] font-semibold text-slate-400">
+            {lang === 'vi' ? 'Ngôn ngữ' : 'Language'}
+          </span>
+          <LanguageToggle variant="dark" />
+        </div>
+
+        <div className="px-3 flex items-center gap-3">
           <div className="w-9 h-9 rounded-full bg-slate-900 border border-slate-800 overflow-hidden flex items-center justify-center text-sm font-semibold text-orange-500 shrink-0">
             {user.avatar ? (
               <img src={user.avatar} alt="Avatar" className="w-full h-full object-cover" />
@@ -206,10 +217,10 @@ export default function Sidebar({ onOpenWallet }: { onOpenWallet?: () => void })
         </div>
         <button
           onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors font-medium text-sm text-left cursor-pointer"
+          className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors font-medium text-sm text-left cursor-pointer"
         >
           <LogOut size={18} />
-          <span>Đăng xuất</span>
+          <span>{t.logout_btn}</span>
         </button>
       </div>
     </aside>

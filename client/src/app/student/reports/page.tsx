@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useAuthStore } from '@/stores/auth.store';
 import { api } from '@/lib/api';
+import { useTranslation } from '@/lib/translations';
 import { toast } from 'sonner';
 import { 
   AlertTriangle, 
@@ -33,6 +34,7 @@ interface ReportTicket {
 }
 
 export default function StudentReportsPage() {
+  const { t, lang } = useTranslation();
   const [reports, setReports] = useState<ReportTicket[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -153,10 +155,10 @@ export default function StudentReportsPage() {
       <div>
         <h1 className="text-2xl font-extrabold tracking-tight text-white flex items-center gap-2.5 font-sans">
           <AlertTriangle className="text-orange-500" size={26} />
-          Báo Cáo Sự Cố & Phản Ánh Nạp Tiền
+          {t.report_page_title}
         </h1>
         <p className="text-slate-400 text-xs mt-1">
-          Gửi báo cáo lỗi hệ thống hoặc phản ánh sự cố nạp tiền sai nội dung chuyển khoản để Admin đối chiếu chứng từ và hỗ trợ xử lý.
+          {t.report_page_sub}
         </p>
       </div>
 
@@ -165,14 +167,14 @@ export default function StudentReportsPage() {
         <div className="lg:col-span-5 bg-slate-900/60 backdrop-blur-xl border border-slate-800 p-5 sm:p-6 rounded-3xl shadow-xl h-fit space-y-4">
           <h2 className="text-sm font-bold text-white flex items-center gap-2 border-b border-slate-800 pb-3">
             <FileText size={16} className="text-orange-500" />
-            Tạo phản ánh / báo cáo mới
+            {t.report_create_title}
           </h2>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Type selector */}
             <div>
               <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1.5">
-                Loại sự cố / vấn đề *
+                {t.report_type_label}
               </label>
               <div className="grid grid-cols-2 gap-2">
                 <button
@@ -185,9 +187,9 @@ export default function StudentReportsPage() {
                   }`}
                 >
                   <span className="flex items-center gap-1.5 text-[11px]">
-                    <DollarSign size={14} className="text-orange-500" /> Lỗi nạp tiền
+                    <DollarSign size={14} className="text-orange-500" /> {t.report_type_deposit}
                   </span>
-                  <span className="text-[9.5px] font-normal text-slate-400">Sai ND / Tiền chưa vào ví</span>
+                  <span className="text-[9.5px] font-normal text-slate-400">{lang === 'vi' ? 'Sai ND / Tiền chưa vào ví' : 'Wrong note / Not credited'}</span>
                 </button>
 
                 <button
@@ -200,9 +202,9 @@ export default function StudentReportsPage() {
                   }`}
                 >
                   <span className="flex items-center gap-1.5 text-[11px]">
-                    <ShieldAlert size={14} className="text-orange-500" /> Lỗi hệ thống
+                    <ShieldAlert size={14} className="text-orange-500" /> {t.report_type_bug}
                   </span>
-                  <span className="text-[9.5px] font-normal text-slate-400">Lỗi giao diện / Chức năng</span>
+                  <span className="text-[9.5px] font-normal text-slate-400">{lang === 'vi' ? 'Lỗi giao diện / Chức năng' : 'UI bug / Feature issue'}</span>
                 </button>
               </div>
             </div>
@@ -211,14 +213,14 @@ export default function StudentReportsPage() {
             {type === 'DEPOSIT_ERROR' && (
               <div className="p-3.5 bg-slate-955 border border-orange-500/20 rounded-2xl space-y-2">
                 <label className="block text-[10px] font-semibold uppercase tracking-wider text-orange-400 mb-1">
-                  Số tiền bạn đã chuyển khoản (VNĐ) *
+                  {t.report_amount_label} *
                 </label>
                 <input
                   type="text"
                   inputMode="numeric"
                   value={expectedAmount ? Number(expectedAmount.replace(/\D/g, '')).toLocaleString('vi-VN').replace(/,/g, '.') : ''}
                   onChange={(e) => setExpectedAmount(e.target.value.replace(/\D/g, ''))}
-                  placeholder="VD: 50.000"
+                  placeholder={lang === 'vi' ? 'VD: 50.000' : 'e.g. 50,000'}
                   className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white font-mono font-extrabold placeholder-slate-600 focus:outline-none focus:border-orange-500"
                 />
               </div>
@@ -227,12 +229,12 @@ export default function StudentReportsPage() {
             {/* Description */}
             <div>
               <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1.5">
-                Mô tả chi tiết sự cố *
+                {t.report_desc_label}
               </label>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Mô tả cụ thể thời gian chuyển khoản, thông tin tài khoản chuyển hoặc thao tác xảy ra lỗi..."
+                placeholder={lang === 'vi' ? 'Mô tả cụ thể thời gian chuyển khoản, thông tin tài khoản chuyển hoặc thao tác xảy ra lỗi...' : 'Describe transfer time, bank info, or error details...'}
                 rows={3}
                 className="w-full bg-slate-955 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-orange-500 resize-none"
               />
@@ -279,7 +281,7 @@ export default function StudentReportsPage() {
               className="w-full bg-orange-600 hover:bg-orange-500 disabled:bg-slate-800 text-white font-bold text-xs py-3 rounded-xl transition-all shadow-lg shadow-orange-600/25 active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer"
             >
               <Upload size={14} />
-              {submitting ? 'Đang gửi...' : 'Gửi báo cáo sự cố'}
+              {submitting ? (lang === 'vi' ? 'Đang gửi...' : 'Submitting...') : t.report_submit_btn}
             </button>
           </form>
         </div>
@@ -289,23 +291,23 @@ export default function StudentReportsPage() {
           <h2 className="text-sm font-bold text-white flex items-center justify-between border-b border-slate-800 pb-3">
             <span className="flex items-center gap-2">
               <Clock size={16} className="text-orange-500" />
-              Lịch sử phản ánh của tôi ({reports.length})
+              {t.report_history_title} ({reports.length})
             </span>
             <button
               onClick={fetchReports}
               className="text-[10px] text-orange-400 hover:underline font-medium cursor-pointer"
             >
-              Làm mới
+              {lang === 'vi' ? 'Làm mới' : 'Refresh'}
             </button>
           </h2>
 
           {loading ? (
-            <p className="text-slate-500 text-xs py-6 text-center">Đang tải lịch sử báo cáo...</p>
+            <p className="text-slate-500 text-xs py-6 text-center">{lang === 'vi' ? 'Đang tải lịch sử báo cáo...' : 'Loading support tickets...'}</p>
           ) : reports.length === 0 ? (
             <div className="text-center py-12 border border-dashed border-slate-800 rounded-2xl space-y-2">
               <HelpCircle className="mx-auto text-slate-600" size={32} />
-              <p className="text-slate-400 text-xs font-medium">Bạn chưa gửi báo cáo sự cố nào.</p>
-              <p className="text-[11px] text-slate-500">Nếu bị lỗi nạp tiền hoặc sự cố ứng dụng, hãy tạo báo cáo ở ô bên cạnh nhé!</p>
+              <p className="text-slate-400 text-xs font-medium">{t.report_empty_history}</p>
+              <p className="text-[11px] text-slate-500">{lang === 'vi' ? 'Nếu bị lỗi nạp tiền hoặc sự cố ứng dụng, hãy tạo báo cáo ở ô bên cạnh nhé!' : 'If you encounter payment or system issues, submit a ticket in the form.'}</p>
             </div>
           ) : (
             <div className="space-y-3.5 max-h-[620px] overflow-y-auto pr-1">

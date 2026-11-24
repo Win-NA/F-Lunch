@@ -6,6 +6,7 @@ import { api } from '@/lib/api';
 import { toast } from 'sonner';
 import Tesseract from 'tesseract.js';
 import { useAuthStore } from '@/stores/auth.store';
+import { useTranslation } from '@/lib/translations';
 import {
   Plus,
   MapPin,
@@ -20,7 +21,10 @@ import {
   Info,
   Search,
   Copy,
-  MessageSquare
+  MessageSquare,
+  Sparkles,
+  Camera,
+  Upload
 } from 'lucide-react';
 
 import { isProfileComplete } from '@/lib/profileGuard';
@@ -44,6 +48,7 @@ interface RequestItem {
 export default function StudentDashboard() {
   const router = useRouter();
   const { user } = useAuthStore();
+  const { t, lang } = useTranslation();
 
   const [requests, setRequests] = useState<RequestItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -415,7 +420,7 @@ export default function StudentDashboard() {
 
   const handleCancelRequestFromDashboard = async (e: React.MouseEvent, requestId: string) => {
     e.stopPropagation();
-    if (!confirm('Bạn có chắc chắn muốn hủy yêu cầu nhận hộ này không? Phí dịch vụ 5.000đ sẽ được hoàn lại vào ví của bạn.')) return;
+    if (!confirm(t.student_cancel_confirm)) return;
     try {
       await api.post(`/requests/${requestId}/cancel`);
       toast.success('Hủy yêu cầu nhận hộ thành công, đã hoàn tiền phí dịch vụ vào ví!');
@@ -445,17 +450,17 @@ export default function StudentDashboard() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'PENDING':
-        return <span className="px-2.5 py-1 text-[10px] font-bold rounded-full bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 whitespace-nowrap">Đang chờ</span>;
+        return <span className="px-2.5 py-1 text-[10px] font-bold rounded-full bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 whitespace-nowrap">{t.status_pending}</span>;
       case 'ACCEPTED':
-        return <span className="px-2.5 py-1 text-[10px] font-bold rounded-full bg-blue-500/10 text-blue-500 border border-blue-500/20 whitespace-nowrap">Đã xác nhận</span>;
+        return <span className="px-2.5 py-1 text-[10px] font-bold rounded-full bg-blue-500/10 text-blue-500 border border-blue-500/20 whitespace-nowrap">{t.status_accepted}</span>;
       case 'RECEIVED':
-        return <span className="px-2.5 py-1 text-[10px] font-bold rounded-full bg-purple-500/10 text-purple-500 border border-purple-500/20 whitespace-nowrap">Đã lấy đơn</span>;
+        return <span className="px-2.5 py-1 text-[10px] font-bold rounded-full bg-purple-500/10 text-purple-500 border border-purple-500/20 whitespace-nowrap">{t.status_received}</span>;
       case 'READY_FOR_PICKUP':
-        return <span className="px-2.5 py-1 text-[10px] font-bold rounded-full bg-green-500/10 text-green-500 border border-green-500/20 whitespace-nowrap">Chờ bạn lấy</span>;
+        return <span className="px-2.5 py-1 text-[10px] font-bold rounded-full bg-green-500/10 text-green-500 border border-green-500/20 whitespace-nowrap">{t.status_ready}</span>;
       case 'COMPLETED':
-        return <span className="px-2.5 py-1 text-[10px] font-bold rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 whitespace-nowrap">Hoàn thành</span>;
+        return <span className="px-2.5 py-1 text-[10px] font-bold rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 whitespace-nowrap">{t.status_completed}</span>;
       default:
-        return <span className="px-2.5 py-1 text-[10px] font-bold rounded-full bg-slate-500/10 text-slate-400 border border-slate-500/20 whitespace-nowrap">Đã hủy</span>;
+        return <span className="px-2.5 py-1 text-[10px] font-bold rounded-full bg-slate-500/10 text-slate-400 border border-slate-500/20 whitespace-nowrap">{t.status_cancelled}</span>;
     }
   };
 
@@ -467,8 +472,8 @@ export default function StudentDashboard() {
   return (
     <div className="space-y-6 pb-6">
       <div>
-        <h1 className="text-2xl font-extrabold tracking-tight text-white font-sans">Dịch vụ Nhận hộ F-Lunch</h1>
-        <p className="text-slate-450 text-xs mt-1">Tạo yêu cầu và theo dõi tiến độ giao nhận đồ ăn tại FPTU.</p>
+        <h1 className="text-2xl font-extrabold tracking-tight text-white font-sans">{t.student_page_title}</h1>
+        <p className="text-slate-450 text-xs mt-1">{t.student_page_sub}</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -476,144 +481,71 @@ export default function StudentDashboard() {
         <div className="bg-slate-900/60 backdrop-blur-xl border border-slate-800 p-5 rounded-3xl shadow-xl h-fit">
           <h2 className="text-md font-bold text-white mb-4 flex items-center gap-2">
             <Plus className="text-orange-500" size={18} />
-            Tạo đơn nhận hộ mới
+            {t.student_form_title}
           </h2>
 
           {hasActiveUnstoredRequest ? (
             <div className="bg-amber-500/10 border-2 border-amber-500/40 p-4 rounded-2xl space-y-2 shadow-sm animate-fadeIn">
               <div className="flex items-center gap-2 font-black text-amber-400 text-xs">
                 <AlertCircle className="shrink-0 text-amber-400" size={18} />
-                <span>CHƯA ĐỦ ĐIỀU KIỆN TẠO ĐƠN MỚI</span>
+                <span>{t.student_ineligible_banner_title}</span>
               </div>
               <p className="text-[11.5px] font-bold text-slate-200 leading-relaxed">
-                Bạn đang có 1 đơn nhận hộ chưa cất vào tủ sảnh. Vui lòng chờ người nhận hộ xác nhận <strong className="text-amber-400 font-extrabold">&ldquo;Đã đến điểm tập kết&rdquo;</strong> đơn hiện tại trước khi có thể tạo đơn nhận hộ mới nhé!
+                {t.student_ineligible_banner_msg}
               </p>
               <div className="pt-2 border-t border-amber-500/20 flex items-center justify-between text-[10px] text-slate-300 font-medium">
-                <span>Trạng thái: Đơn đang trong quá trình xử lý</span>
+                <span>{t.student_order_status_label}</span>
               </div>
             </div>
           ) : (
             <form onSubmit={handleCreateRequest} className="space-y-4">
-              <div>
-                <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1.5">
-                  Ứng dụng đặt đồ ăn *
-                </label>
-                <select
-                  value={foodPlatform}
-                  onChange={(e) => setFoodPlatform(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-orange-500"
-                >
-                  <option value="GRABFOOD">GrabFood</option>
-                  <option value="SHOPEEFOOD">ShopeeFood</option>
-                  <option value="BEFOOD">BeFood</option>
-                  <option value="OTHER">Khác</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1.5">
-                  Vị trí Shipper giao tới *
-                </label>
-                <select
-                  value={pickupLocation}
-                  onChange={(e) => setPickupLocation(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-orange-500"
-                >
-                  <option value="Cổng 1 FPT">Cổng 1 FPT</option>
-                  <option value="Cổng 2 FPT">Cổng 2 FPT</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1.5">
-                  Nơi bạn xuống nhận hàng *
-                </label>
-                <div className="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-350 flex items-center gap-2 select-none">
-                  <MapPin size={12} className="text-orange-500 shrink-0" />
-                  <span>Sảnh Trống Đồng (Mặc định cố định)</span>
-                </div>
-              </div>
-
-              <div>
-                <div className="flex justify-between items-center mb-1.5">
-                  <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-                    Giờ giao hàng dự kiến *
+              {/* 1. SCREENSHOT UPLOAD - PROMINENT AT TOP */}
+              <div className="space-y-2.5 bg-slate-950/80 p-3 sm:p-4 rounded-2xl border border-orange-500/30 shadow-inner">
+                <div className="flex flex-wrap items-center justify-between gap-1.5 sm:gap-2">
+                  <label className="text-[11px] sm:text-xs font-black uppercase tracking-wider text-orange-600 flex items-center gap-1.5 min-w-0">
+                    <Sparkles size={14} className="text-orange-600 animate-pulse shrink-0" />
+                    <span className="whitespace-nowrap">{t.student_form_upload_title}</span>
+                    <span className="text-red-500 font-black text-sm leading-none shrink-0">*</span>
                   </label>
-                  <span className="text-[10px] text-orange-500 font-medium">Hôm nay ({getTodayString()})</span>
+                  <span className="inline-flex items-center gap-1 text-[10px] font-black tracking-wide text-orange-700 bg-orange-100 border border-orange-300 px-2.5 py-0.5 rounded-full whitespace-nowrap shrink-0 shadow-2xs">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                    <span>{t.student_form_upload_badge}</span>
+                  </span>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="flex items-center gap-2 bg-slate-955 border border-slate-800 rounded-xl px-3 py-2.5">
-                    <select
-                      value={pickupHour}
-                      onChange={(e) => setPickupHour(e.target.value)}
-                      className="flex-1 bg-transparent text-xs text-white focus:outline-none cursor-pointer [color-scheme:dark] h-5"
-                    >
-                      {Array.from({ length: 24 }, (_, i) => {
-                        const h = i.toString().padStart(2, '0');
-                        return <option key={h} value={h} className="bg-slate-950">{h} giờ</option>;
-                      })}
-                    </select>
-                  </div>
-                  <div className="flex items-center gap-2 bg-slate-955 border border-slate-800 rounded-xl px-3 py-2.5">
-                    <select
-                      value={pickupMinute}
-                      onChange={(e) => setPickupMinute(e.target.value)}
-                      className="flex-1 bg-transparent text-xs text-white focus:outline-none cursor-pointer [color-scheme:dark] h-5"
-                    >
-                      {Array.from({ length: 60 }, (_, i) => {
-                        const m = i.toString().padStart(2, '0');
-                        return <option key={m} value={m} className="bg-slate-950">{m} phút</option>;
-                      })}
-                    </select>
-                  </div>
-                </div>
-              </div>
 
-              <div>
-                <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1.5">
-                  Ghi chú cho F-Lunch / Thông tin thêm
-                </label>
-                <textarea
-                  value={note}
-                  onChange={(e) => setNote(e.target.value)}
-                  placeholder="Ví dụ: Số điện thoại tài xế, hoặc lưu ý đồ uống có đá/cần bảo quản lạnh"
-                  rows={2}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-orange-500 resize-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1.5 flex justify-between items-center">
-                  <span>Ảnh chụp màn hình đơn hàng *</span>
-                  <span className="text-[9px] text-slate-500 font-normal">Dưới 2MB</span>
-                </label>
-                <div className="flex flex-col gap-2.5">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageChange}
-                    className="block w-full text-xs text-slate-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-[10px] file:font-semibold file:bg-orange-500/10 file:text-orange-500 file:cursor-pointer hover:file:bg-orange-500/20"
-                  />
-
-                  {ocrLoading && (
-                    <div className="text-[10px] text-orange-400 flex items-center gap-1.5 animate-pulse bg-orange-500/5 p-2.5 rounded-xl border border-orange-500/10 justify-center">
-                      <Clock size={12} className="animate-spin shrink-0 text-orange-400" />
-                      <span>Đang tự động quét & AI kiểm duyệt đơn hàng...</span>
+                {!imageBase64 ? (
+                  <label
+                    htmlFor="order-screenshot-upload"
+                    className="relative flex flex-col items-center justify-center p-4 sm:p-6 rounded-2xl border-2 border-dashed border-orange-500/50 hover:border-orange-500 bg-gradient-to-b from-orange-500/[0.08] to-orange-500/[0.02] hover:bg-orange-500/[0.12] transition-all cursor-pointer group shadow-lg shadow-orange-500/5 text-center"
+                  >
+                    <input
+                      id="order-screenshot-upload"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                      className="hidden"
+                    />
+                    <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-orange-500/20 text-orange-600 border border-orange-500/40 flex items-center justify-center mb-2 group-hover:scale-110 group-hover:bg-orange-500/30 transition-all shadow-md shadow-orange-500/20">
+                      <Camera size={24} />
                     </div>
-                  )}
-
-                  {extractedOrderCode && (
-                    <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 p-2.5 rounded-xl text-[10px] flex items-center gap-2">
-                      <span>Mã đơn nhận dạng được: <strong className="text-emerald-400 font-bold">{extractedOrderCode}</strong></span>
+                    <p className="text-xs sm:text-sm font-black text-[#4a1f05] group-hover:text-orange-600 transition-colors">
+                      {lang === 'vi' ? 'Nhấn để chọn hoặc kéo thả ảnh đơn' : 'Click to select or drag & drop order image'}
+                    </p>
+                    <p className="text-[10px] text-slate-500 mt-1 max-w-full sm:max-w-[280px] leading-relaxed">
+                      {t.student_form_upload_sub}
+                    </p>
+                    <div className="mt-2.5 inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-orange-600 hover:bg-orange-500 text-white text-[11px] font-black shadow-md shadow-orange-600/30 transition-all">
+                      <Upload size={13} />
+                      <span>{t.student_form_upload_btn}</span>
                     </div>
-                  )}
-
-                  {imageBase64 && (
-                    <div className="relative w-full h-24 rounded-xl border border-slate-800 bg-slate-950 overflow-hidden flex items-center justify-center p-2">
+                  </label>
+                ) : (
+                  <div className="relative rounded-2xl border-2 border-orange-500/50 bg-slate-900 p-3 space-y-2.5 shadow-lg">
+                    <div className="relative w-full h-36 rounded-xl bg-slate-950 overflow-hidden flex items-center justify-center border border-slate-800">
                       <img
                         src={imageBase64}
-                        alt="Xem trước đơn hàng"
-                        className="max-h-full max-w-full rounded object-contain"
+                        alt="Order preview"
+                        className="max-h-full max-w-full object-contain"
                       />
                       <button
                         type="button"
@@ -627,75 +559,197 @@ export default function StudentDashboard() {
                           setAiReason(null);
                           setAiPowered(false);
                         }}
-                        className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-red-500/80 hover:bg-red-500 text-white flex items-center justify-center text-xs active:scale-90 transition-transform cursor-pointer"
+                        className="absolute top-2 right-2 w-7 h-7 rounded-full bg-red-600 hover:bg-red-500 text-white flex items-center justify-center shadow-lg transition-transform active:scale-90 cursor-pointer"
+                        title={lang === 'vi' ? 'Xóa ảnh' : 'Remove image'}
                       >
-                        <X size={10} />
+                        <X size={14} />
                       </button>
                     </div>
-                  )}
 
-                  {/* AI / OCR Warning Alert: Non-Food or COD Payment (RED ALERT) */}
-                  {(!isFoodOrder || paymentStatus === 'UNPAID') && (
-                    <div className="bg-red-500/10 border border-red-500/30 text-red-400 p-2.5 rounded-xl text-[10px] space-y-1">
-                      <div className="flex items-center gap-1.5 font-bold text-red-400">
-                        <AlertCircle size={14} className="shrink-0 text-red-400" />
-                        <span>{!isFoodOrder ? 'Cảnh báo: Đơn hàng không thuộc nhóm Đồ ăn' : 'Phát hiện đơn "Tiền mặt" (COD)'}</span>
-                      </div>
-                      <p className="text-[9.5px] text-red-400/90 leading-normal">
-                        {!isFoodOrder
-                          ? (aiReason || 'F-Lunch hiện chỉ hỗ trợ nhận hộ Đồ ăn & Thức uống. Hệ thống không nhận hộ bưu kiện hoặc hàng hóa khác.')
-                          : 'F-Lunch chỉ nhận hộ các đơn hàng đã thanh toán trước (ShopeePay, GrabPay, MoMo, Thẻ...). Vui lòng chọn đơn đã thanh toán trực tuyến.'}
-                      </p>
-                      {detectedCategory && (
-                        <div className="inline-block mt-0.5 bg-red-500/15 text-red-400 px-2 py-0.5 rounded text-[9px] font-semibold border border-red-500/20">
-                          Mặt hàng phát hiện: {detectedCategory}
-                        </div>
-                      )}
-                    </div>
-                  )}
+                    {/* Change screenshot button */}
+                    <label
+                      htmlFor="order-screenshot-upload-replace"
+                      className="w-full py-2 rounded-xl bg-slate-800 hover:bg-slate-750 border border-slate-700 text-slate-200 text-xs font-bold flex items-center justify-center gap-2 cursor-pointer transition-colors"
+                    >
+                      <Upload size={14} />
+                      <span>{t.student_form_change_img}</span>
+                      <input
+                        id="order-screenshot-upload-replace"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageChange}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+                )}
 
-                  {/* AI Verification Success Banner (GREEN ALERT) */}
-                  {isFoodOrder && paymentStatus === 'PAID' && (
-                    <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 p-2.5 rounded-xl text-[10px] space-y-1">
-                      <div className="flex items-center gap-1.5 font-bold text-emerald-400">
-                        <CheckCircle2 size={14} className="shrink-0 text-emerald-400" />
-                        <span>Xác thực thành công: Đơn hàng ĐÃ THANH TOÁN!</span>
-                      </div>
-                      <p className="text-[9.5px] text-emerald-400/90 leading-normal">
-                        Đơn hàng đồ ăn hợp lệ, đã trả trước qua <strong>{detectedPaymentMethod || 'Ví/Thẻ Trực tuyến'}</strong>.
-                      </p>
-                      {aiPowered && (
-                        <div className="inline-flex items-center gap-1 bg-emerald-500/15 text-emerald-400 px-2 py-0.5 rounded text-[9px] font-medium border border-emerald-500/20 mt-0.5">
-                          Kiểm duyệt tự động Gemini Vision
-                        </div>
-                      )}
-                    </div>
-                  )}
+                {/* Scanning & AI indicators */}
+                {ocrLoading && (
+                  <div className="text-[10px] text-orange-400 flex items-center gap-1.5 animate-pulse bg-orange-500/10 p-2.5 rounded-xl border border-orange-500/20 justify-center font-bold">
+                    <Clock size={12} className="animate-spin shrink-0 text-orange-400" />
+                    <span>{t.student_scan_loading}</span>
+                  </div>
+                )}
 
-                  {/* Alert: Unknown payment status (RED WARNING ALERT) */}
-                  {paymentStatus === 'UNKNOWN' && imageBase64 && !ocrLoading && isFoodOrder && (
-                    <div className="bg-red-500/10 border border-red-500/30 text-red-400 p-2.5 rounded-xl text-[10px] space-y-1">
-                      <div className="flex items-center gap-1.5 font-bold text-red-400">
-                        <AlertCircle size={14} className="shrink-0 text-red-400" />
-                        <span>Chưa nhận dạng được trạng thái thanh toán</span>
-                      </div>
-                      <p className="text-[9.5px] text-red-400/90 leading-normal">
-                        Hệ thống chưa thể tự động nhận dạng ví thanh toán từ ảnh. Vui lòng đảm bảo đơn hàng của bạn đã được trả trước (ShopeePay, GrabPay, MoMo, Thẻ...) trước khi gửi!
-                      </p>
+                {extractedOrderCode && (
+                  <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 p-2.5 rounded-xl text-[10px] flex items-center gap-2">
+                    <span>{t.student_code_detected} <strong className="text-emerald-400 font-bold">{extractedOrderCode}</strong></span>
+                  </div>
+                )}
+
+                {/* AI Warning Alerts */}
+                {(!isFoodOrder || paymentStatus === 'UNPAID') && (
+                  <div className="bg-red-500/10 border border-red-500/30 text-red-400 p-2.5 rounded-xl text-[10px] space-y-1">
+                    <div className="flex items-center gap-1.5 font-bold text-red-400">
+                      <AlertCircle size={14} className="shrink-0 text-red-400" />
+                      <span>{!isFoodOrder ? t.student_alert_non_food : t.student_alert_cod}</span>
                     </div>
-                  )}
+                    <p className="text-[9.5px] text-red-400/90 leading-normal">
+                      {!isFoodOrder
+                        ? (aiReason || (lang === 'vi' ? 'F-Lunch hiện chỉ hỗ trợ nhận hộ Đồ ăn & Thức uống. Hệ thống không nhận hộ bưu kiện hoặc hàng hóa khác.' : 'F-Lunch only supports food & drinks delivery. Packages/parcels are not accepted.'))
+                        : t.student_alert_cod_desc}
+                    </p>
+                    {detectedCategory && (
+                      <div className="inline-block mt-0.5 bg-red-500/15 text-red-400 px-2 py-0.5 rounded text-[9px] font-semibold border border-red-500/20">
+                        {lang === 'vi' ? 'Mặt hàng phát hiện:' : 'Detected category:'} {detectedCategory}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {isFoodOrder && paymentStatus === 'PAID' && (
+                  <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 p-2.5 rounded-xl text-[10px] space-y-1">
+                    <div className="flex items-center gap-1.5 font-bold text-emerald-400">
+                      <CheckCircle2 size={14} className="shrink-0 text-emerald-400" />
+                      <span>{t.student_alert_prepaid_ok}</span>
+                    </div>
+                    <p className="text-[9.5px] text-emerald-400/90 leading-normal">
+                      {t.student_alert_prepaid_desc} <strong>{detectedPaymentMethod || (lang === 'vi' ? 'Ví/Thẻ Trực tuyến' : 'Online Card/Wallet')}</strong>.
+                    </p>
+                    {aiPowered && (
+                      <div className="inline-flex items-center gap-1 bg-emerald-500/15 text-emerald-400 px-2 py-0.5 rounded text-[9px] font-medium border border-emerald-500/20 mt-0.5">
+                        {t.student_ai_badge}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {paymentStatus === 'UNKNOWN' && imageBase64 && !ocrLoading && isFoodOrder && (
+                  <div className="bg-red-500/10 border border-red-500/30 text-red-400 p-2.5 rounded-xl text-[10px] space-y-1">
+                    <div className="flex items-center gap-1.5 font-bold text-red-400">
+                      <AlertCircle size={14} className="shrink-0 text-red-400" />
+                      <span>{t.student_alert_unknown}</span>
+                    </div>
+                    <p className="text-[9.5px] text-red-400/90 leading-normal">
+                      {t.student_alert_unknown_desc}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* 2. ORDER DETAILS */}
+              <div className="pt-2 border-t border-slate-800/80 space-y-3.5">
+                <p className="text-xs font-bold text-slate-300 uppercase tracking-wider">{t.student_form_step2}</p>
+                
+                <div>
+                  <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1.5">
+                    {t.student_platform_label}
+                  </label>
+                  <select
+                    value={foodPlatform}
+                    onChange={(e) => setFoodPlatform(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-orange-500"
+                  >
+                    <option value="GRABFOOD">GrabFood</option>
+                    <option value="SHOPEEFOOD">ShopeeFood</option>
+                    <option value="BEFOOD">BeFood</option>
+                    <option value="OTHER">{t.student_platform_other}</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1.5">
+                    {t.student_pickup_loc_label}
+                  </label>
+                  <select
+                    value={pickupLocation}
+                    onChange={(e) => setPickupLocation(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-orange-500"
+                  >
+                    <option value="Cổng 1 FPT">{t.student_gate_1}</option>
+                    <option value="Cổng 2 FPT">{t.student_gate_2}</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1.5">
+                    {t.student_dropoff_loc_label}
+                  </label>
+                  <div className="w-full bg-slate-950/50 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-350 flex items-center gap-2 select-none">
+                    <MapPin size={12} className="text-orange-500 shrink-0" />
+                    <span>{t.student_dropoff_default}</span>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex justify-between items-center mb-1.5">
+                    <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                      {t.student_est_time}
+                    </label>
+                    <span className="text-[10px] text-orange-500 font-medium">{t.student_today} ({getTodayString()})</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="flex items-center gap-2 bg-slate-955 border border-slate-800 rounded-xl px-3 py-2.5">
+                      <select
+                        value={pickupHour}
+                        onChange={(e) => setPickupHour(e.target.value)}
+                        className="flex-1 bg-transparent text-xs text-white focus:outline-none cursor-pointer [color-scheme:dark] h-5"
+                      >
+                        {Array.from({ length: 24 }, (_, i) => {
+                          const h = i.toString().padStart(2, '0');
+                          return <option key={h} value={h} className="bg-slate-950">{h} {t.student_hour_suffix}</option>;
+                        })}
+                      </select>
+                    </div>
+                    <div className="flex items-center gap-2 bg-slate-955 border border-slate-800 rounded-xl px-3 py-2.5">
+                      <select
+                        value={pickupMinute}
+                        onChange={(e) => setPickupMinute(e.target.value)}
+                        className="flex-1 bg-transparent text-xs text-white focus:outline-none cursor-pointer [color-scheme:dark] h-5"
+                      >
+                        {Array.from({ length: 60 }, (_, i) => {
+                          const m = i.toString().padStart(2, '0');
+                          return <option key={m} value={m} className="bg-slate-950">{m} {t.student_minute_suffix}</option>;
+                        })}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1.5">
+                    {t.student_note_label}
+                  </label>
+                  <textarea
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
+                    placeholder={t.student_note_placeholder}
+                    rows={2}
+                    className="w-full bg-slate-955 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-orange-500 resize-none"
+                  />
                 </div>
               </div>
 
               <div className="bg-slate-955 p-3 rounded-xl border border-slate-800 text-[10px] space-y-1.5">
                 <div className="flex justify-between items-center text-slate-300">
                   <span className="flex items-center gap-1 font-medium">
-                    <Wallet size={12} className="text-orange-500" /> Phí nhận hộ:
+                    <Wallet size={12} className="text-orange-500" /> {t.student_fee_label}
                   </span>
                   <span className="font-mono font-black text-orange-400 text-xs">5.000 VNĐ</span>
                 </div>
                 <p className="text-[9.5px] text-slate-400 leading-normal border-t border-slate-900 pt-1.5">
-                  <span className="text-orange-400 font-semibold">Hệ thống ưu tiên tự động trừ Ví Khuyến Mãi trước</span>, sau đó mới trừ Ví Chính.
+                  <span className="text-orange-400 font-semibold">{t.student_fee_note}</span>
                 </p>
               </div>
 
@@ -707,13 +761,7 @@ export default function StudentDashboard() {
                   : 'bg-orange-600 hover:bg-orange-500 disabled:bg-orange-850 text-white shadow-orange-600/25 cursor-pointer active:scale-[0.99]'
                   }`}
               >
-                {formLoading
-                  ? 'Đang gửi...'
-                  : !isFoodOrder
-                    ? 'Không thể gửi đơn KHÔNG PHẢI ĐỒ ĂN'
-                    : paymentStatus === 'UNPAID'
-                      ? 'Không thể gửi đơn Tiền mặt (COD)'
-                      : 'Xác nhận Tạo đơn nhận hộ'}
+                {formLoading ? t.student_submitting_btn : t.student_submit_btn}
               </button>
             </form>
           )}
@@ -724,7 +772,7 @@ export default function StudentDashboard() {
           {/* Active Requests */}
           <div className="bg-slate-900/60 backdrop-blur-xl border border-slate-800 p-5 rounded-3xl shadow-xl space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <h2 className="text-md font-bold text-white">Đơn hàng đang xử lý ({activeRequests.length})</h2>
+              <h2 className="text-md font-bold text-white">{t.student_active_title} ({activeRequests.length})</h2>
               {activeRequests.length > 0 && (
                 <div className="relative w-full sm:w-64">
                   <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
@@ -732,7 +780,7 @@ export default function StudentDashboard() {
                     type="text"
                     value={activeSearchQuery}
                     onChange={(e) => setActiveSearchQuery(e.target.value)}
-                    placeholder="Tìm mã đơn, ứng dụng, vị trí..."
+                    placeholder={t.student_search_placeholder}
                     className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-orange-500"
                   />
                   {activeSearchQuery && (
@@ -740,7 +788,7 @@ export default function StudentDashboard() {
                       onClick={() => setActiveSearchQuery('')}
                       className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 hover:text-white"
                     >
-                      Xóa
+                      {t.student_clear_search}
                     </button>
                   )}
                 </div>
@@ -752,7 +800,7 @@ export default function StudentDashboard() {
             ) : activeRequests.length === 0 ? (
               <div className="text-center py-10 border border-dashed border-slate-800 rounded-2xl">
                 <Pizza className="mx-auto text-slate-600 mb-2" size={28} />
-                <p className="text-slate-500 text-xs">Hiện chưa có đơn hàng nào đang xử lý.</p>
+                <p className="text-slate-500 text-xs">{t.student_active_empty}</p>
               </div>
             ) : (
               (() => {
@@ -769,7 +817,7 @@ export default function StudentDashboard() {
                 });
 
                 if (filtered.length === 0) {
-                  return <p className="text-xs text-slate-400 text-center py-6">Không tìm thấy yêu cầu nào khớp với "{activeSearchQuery}"</p>;
+                  return <p className="text-xs text-slate-400 text-center py-6">{t.student_no_results} "{activeSearchQuery}"</p>;
                 }
 
                 return (
@@ -790,7 +838,7 @@ export default function StudentDashboard() {
                               <p className="text-xs sm:text-sm font-bold text-white truncate max-w-[130px] sm:max-w-[180px]">{req.foodPlatform}</p>
                               {req.orderCode && (
                                 <span className="text-[9px] text-slate-300 font-mono bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800 truncate shrink-0 max-w-[130px]" title={req.orderCode}>
-                                  Mã: {req.orderCode}
+                                  {t.student_code_prefix} {req.orderCode}
                                 </span>
                               )}
                             </div>
@@ -806,7 +854,7 @@ export default function StudentDashboard() {
                         <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 text-[10px] sm:text-xs text-slate-400 pt-2 border-t border-slate-800/50">
                           <div className="flex items-center gap-1.5 text-slate-300 font-medium min-w-0" title="Vị trí shipper giao → Vị trí bạn nhận">
                             <MapPin size={12} className="shrink-0 text-orange-400" />
-                            <span className="truncate max-w-[200px] sm:max-w-[320px]">{req.pickupLocation} → {req.dropoffLocation || 'Sảnh Trống Đồng'}</span>
+                            <span className="truncate max-w-[200px] sm:max-w-[320px]">{req.pickupLocation} → {req.dropoffLocation || (lang === 'vi' ? 'Sảnh Trống Đồng' : 'Trong Dong Lobby')}</span>
                           </div>
 
                           <div className="flex items-center gap-1 text-slate-400 shrink-0">
@@ -858,7 +906,7 @@ export default function StudentDashboard() {
           {/* History */}
           <div className="bg-slate-900/60 backdrop-blur-xl border border-slate-800 p-5 rounded-3xl shadow-xl space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <h2 className="text-md font-bold text-white">Lịch sử ({pastRequests.length})</h2>
+              <h2 className="text-md font-bold text-white">{t.student_history_title} ({pastRequests.length})</h2>
               {pastRequests.length > 0 && (
                 <div className="relative w-full sm:w-64">
                   <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
@@ -866,7 +914,7 @@ export default function StudentDashboard() {
                     type="text"
                     value={historySearchQuery}
                     onChange={(e) => setHistorySearchQuery(e.target.value)}
-                    placeholder="Tìm theo mã đơn, ngày đặt..."
+                    placeholder={t.student_search_placeholder}
                     className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-orange-500"
                   />
                   {historySearchQuery && (
@@ -874,7 +922,7 @@ export default function StudentDashboard() {
                       onClick={() => setHistorySearchQuery('')}
                       className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 hover:text-white"
                     >
-                      Xóa
+                      {t.student_clear_search}
                     </button>
                   )}
                 </div>
@@ -884,7 +932,7 @@ export default function StudentDashboard() {
             {loading ? (
               <p className="text-slate-550 text-xs">Đang tải...</p>
             ) : pastRequests.length === 0 ? (
-              <p className="text-[11px] text-slate-500 text-center py-4">Chưa có lịch sử yêu cầu nào.</p>
+              <p className="text-[11px] text-slate-500 text-center py-4">{t.student_history_empty}</p>
             ) : (
               (() => {
                 const filtered = pastRequests.filter((req) => {
@@ -898,7 +946,7 @@ export default function StudentDashboard() {
                 });
 
                 if (filtered.length === 0) {
-                  return <p className="text-xs text-slate-400 text-center py-6">Không tìm thấy yêu cầu lịch sử nào khớp với "{historySearchQuery}"</p>;
+                  return <p className="text-xs text-slate-400 text-center py-6">{t.student_no_results} "{historySearchQuery}"</p>;
                 }
 
                 return (
@@ -918,7 +966,7 @@ export default function StudentDashboard() {
                               <p className="text-xs sm:text-sm font-bold text-white truncate max-w-[130px] sm:max-w-[180px]">{req.foodPlatform}</p>
                               {req.orderCode && (
                                 <span className="text-[9px] text-slate-400 font-mono bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800 truncate shrink-0 max-w-[120px]" title={req.orderCode}>
-                                  Mã: {req.orderCode}
+                                  {t.student_code_prefix} {req.orderCode}
                                 </span>
                               )}
                             </div>
@@ -929,7 +977,7 @@ export default function StudentDashboard() {
                           </div>
                         </div>
                         <div className="flex items-center gap-3 text-[10px] text-slate-400 pt-1 border-t border-slate-800/30">
-                          <span className="flex items-center gap-1"><Calendar size={10} className="shrink-0 text-slate-500" /> {new Date(req.pickupTime).toLocaleDateString('vi-VN')}</span>
+                          <span className="flex items-center gap-1"><Calendar size={10} className="shrink-0 text-slate-500" /> {new Date(req.pickupTime).toLocaleDateString(lang === 'vi' ? 'vi-VN' : 'en-US')}</span>
                           <span className="flex items-center gap-1"><MapPin size={10} className="shrink-0 text-slate-500" /> {req.pickupLocation}</span>
                         </div>
                       </div>
@@ -944,8 +992,8 @@ export default function StudentDashboard() {
       <IncompleteProfileModal
         isOpen={isIncompleteProfileModalOpen}
         onClose={() => setIsIncompleteProfileModalOpen(false)}
-        title="Yêu cầu Cập nhật Hồ sơ trước khi Tạo đơn"
-        message="Vui lòng cập nhật đầy đủ Số điện thoại, Chức vụ và Mã định danh (MSSV / Mã Cán bộ) để có thể đăng đơn nhờ nhận hộ!"
+        title={lang === 'vi' ? 'Yêu cầu Cập nhật Hồ sơ trước khi Tạo đơn' : 'Profile Update Required Before Creating Order'}
+        message={lang === 'vi' ? 'Vui lòng cập nhật đầy đủ Số điện thoại, Chức vụ và Mã định danh (MSSV / Mã Cán bộ) để có thể đăng đơn nhờ nhận hộ!' : 'Please complete your phone number, role, and student ID / staff code before submitting orders!'}
       />
     </div>
   );

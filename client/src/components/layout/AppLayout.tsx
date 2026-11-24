@@ -2,6 +2,9 @@
 
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth.store';
+import { useTranslation } from '@/lib/translations';
+import { translateNotification } from '@/lib/notificationTranslator';
+import LanguageToggle from '@/components/common/LanguageToggle';
 import Link from 'next/link';
 import Image from 'next/image';
 import Sidebar from './Sidebar';
@@ -16,6 +19,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const { user, logout, updateUser } = useAuthStore();
+  const { t, lang } = useTranslation();
   const [mounted, setMounted] = useState(false);
 
   // Wallet Modal State
@@ -63,18 +67,19 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           if (!seenNotificationIds.has(n.id)) {
             seenNotificationIds.add(n.id);
             if (!n.isRead) {
+              const { title: tTitle, message: tMessage } = translateNotification(n.title, n.message, lang);
               const toastOptions = {
-                description: n.message,
+                description: tMessage,
                 onClick: () => router.push('/notifications'),
                 duration: 4000,
               };
 
               if (n.type === 'SUCCESS') {
-                toast.success(n.title, toastOptions);
+                toast.success(tTitle, toastOptions);
               } else if (n.type === 'WARNING') {
-                toast.warning(n.title, toastOptions);
+                toast.warning(tTitle, toastOptions);
               } else {
-                toast.info(n.title, toastOptions);
+                toast.info(tTitle, toastOptions);
               }
 
               // Refresh profile balance on new notification
@@ -100,7 +105,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     if (!mounted) return;
 
     if (!user && !isAuthPage) {
-      router.replace('/login');
+      router.replace('/');
       return;
     }
 
@@ -144,7 +149,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <div className="w-12 h-12 rounded-2xl bg-red-600/20 text-red-500 border border-red-500/30 flex items-center justify-center mx-auto text-xl font-bold">
             403
           </div>
-          <p className="text-sm font-semibold text-slate-300">Đang kiểm tra quyền truy cập...</p>
+          <p className="text-sm font-semibold text-slate-300">{t.checking_permission}</p>
         </div>
       </div>
     );
@@ -179,13 +184,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               <span className="font-extrabold text-sm tracking-wide text-white block leading-tight">F-LUNCH</span>
               {user.role !== 'STUDENT' && (
                 <span className="text-[9px] uppercase font-bold text-orange-500 tracking-wider block leading-none mt-0.5">
-                  {user.role === 'ADMIN' ? 'QUẢN TRỊ' : 'NGƯỜI NHẬN HỘ'}
+                  {user.role === 'ADMIN' ? t.role_admin : t.role_receiver}
                 </span>
               )}
             </div>
           </Link>
 
           <div className="flex items-center gap-2">
+            {/* Mobile Language Switcher */}
+            <LanguageToggle variant="dark" size="sm" />
+
             {/* Mobile Wallet Button (Only for STUDENT) */}
             {user.role === 'STUDENT' && (
               <button

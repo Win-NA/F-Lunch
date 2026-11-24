@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/stores/auth.store';
+import { useTranslation } from '@/lib/translations';
+import { translateNotification } from '@/lib/notificationTranslator';
 import { 
   Bell, 
   Check, 
@@ -25,6 +27,7 @@ interface NotificationItem {
 export default function NotificationsPage() {
   const router = useRouter();
   const { user } = useAuthStore();
+  const { t, lang } = useTranslation();
   const role = user?.role || 'STUDENT';
 
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
@@ -32,15 +35,13 @@ export default function NotificationsPage() {
   const [btnLoading, setBtnLoading] = useState(false);
 
   const getSubtitle = () => {
-    if (role === 'ADMIN') return 'Cập nhật biến động hệ thống, duyệt nạp tiền và khiếu nại';
-    if (role === 'RECEIVER') return 'Cập nhật đơn nhận hộ, tiền công và thông báo hệ thống';
-    return 'Theo dõi trạng thái đơn hàng, biến động số dư và phản hồi sự cố';
+    if (role === 'ADMIN') return t.notif_admin_sub;
+    if (role === 'RECEIVER') return t.notif_receiver_sub;
+    return t.notif_student_sub;
   };
 
   const getEmptyStateMessage = () => {
-    if (role === 'ADMIN') return 'Chưa có thông báo hệ thống hoặc khiếu nại mới nào.';
-    if (role === 'RECEIVER') return 'Bạn chưa có thông báo mới nào về đơn hàng hoặc thu nhập.';
-    return 'Bạn chưa nhận được thông báo mới nào.';
+    return t.notif_empty;
   };
 
   const fetchNotifications = async () => {
@@ -133,13 +134,13 @@ export default function NotificationsPage() {
       date.getMonth() === yesterday.getMonth() &&
       date.getFullYear() === yesterday.getFullYear();
 
-    const timeStr = date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+    const timeStr = date.toLocaleTimeString(lang === 'vi' ? 'vi-VN' : 'en-US', { hour: '2-digit', minute: '2-digit' });
 
     if (isToday) {
       return timeStr;
     }
     if (isYesterday) {
-      return `${timeStr} hôm qua`;
+      return lang === 'vi' ? `${timeStr} hôm qua` : `${timeStr} Yesterday`;
     }
 
     const day = String(date.getDate()).padStart(2, '0');
@@ -194,7 +195,7 @@ export default function NotificationsPage() {
         <div>
           <h1 className="text-2xl font-extrabold tracking-tight text-white flex items-center gap-2">
             <Bell className="text-orange-500" size={24} />
-            Thông báo
+            {t.notif_title}
           </h1>
           <p className="text-slate-400 text-xs mt-1">{getSubtitle()}</p>
         </div>
@@ -205,13 +206,13 @@ export default function NotificationsPage() {
             disabled={btnLoading}
             className="flex items-center gap-1.5 bg-slate-900 border border-slate-800 hover:border-orange-500 text-white font-bold text-xs px-3 py-2 rounded-xl transition-all cursor-pointer shadow-sm active:scale-95"
           >
-            <CheckCheck size={14} /> Đọc tất cả
+            <CheckCheck size={14} /> {t.notif_mark_all_read}
           </button>
         )}
       </div>
 
       {loading ? (
-        <p className="text-slate-500 text-xs">Đang tải thông báo...</p>
+        <p className="text-slate-500 text-xs">{lang === 'vi' ? 'Đang tải thông báo...' : 'Loading notifications...'}</p>
       ) : displayedNotifications.length === 0 ? (
         <div className="text-center py-12 border border-dashed border-slate-800 rounded-3xl bg-slate-900/40">
           <Inbox className="mx-auto text-slate-700 mb-2" size={32} />
@@ -219,36 +220,39 @@ export default function NotificationsPage() {
         </div>
       ) : (
         <div className="space-y-3">
-          {displayedNotifications.map((n) => (
-            <div
-              key={n.id}
-              onClick={() => handleNotificationClick(n)}
-              className={`p-4 rounded-2xl border transition-all flex items-start gap-4 cursor-pointer select-none ${
-                n.isRead
-                  ? 'bg-slate-900/30 border-slate-850 hover:bg-slate-900/60 hover:border-slate-800'
-                  : 'bg-slate-900/80 border-orange-500/20 hover:border-orange-500/40 hover:bg-slate-900 shadow-md'
-              }`}
-            >
-              {getIcon(n.type)}
-              <div className="flex-1 min-w-0">
-                <div className="flex justify-between items-start gap-2">
-                  <h4 className={`text-xs font-bold truncate ${n.isRead ? 'text-slate-350 font-semibold' : 'text-white'}`}>
-                    {n.title}
-                  </h4>
-                  <span className="text-[9px] text-slate-500 whitespace-nowrap">
-                    {formatNotificationTime(n.createdAt)}
-                  </span>
+          {displayedNotifications.map((n) => {
+            const { title: displayTitle, message: displayMessage } = translateNotification(n.title, n.message, lang);
+            return (
+              <div
+                key={n.id}
+                onClick={() => handleNotificationClick(n)}
+                className={`p-4 rounded-2xl border transition-all flex items-start gap-4 cursor-pointer select-none ${
+                  n.isRead
+                    ? 'bg-slate-900/30 border-slate-850 hover:bg-slate-900/60 hover:border-slate-800'
+                    : 'bg-slate-900/80 border-orange-500/20 hover:border-orange-500/40 hover:bg-slate-900 shadow-md'
+                }`}
+              >
+                {getIcon(n.type)}
+                <div className="flex-1 min-w-0">
+                  <div className="flex justify-between items-start gap-2">
+                    <h4 className={`text-xs font-bold truncate ${n.isRead ? 'text-slate-350 font-semibold' : 'text-white'}`}>
+                      {displayTitle}
+                    </h4>
+                    <span className="text-[9px] text-slate-500 whitespace-nowrap">
+                      {formatNotificationTime(n.createdAt)}
+                    </span>
+                  </div>
+                  <p className={`text-[11px] mt-1 leading-relaxed ${n.isRead ? 'text-slate-500' : 'text-slate-300'}`}>
+                    {displayMessage}
+                  </p>
                 </div>
-                <p className={`text-[11px] mt-1 leading-relaxed ${n.isRead ? 'text-slate-500' : 'text-slate-300'}`}>
-                  {n.message}
-                </p>
-              </div>
 
-              {!n.isRead && (
-                <span className="w-2 h-2 rounded-full bg-orange-500 shrink-0 self-center" />
-              )}
-            </div>
-          ))}
+                {!n.isRead && (
+                  <span className="w-2 h-2 rounded-full bg-orange-500 shrink-0 self-center" />
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

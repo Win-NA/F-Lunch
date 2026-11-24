@@ -6,6 +6,8 @@ import Image from 'next/image';
 import Script from 'next/script';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth.store';
+import { useTranslation } from '@/lib/translations';
+import LanguageToggle from '@/components/common/LanguageToggle';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
 
@@ -19,6 +21,7 @@ export default function LoginPage() {
   const router = useRouter();
   const setAuth = useAuthStore((state) => state.setAuth);
   const updateUser = useAuthStore((state) => state.updateUser);
+  const { t, lang } = useTranslation();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -150,6 +153,17 @@ export default function LoginPage() {
       <div className="absolute w-96 h-96 rounded-full bg-blue-600/10 blur-[100px] -bottom-20 -right-20 pointer-events-none" />
 
       <div className="w-full max-w-md bg-slate-900/60 backdrop-blur-xl border border-slate-800 p-6 sm:p-8 rounded-3xl shadow-2xl relative z-10">
+        {/* Top bar with Back button and Language Switcher */}
+        <div className="flex items-center justify-between mb-4">
+          <Link
+            href="/"
+            className="text-xs font-semibold text-slate-400 hover:text-orange-400 transition-colors flex items-center gap-1.5"
+          >
+            ← {t.back_to_home}
+          </Link>
+          <LanguageToggle variant="dark" />
+        </div>
+
         <div className="text-center mb-5 flex flex-col items-center">
           <div className="mb-2 transition-transform hover:scale-105 duration-300">
             <Image
@@ -161,33 +175,33 @@ export default function LoginPage() {
               priority
             />
           </div>
-          <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight text-white font-sans">Đăng nhập tài khoản</h2>
-          <p className="text-xs sm:text-sm text-slate-400 mt-1">Cổng nhận hộ đơn hàng Campus FPT</p>
+          <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight text-white font-sans">{t.login_title}</h2>
+          <p className="text-xs sm:text-sm text-slate-400 mt-1">{t.login_subtitle}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-450 mb-1.5">
-              Email Sinh viên FPT hoặc Gmail *
+              {t.email_label} *
             </label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="student1@fpt.edu.vn hoặc user@gmail.com"
+              placeholder={t.email_placeholder}
               className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-650 focus:outline-none focus:border-orange-500 transition-colors"
             />
           </div>
 
           <div>
             <label className="block text-[10px] font-semibold uppercase tracking-wider text-slate-450 mb-1.5">
-              Mật khẩu *
+              {t.password_label} *
             </label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
+              placeholder={t.password_placeholder}
               className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-650 focus:outline-none focus:border-orange-500 transition-colors"
             />
           </div>
@@ -197,14 +211,14 @@ export default function LoginPage() {
             disabled={loading}
             className="w-full bg-orange-600 hover:bg-orange-500 disabled:bg-orange-850 text-white font-semibold text-sm py-3 rounded-xl transition-all shadow-lg shadow-orange-600/25 active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer mt-1"
           >
-            {loading ? 'Đang đăng nhập...' : 'Đăng Nhập'}
+            {loading ? t.login_loading : t.login_btn}
           </button>
         </form>
 
         {/* Divider */}
         <div className="flex items-center my-5">
           <div className="flex-1 border-t border-slate-850" />
-          <span className="px-3 text-[10px] text-slate-500 font-bold uppercase tracking-widest">Hoặc tiếp tục với</span>
+          <span className="px-3 text-[10px] text-slate-500 font-bold uppercase tracking-widest">{t.or_google}</span>
           <div className="flex-1 border-t border-slate-850" />
         </div>
 
@@ -214,9 +228,9 @@ export default function LoginPage() {
         </div>
 
         <p className="text-center text-xs text-slate-500 mt-6">
-          Chưa có tài khoản?{' '}
+          {t.no_account}{' '}
           <Link href="/register" className="text-orange-500 hover:text-orange-400 font-semibold transition-colors">
-            Đăng ký ngay
+            {t.register_link}
           </Link>
         </p>
       </div>

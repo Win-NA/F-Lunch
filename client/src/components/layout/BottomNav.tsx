@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth.store';
+import { useTranslation } from '@/lib/translations';
 import { api } from '@/lib/api';
 import { 
   Home, 
@@ -19,6 +20,7 @@ export default function BottomNav() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { user } = useAuthStore();
+  const { t } = useTranslation();
   const [unreadCount, setUnreadCount] = useState<number>(0);
 
   const fetchUnreadCount = async () => {
@@ -48,32 +50,25 @@ export default function BottomNav() {
 
   if (role === 'STUDENT') {
     menuItems.push(
-      { name: 'Trang chủ', path: '/student', icon: Home },
-      { name: 'Thông báo', path: '/notifications', icon: Bell },
-      { name: 'Hồ sơ', path: '/profile', icon: User }
+      { name: t.nav_home, path: '/student', icon: Home },
+      { name: t.nav_notifications, path: '/notifications', icon: Bell },
+      { name: t.nav_profile, path: '/profile', icon: User }
     );
   } else if (role === 'RECEIVER') {
     menuItems.push(
-      { name: 'Bàn việc', path: '/receiver', icon: ClipboardList },
-      { name: 'Quét QR', path: '/receiver/scan', icon: QrCode },
-      { name: 'Thông báo', path: '/notifications', icon: Bell },
-      { name: 'Hồ sơ', path: '/profile', icon: User }
+      { name: t.nav_receiverDesk, path: '/receiver', icon: ClipboardList },
+      { name: t.nav_receiverScan, path: '/receiver/scan', icon: QrCode },
+      { name: t.nav_notifications, path: '/notifications', icon: Bell },
+      { name: t.nav_profile, path: '/profile', icon: User }
     );
   } else if (role === 'ADMIN') {
     menuItems.push(
-      { name: 'Quản trị', path: '/admin', icon: Shield },
-      { name: 'Báo cáo CEO', path: '/admin?view=ceo', icon: Crown },
-      { name: 'Thông báo', path: '/notifications', icon: Bell },
-      { name: 'Hồ sơ', path: '/profile', icon: User }
+      { name: t.nav_admin, path: '/admin', icon: Shield },
+      { name: t.nav_adminCeo, path: '/admin?view=ceo', icon: Crown },
+      { name: t.nav_notifications, path: '/notifications', icon: Bell },
+      { name: t.nav_profile, path: '/profile', icon: User }
     );
   }
-
-  // Thay đổi nhãn "Báo động" thành "Thông báo" cho thân thiện
-  menuItems.forEach(item => {
-    if (item.path === '/notifications') {
-      item.name = 'Thông báo';
-    }
-  });
 
   const currentView = searchParams.get('view');
 

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuthStore } from '@/stores/auth.store';
+import { useTranslation } from '@/lib/translations';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
@@ -24,6 +25,7 @@ import {
 export default function ProfilePage() {
   const router = useRouter();
   const { user, logout, updateUser } = useAuthStore();
+  const { t, lang } = useTranslation();
 
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
@@ -62,14 +64,14 @@ export default function ProfilePage() {
 
   const handleLogout = () => {
     logout();
-    toast.success('Đăng xuất thành công');
-    router.push('/login');
+    toast.success(t.logout_success);
+    router.replace('/');
   };
 
   const getRoleLabel = (r: string) => {
-    if (r === 'ADMIN') return 'QUẢN TRỊ VIÊN';
-    if (r === 'RECEIVER') return 'NGƯỜI NHẬN HỘ';
-    return 'NGƯỜI ĐẶT HÀNG';
+    if (r === 'ADMIN') return t.role_admin;
+    if (r === 'RECEIVER') return t.role_receiver;
+    return t.role_student;
   };
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -144,14 +146,10 @@ export default function ProfilePage() {
         <div>
           <h1 className="text-2xl font-extrabold tracking-tight text-white flex items-center gap-2 font-sans">
             <User className="text-orange-500" size={24} />
-            Hồ sơ của bạn
+            {t.profile_title}
           </h1>
           <p className="text-slate-450 text-xs mt-1">
-            {user.role === 'ADMIN'
-              ? 'Thông tin tài khoản quản trị hệ thống'
-              : user.role === 'RECEIVER'
-              ? 'Thông tin cá nhân, liên lạc và vai trò nhận hộ'
-              : 'Thông tin tài khoản cá nhân và liên lạc'}
+            {t.profile_sub}
           </p>
         </div>
 
@@ -160,7 +158,7 @@ export default function ProfilePage() {
             onClick={() => setIsEditing(true)}
             className="flex items-center gap-1 bg-orange-500/10 text-orange-500 border border-orange-500/20 hover:bg-orange-500/20 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer"
           >
-            <Edit2 size={12} /> Chỉnh sửa
+            <Edit2 size={12} /> {t.profile_edit}
           </button>
         )}
       </div>
@@ -183,14 +181,14 @@ export default function ProfilePage() {
                   <input type="file" accept="image/*" onChange={handleAvatarChange} className="hidden" />
                 </label>
               </div>
-              <p className="text-[9px] text-slate-500">Nhấp vào ảnh đại diện để thay đổi (dưới 1MB)</p>
+              <p className="text-[9px] text-slate-500">{lang === 'vi' ? 'Nhấp vào ảnh đại diện để thay đổi (dưới 1MB)' : 'Click avatar to change (under 1MB)'}</p>
             </div>
 
             {/* Form Fields */}
             <div className="space-y-4">
               <div>
                 <label className="block text-[9px] font-semibold uppercase tracking-wider text-slate-550 mb-1">
-                  Họ và tên *
+                  {lang === 'vi' ? 'Họ và tên *' : 'Full Name *'}
                 </label>
                 <input
                   type="text"
@@ -202,7 +200,7 @@ export default function ProfilePage() {
 
               <div>
                 <label className="block text-[9px] font-semibold uppercase tracking-wider text-slate-550 mb-1">
-                  Địa chỉ Email *
+                  {lang === 'vi' ? 'Địa chỉ Email *' : 'Email Address *'}
                 </label>
                 <input
                   type="email"
@@ -214,40 +212,42 @@ export default function ProfilePage() {
 
               <div>
                 <label className="block text-[9px] font-semibold uppercase tracking-wider text-slate-550 mb-1">
-                  Chức vụ / Đối tượng *
+                  {lang === 'vi' ? 'Chức vụ / Đối tượng *' : 'Role / Category *'}
                 </label>
                 <select
                   value={userCategory}
                   onChange={(e) => setUserCategory(e.target.value as 'STUDENT' | 'STAFF')}
                   className="w-full bg-slate-955 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-orange-500 cursor-pointer"
                 >
-                  <option value="STUDENT">Sinh viên Trường</option>
-                  <option value="STAFF">Cán bộ / Giảng viên / Nhân viên</option>
+                  <option value="STUDENT">{lang === 'vi' ? 'Sinh viên Trường' : 'University Student'}</option>
+                  <option value="STAFF">{lang === 'vi' ? 'Cán bộ / Giảng viên / Nhân viên' : 'Staff / Faculty / Officer'}</option>
                 </select>
               </div>
 
               <div>
                 <label className="block text-[9px] font-semibold uppercase tracking-wider text-slate-550 mb-1">
-                  {userCategory === 'STAFF' ? 'Mã Cán bộ / Giảng viên (User Code) *' : 'Mã số Sinh viên (MSSV) *'}
+                  {userCategory === 'STAFF'
+                    ? (lang === 'vi' ? 'Mã Cán bộ / Giảng viên (User Code) *' : 'Staff / Faculty ID *')
+                    : (lang === 'vi' ? 'Mã số Sinh viên (MSSV) *' : 'Student ID (MSSV) *')}
                 </label>
                 <input
                   type="text"
                   value={userCode}
                   onChange={(e) => setUserCode(e.target.value)}
-                  placeholder={userCategory === 'STAFF' ? 'Ví dụ: NguyenTT, NguyenTT6, NamNV...' : 'Ví dụ: SE181234, HE170000...'}
+                  placeholder={userCategory === 'STAFF' ? (lang === 'vi' ? 'Ví dụ: NguyenTT, NguyenTT6, NamNV...' : 'e.g. NguyenTT, NguyenTT6...') : (lang === 'vi' ? 'Ví dụ: SE181234, HE170000...' : 'e.g. SE181234, HE170000...')}
                   className="w-full bg-slate-955 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-orange-500 uppercase font-mono"
                 />
               </div>
 
               <div>
                 <label className="block text-[9px] font-semibold uppercase tracking-wider text-slate-550 mb-1">
-                  Số điện thoại liên hệ *
+                  {lang === 'vi' ? 'Số điện thoại liên hệ *' : 'Contact Phone Number *'}
                 </label>
                 <input
                   type="text"
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value)}
-                  placeholder="Ví dụ: 0901234567"
+                  placeholder={lang === 'vi' ? 'Ví dụ: 0901234567' : 'e.g. 0901234567'}
                   className="w-full bg-slate-955 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-orange-500"
                 />
               </div>
@@ -259,14 +259,14 @@ export default function ProfilePage() {
                 onClick={() => setIsEditing(false)}
                 className="flex-1 bg-slate-800 hover:bg-slate-755 text-slate-350 font-bold text-xs py-3 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5"
               >
-                <X size={14} /> Hủy bỏ
+                <X size={14} /> {lang === 'vi' ? 'Hủy bỏ' : 'Cancel'}
               </button>
               <button
                 type="submit"
                 disabled={saving}
                 className="flex-1 bg-orange-600 hover:bg-orange-500 disabled:bg-orange-850 text-white font-bold text-xs py-3 rounded-xl transition-all shadow-md shadow-orange-600/20 cursor-pointer flex items-center justify-center gap-1.5"
               >
-                <Save size={14} /> {saving ? 'Đang lưu...' : 'Lưu lại'}
+                <Save size={14} /> {saving ? (lang === 'vi' ? 'Đang lưu...' : 'Saving...') : (lang === 'vi' ? 'Lưu lại' : 'Save Changes')}
               </button>
             </div>
           </form>
@@ -290,7 +290,7 @@ export default function ProfilePage() {
                     </span>
                   )}
                   <span className="inline-block px-2.5 py-0.5 text-[9px] font-bold uppercase rounded-md bg-blue-500/10 text-blue-400 border border-blue-500/20">
-                    {user.userCategory === 'STAFF' ? 'CÁN BỘ / GIẢNG VIÊN' : 'SINH VIÊN'}
+                    {user.userCategory === 'STAFF' ? (lang === 'vi' ? 'CÁN BỘ / GIẢNG VIÊN' : 'FACULTY / STAFF') : (lang === 'vi' ? 'SINH VIÊN' : 'STUDENT')}
                   </span>
                 </div>
               </div>
@@ -301,7 +301,7 @@ export default function ProfilePage() {
               <div className="flex items-center gap-3">
                 <Mail className="text-slate-550 shrink-0" size={16} />
                 <div>
-                  <p className="text-[9px] text-slate-550 font-semibold uppercase tracking-wider">Địa chỉ Email</p>
+                  <p className="text-[9px] text-slate-550 font-semibold uppercase tracking-wider">{lang === 'vi' ? 'Địa chỉ Email' : 'Email Address'}</p>
                   <p className="text-xs font-semibold text-white mt-0.5">{user.email}</p>
                 </div>
               </div>
@@ -310,17 +310,17 @@ export default function ProfilePage() {
                 <IdCard className="text-slate-550 shrink-0" size={16} />
                 <div>
                   <p className="text-[9px] text-slate-550 font-semibold uppercase tracking-wider">
-                    Mã định danh (MSSV / Mã Cán bộ)
+                    {lang === 'vi' ? 'Mã định danh (MSSV / Mã Cán bộ)' : 'Student ID / Staff Code'}
                   </p>
-                  <p className="text-xs font-semibold text-white mt-0.5">{user.userCode || user.mssv || 'Chưa cập nhật'}</p>
+                  <p className="text-xs font-semibold text-white mt-0.5">{user.userCode || user.mssv || (lang === 'vi' ? 'Chưa cập nhật' : 'Not updated')}</p>
                 </div>
               </div>
 
               <div className="flex items-center gap-3">
                 <Phone className="text-slate-550 shrink-0" size={16} />
                 <div>
-                  <p className="text-[9px] text-slate-550 font-semibold uppercase tracking-wider">Số điện thoại</p>
-                  <p className="text-xs font-semibold text-white mt-0.5">{user.phoneNumber || 'Chưa cập nhật'}</p>
+                  <p className="text-[9px] text-slate-550 font-semibold uppercase tracking-wider">{lang === 'vi' ? 'Số điện thoại' : 'Phone Number'}</p>
+                  <p className="text-xs font-semibold text-white mt-0.5">{user.phoneNumber || (lang === 'vi' ? 'Chưa cập nhật' : 'Not updated')}</p>
                 </div>
               </div>
             </div>
@@ -334,8 +334,8 @@ export default function ProfilePage() {
                   <div className="flex items-center gap-2.5">
                     <AlertTriangle size={18} className="text-orange-500 group-hover:scale-110 transition-transform" />
                     <div className="text-left">
-                      <p className="font-bold text-white">Báo cáo sự cố / Lỗi nạp tiền</p>
-                      <p className="text-[10px] text-slate-400 font-normal">Gửi chứng từ chuyển khoản sai ND hoặc báo lỗi hệ thống</p>
+                      <p className="font-bold text-white">{lang === 'vi' ? 'Báo cáo sự cố / Lỗi nạp tiền' : 'Report Issue / Top-up Error'}</p>
+                      <p className="text-[10px] text-slate-400 font-normal">{lang === 'vi' ? 'Gửi chứng từ chuyển khoản sai ND hoặc báo lỗi hệ thống' : 'Submit receipts or report system bugs'}</p>
                     </div>
                   </div>
                   <ChevronRight size={16} className="text-orange-500" />
@@ -352,8 +352,8 @@ export default function ProfilePage() {
                   <div className="flex items-center gap-2.5">
                     <AlertTriangle size={18} className="text-orange-500 group-hover:scale-110 transition-transform" />
                     <div className="text-left">
-                      <p className="font-bold text-white">Duyệt khiếu nại & báo cáo nạp tiền</p>
-                      <p className="text-[10px] text-slate-400 font-normal">Xem chứng từ đối chiếu và duyệt nạp tiền cho sinh viên</p>
+                      <p className="font-bold text-white">{lang === 'vi' ? 'Duyệt khiếu nại & báo cáo nạp tiền' : 'Review Top-up Reports & Tickets'}</p>
+                      <p className="text-[10px] text-slate-400 font-normal">{lang === 'vi' ? 'Xem chứng từ đối chiếu và duyệt nạp tiền cho sinh viên' : 'Review transfer receipts and credit wallets'}</p>
                     </div>
                   </div>
                   <ChevronRight size={16} className="text-orange-500" />
@@ -365,7 +365,7 @@ export default function ProfilePage() {
               onClick={handleLogout}
               className="w-full flex items-center justify-center gap-2 bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 text-red-400 font-bold text-xs py-3 rounded-xl transition-all cursor-pointer"
             >
-              <LogOut size={14} /> Đăng xuất tài khoản
+              <LogOut size={14} /> {lang === 'vi' ? 'Đăng xuất tài khoản' : 'Sign out account'}
             </button>
           </>
         )}

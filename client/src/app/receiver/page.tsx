@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
+import { useTranslation } from '@/lib/translations';
 import { toast } from 'sonner';
 import {
   ClipboardList,
@@ -43,6 +44,7 @@ interface RequestItem {
 
 export default function ReceiverDashboard() {
   const router = useRouter();
+  const { t, lang } = useTranslation();
 
   const [pendingRequests, setPendingRequests] = useState<RequestItem[]>([]);
   const [activeTask, setActiveTask] = useState<RequestItem | null>(null);
@@ -187,8 +189,8 @@ export default function ReceiverDashboard() {
   return (
     <div className="space-y-6 pb-12">
       <div>
-        <h1 className="text-2xl font-extrabold tracking-tight text-white font-sans">Bàn làm việc Người nhận hộ</h1>
-        <p className="text-slate-400 text-xs mt-1">Tiếp nhận và quản lý tiến độ giao nhận các đơn hàng tại FPTU.</p>
+        <h1 className="text-2xl font-extrabold tracking-tight text-white font-sans">{t.receiver_page_title}</h1>
+        <p className="text-slate-400 text-xs mt-1">{t.receiver_page_sub}</p>
       </div>
 
       {/* Receiver Statistics Panel */}
@@ -243,7 +245,7 @@ export default function ReceiverDashboard() {
         {/* Active Task */}
         <div className="lg:col-span-2 space-y-6">
           <div className="bg-slate-900/60 backdrop-blur-xl border border-slate-800 p-5 rounded-3xl shadow-xl">
-            <h2 className="text-md font-bold text-white mb-4">Nhiệm vụ đang thực hiện</h2>
+            <h2 className="text-md font-bold text-white mb-4">{t.receiver_task_heading}</h2>
 
             {loading ? (
               <p className="text-slate-500 text-xs">Đang tải...</p>
@@ -361,7 +363,7 @@ export default function ReceiverDashboard() {
           {/* Lịch sử nhận hộ đơn hàng */}
           <div ref={historySectionRef} className="bg-slate-900/60 backdrop-blur-xl border border-slate-800 p-5 rounded-3xl shadow-xl space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <h2 className="text-md font-bold text-white">Lịch sử nhận hộ ({historyRequests.length})</h2>
+              <h2 className="text-md font-bold text-white">{t.receiver_history_title} ({historyRequests.length})</h2>
               {historyRequests.length > 0 && (
                 <div className="relative w-full sm:w-64">
                   <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
@@ -458,7 +460,7 @@ export default function ReceiverDashboard() {
         <div className="space-y-6">
           <div className="bg-slate-900/60 backdrop-blur-xl border border-slate-800 p-5 rounded-3xl shadow-xl h-fit space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <h2 className="text-md font-bold text-white">Đơn hàng chờ nhận ({pendingRequests.length})</h2>
+              <h2 className="text-md font-bold text-white">{t.receiver_pending_title} ({pendingRequests.length})</h2>
               {pendingRequests.length > 0 && (
                 <div className="relative w-full sm:w-48">
                   <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />

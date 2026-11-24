@@ -61,28 +61,10 @@ body {
 .bg-purple-600,
 .bg-emerald-600,
 .bg-green-600,
-.bg-emerald-500,
-[class*="bg-gradient"],
-.bg-gradient-to-r {
+.bg-emerald-500 {
   color: #ffffff !important;
 }
 
-.bg-orange-600 *,
-.bg-orange-500 *,
-.bg-amber-500 *,
-.bg-amber-600 *,
-.bg-red-500 *,
-.bg-red-600 *,
-.bg-purple-600 *,
-.bg-emerald-600 *,
-.bg-green-600 *,
-.bg-emerald-500 *,
-[class*="bg-gradient"] *,
-.bg-gradient-to-r * {
-  color: #ffffff !important;
-}
-
-/* Button overrides for contrast */
 button.bg-orange-600,
 button.bg-orange-500,
 button.bg-amber-500,
@@ -90,9 +72,11 @@ button.bg-red-500,
 button.bg-purple-600,
 button.bg-green-600,
 button.bg-emerald-600,
-button[class*="bg-gradient"] {
+button[class*="bg-gradient"],
+a.bg-orange-600,
+a.bg-orange-500,
+a[class*="bg-gradient"] {
   color: #ffffff !important;
-  border: none !important;
 }
 
 /* Secondary/gray/slate buttons should be warm beige with dark orange text */
@@ -121,10 +105,8 @@ button.disabled {
 }
 
 /* Ensure background of white elements remains pure white */
-.bg-white,
-.bg-white * {
+.bg-white {
   background-color: #ffffff !important;
-  color: initial !important;
 }
 
 /* Override input placeholder texts to be darker warm orange */
@@ -193,4 +175,29 @@ button.disabled {
 .bg-orange-600.text-white * {
   color: #ffffff !important;
 }
+
+/* Explicit high-contrast classes for Landing Page */
+.text-pure-white,
+.text-pure-white * {
+  color: #ffffff !important;
+}
+.text-pure-white-force {
+  color: #ffffff !important;
+}
+.landing-text-white {
+  color: #ffffff !important;
+}
+.landing-text-cream {
+  color: #ffeedd !important;
+}
+.landing-text-orange {
+  color: #ea580c !important;
+}
+.landing-text-brown {
+  color: #4a1f05 !important;
+}
+.landing-border-orange {
+  border-color: #ea580c !important;
+}
+
 

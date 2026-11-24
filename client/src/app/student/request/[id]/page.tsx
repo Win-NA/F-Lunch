@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
+import { useTranslation } from '@/lib/translations';
 import { toast } from 'sonner';
 import Tesseract from 'tesseract.js';
 import { QRCodeSVG } from 'qrcode.react';
@@ -53,6 +54,7 @@ interface RequestDetail {
 export default function RequestDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const { t, lang } = useTranslation();
   const requestId = params.id as string;
 
   const [request, setRequest] = useState<RequestDetail | null>(null);
@@ -374,7 +376,7 @@ export default function RequestDetailPage() {
     <div className="space-y-6 pb-12">
       {/* Back button */}
       <button onClick={() => router.back()} className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors cursor-pointer text-xs">
-        <ArrowLeft size={14} /> Quay lại Bảng điều khiển
+        <ArrowLeft size={14} /> {t.detail_back_to_dashboard}
       </button>
 
       {/* Main Grid */}
@@ -389,15 +391,19 @@ export default function RequestDetailPage() {
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-orange-500/30 pb-3">
                 <div className="flex items-center gap-2 text-orange-400 font-black text-xs sm:text-sm uppercase tracking-wide">
                   <MessageSquare size={18} className="text-orange-400 shrink-0" />
-                  <span>Thông tin gửi tài xế giao hàng ({request.foodPlatform})</span>
+                  <span>{lang === 'vi' ? `Thông tin gửi tài xế giao hàng (${request.foodPlatform})` : `Note for driver (${request.foodPlatform})`}</span>
                 </div>
                 <span className="w-fit text-[10px] font-extrabold bg-orange-600 text-white px-2.5 py-0.5 rounded-full shadow-sm uppercase tracking-wider">
-                  Quan trọng
+                  {lang === 'vi' ? 'Quan trọng' : 'Important'}
                 </span>
               </div>
 
               <p className="text-xs sm:text-sm text-slate-100 font-medium leading-relaxed">
-                Người nhận hộ <strong className="text-orange-400 font-black">{request.receiver.fullName}</strong> đã nhận đơn! Vui lòng copy mẫu tin nhắn bên dưới dán vào phần <strong className="text-white underline">Chat / Ghi chú</strong> cho tài xế trên app <strong>{request.foodPlatform}</strong>:
+                {lang === 'vi' ? (
+                  <>Người nhận hộ <strong className="text-orange-400 font-black">{request.receiver.fullName}</strong> đã nhận đơn! Vui lòng copy mẫu tin nhắn bên dưới dán vào phần <strong className="text-white underline">Chat / Ghi chú</strong> cho tài xế trên app <strong>{request.foodPlatform}</strong>:</>
+                ) : (
+                  <>Receiver <strong className="text-orange-400 font-black">{request.receiver.fullName}</strong> accepted your order! Please copy the message below into driver <strong className="text-white underline">Chat / Notes</strong> on <strong>{request.foodPlatform}</strong>:</>
+                )}
               </p>
 
               {/* Message Template Box with Ultra-High Contrast */}
@@ -414,25 +420,25 @@ export default function RequestDetailPage() {
                   const phoneStr = request.receiver?.phoneNumber ? request.receiver.phoneNumber : '';
                   const textToCopy = `Chào anh/chị tài xế, em có nhờ bạn nhận hộ. Khi tới ${request.pickupLocation || 'Cổng 1 FPT'}, anh/chị vui lòng gọi cho bạn nhận hộ giúp em: ${request.receiver?.fullName} - SĐT: ${phoneStr}. Em cảm ơn!`;
                   navigator.clipboard.writeText(textToCopy);
-                  toast.success('Đã sao chép nội dung tin nhắn gửi tài xế!');
+                  toast.success(lang === 'vi' ? 'Đã sao chép nội dung tin nhắn gửi tài xế!' : 'Driver note copied to clipboard!');
                 }}
                 className="w-full bg-orange-600 hover:bg-orange-500 active:scale-[0.98] text-white font-extrabold text-xs sm:text-sm py-3.5 px-4 rounded-xl transition-all shadow-lg shadow-orange-600/30 cursor-pointer flex items-center justify-center gap-2"
               >
-                <Copy size={16} /> Sao chép tin nhắn gửi tài xế
+                <Copy size={16} /> {lang === 'vi' ? 'Sao chép tin nhắn gửi tài xế' : 'Copy driver note'}
               </button>
             </div>
           )}
 
           {/* Tracker Card */}
           <div className="bg-slate-900/60 backdrop-blur-xl border border-slate-800 p-5 rounded-3xl shadow-xl">
-            <h2 className="text-md font-bold text-white mb-6">Trạng thái đơn hàng</h2>
+            <h2 className="text-md font-bold text-white mb-6">{t.detail_status_progress}</h2>
 
             {request.status === 'CANCELLED' ? (
               <div className="flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/20 text-red-400 rounded-2xl">
                 <X size={18} />
                 <div>
-                  <p className="font-bold text-xs">Yêu cầu đã bị hủy</p>
-                  <p className="text-[10px] mt-0.5 text-slate-400">Đơn hàng nhận hộ này đã được hủy bởi bạn hoặc người quản trị.</p>
+                  <p className="font-bold text-xs">{lang === 'vi' ? 'Yêu cầu đã bị hủy' : 'Request cancelled'}</p>
+                  <p className="text-[10px] mt-0.5 text-slate-400">{lang === 'vi' ? 'Đơn hàng nhận hộ này đã được hủy bởi bạn hoặc người quản trị.' : 'This request has been cancelled by you or admin.'}</p>
                 </div>
               </div>
             ) : (
@@ -446,26 +452,26 @@ export default function RequestDetailPage() {
                   let stepDesc = '';
                   switch (step) {
                     case 'PENDING':
-                      stepLabel = 'Đã gửi yêu cầu';
-                      stepDesc = 'Đang đợi một người nhận hộ chấp nhận đơn hàng.';
+                      stepLabel = lang === 'vi' ? 'Đã gửi yêu cầu' : 'Request Submitted';
+                      stepDesc = lang === 'vi' ? 'Đang đợi một người nhận hộ chấp nhận đơn hàng.' : 'Waiting for a receiver to accept your request.';
                       break;
                     case 'ACCEPTED':
-                      stepLabel = 'Đã xác nhận';
+                      stepLabel = lang === 'vi' ? 'Đã xác nhận' : 'Receiver Accepted';
                       stepDesc = request.receiver
-                        ? `Người nhận hộ ${request.receiver.fullName} đã nhận việc và đang đợi shipper giao.`
-                        : 'Một người nhận hộ đã chấp nhận đơn hàng.';
+                        ? (lang === 'vi' ? `Người nhận hộ ${request.receiver.fullName} đã nhận việc và đang đợi shipper giao.` : `Receiver ${request.receiver.fullName} accepted and is waiting for shipper.`)
+                        : (lang === 'vi' ? 'Một người nhận hộ đã chấp nhận đơn hàng.' : 'A receiver accepted your order.');
                       break;
                     case 'RECEIVED':
-                      stepLabel = 'Đã lấy đơn';
-                      stepDesc = 'Đơn hàng đã được nhận từ shipper và đang chuyển về điểm tập kết.';
+                      stepLabel = lang === 'vi' ? 'Đã lấy đơn' : 'Food Collected';
+                      stepDesc = lang === 'vi' ? 'Đơn hàng đã được nhận từ shipper và đang chuyển về điểm tập kết.' : 'Food collected from shipper and on the way to lobby.';
                       break;
                     case 'READY_FOR_PICKUP':
-                      stepLabel = 'Chờ bạn đến lấy';
-                      stepDesc = 'Đơn hàng đã ở điểm tập kết. Hãy đến vị trí bàn giao và xuất trình mã QR.';
+                      stepLabel = lang === 'vi' ? 'Chờ bạn đến lấy' : 'Ready for Pickup';
+                      stepDesc = lang === 'vi' ? 'Đơn hàng đã ở điểm tập kết. Hãy đến vị trí bàn giao và xuất trình mã QR.' : 'Food is ready at lobby. Present your QR code to collect.';
                       break;
                     case 'COMPLETED':
-                      stepLabel = 'Hoàn thành';
-                      stepDesc = 'Đã bàn giao đơn hàng thành công!';
+                      stepLabel = lang === 'vi' ? 'Hoàn thành' : 'Completed';
+                      stepDesc = lang === 'vi' ? 'Đã bàn giao đơn hàng thành công!' : 'Order handover completed successfully!';
                       break;
                   }
 
@@ -502,26 +508,26 @@ export default function RequestDetailPage() {
 
           {/* Details Card */}
           <div className="bg-slate-900/60 backdrop-blur-xl border border-slate-800 p-5 rounded-3xl shadow-xl space-y-4">
-            <h2 className="text-md font-bold text-white border-b border-slate-800 pb-2">Chi tiết đơn hàng</h2>
+            <h2 className="text-md font-bold text-white border-b border-slate-800 pb-2">{t.detail_order_info}</h2>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Ứng dụng</p>
+                <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">{lang === 'vi' ? 'Ứng dụng' : 'Platform'}</p>
                 <p className="text-xs font-bold text-white mt-1">{request.foodPlatform}</p>
               </div>
               <div>
-                <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Mã đơn hàng</p>
-                <p className="text-xs font-bold text-white mt-1">{request.orderCode || 'Đã đính kèm ảnh chụp'}</p>
+                <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">{lang === 'vi' ? 'Mã đơn hàng' : 'Order Code'}</p>
+                <p className="text-xs font-bold text-white mt-1">{request.orderCode || (lang === 'vi' ? 'Đã đính kèm ảnh chụp' : 'Screenshot attached')}</p>
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4 pt-2 border-t border-slate-800/40">
               <div>
-                <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Ngày đặt đơn</p>
-                <p className="text-xs font-bold text-white mt-1">{new Date(request.createdAt).toLocaleDateString('vi-VN')} - {new Date(request.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">{lang === 'vi' ? 'Ngày đặt đơn' : 'Created Date'}</p>
+                <p className="text-xs font-bold text-white mt-1">{new Date(request.createdAt).toLocaleDateString(lang === 'vi' ? 'vi-VN' : 'en-US')} - {new Date(request.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
               </div>
               <div>
-                <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Giờ tài xế giao tới</p>
+                <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">{t.detail_estimated_time}</p>
                 <p className="text-xs font-bold text-white mt-1">{new Date(request.pickupTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
               </div>
             </div>
@@ -529,7 +535,7 @@ export default function RequestDetailPage() {
             <div className="flex items-start gap-2.5 pt-2 border-t border-slate-800/40">
               <MapPin className="text-orange-500 shrink-0 mt-0.5" size={14} />
               <div>
-                <p className="text-[10px] font-semibold text-slate-500">Vị trí shipper giao tới</p>
+                <p className="text-[10px] font-semibold text-slate-500">{t.detail_pickup_gate}</p>
                 <p className="text-xs font-bold text-white mt-0.5">{request.pickupLocation}</p>
               </div>
             </div>
@@ -537,8 +543,8 @@ export default function RequestDetailPage() {
             <div className="flex items-start gap-2.5 pt-2 border-t border-slate-800/40">
               <MapPin className="text-orange-500 shrink-0 mt-0.5" size={14} />
               <div>
-                <p className="text-[10px] font-semibold text-slate-500">Nơi bạn xuống nhận hàng</p>
-                <p className="text-xs font-bold text-white mt-0.5">{request.dropoffLocation || 'Sảnh Trống Đồng'}</p>
+                <p className="text-[10px] font-semibold text-slate-500">{t.detail_dropoff_place}</p>
+                <p className="text-xs font-bold text-white mt-0.5">{request.dropoffLocation || (lang === 'vi' ? 'Sảnh Trống Đồng' : 'Trong Dong Lobby')}</p>
               </div>
             </div>
 
@@ -561,7 +567,7 @@ export default function RequestDetailPage() {
                     onClick={() => setFullscreenImage(request.imageUrl || null)}
                   />
                 </div>
-                <p className="text-[9px] text-slate-500 mt-1">Chạm vào ảnh để phóng to đơn hàng</p>
+                <p className="text-[9px] text-slate-500 mt-1">{lang === 'vi' ? 'Chạm vào ảnh để phóng to đơn hàng' : 'Tap image to zoom in'}</p>
               </div>
             )}
 
@@ -573,7 +579,7 @@ export default function RequestDetailPage() {
                   onClick={() => setIsEditing(true)}
                   className="w-full bg-orange-600 hover:bg-orange-500 text-white font-bold text-xs py-3 rounded-xl transition-all shadow-md shadow-orange-600/20 cursor-pointer flex items-center justify-center gap-1.5"
                 >
-                  Chỉnh sửa đơn
+                  {lang === 'vi' ? 'Chỉnh sửa đơn' : 'Edit Request'}
                 </button>
                 <button
                   type="button"
@@ -581,7 +587,7 @@ export default function RequestDetailPage() {
                   disabled={cancelling}
                   className="w-full bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 disabled:bg-red-955 text-red-400 font-bold text-xs py-3 rounded-xl transition-all cursor-pointer"
                 >
-                  {cancelling ? 'Đang hủy...' : 'Hủy yêu cầu'}
+                  {cancelling ? (lang === 'vi' ? 'Đang hủy...' : 'Cancelling...') : t.detail_cancel_btn}
                 </button>
               </div>
             )}
@@ -594,15 +600,15 @@ export default function RequestDetailPage() {
           {/* QR Handover Code card (if ready for pickup) */}
           {request.status === 'READY_FOR_PICKUP' && (
             <div id="qr-handover-card" className="bg-slate-900/60 backdrop-blur-xl border border-orange-500/30 p-5 rounded-3xl shadow-xl text-center space-y-4 scroll-mt-20">
-              <h2 className="text-xs font-extrabold text-orange-500 uppercase tracking-wider">Bàn giao đơn hàng</h2>
-              <p className="text-[10px] text-slate-400">Trình mã QR này cho người nhận hộ để lấy lại đơn hàng của bạn.</p>
+              <h2 className="text-xs font-extrabold text-orange-500 uppercase tracking-wider">{t.detail_qr_title}</h2>
+              <p className="text-[10px] text-slate-400">{t.detail_qr_desc}</p>
 
               <div className="bg-white p-3.5 rounded-2xl inline-block shadow-lg">
                 <QRCodeSVG value={request.id.substring(0, 6).toUpperCase()} size={150} />
               </div>
 
               <div className="bg-slate-955 border border-slate-800 p-2.5 rounded-xl">
-                <p className="text-[9px] text-slate-500">Mã xác thực bàn giao (OTP)</p>
+                <p className="text-[9px] text-slate-500">{lang === 'vi' ? 'Mã xác thực bàn giao (OTP)' : 'Handover OTP Code'}</p>
                 <p className="text-lg font-bold text-orange-500 tracking-[0.2em] mt-1 uppercase">
                   {request.id.substring(0, 6).toUpperCase()}
                 </p>
@@ -613,7 +619,7 @@ export default function RequestDetailPage() {
           {/* Assigned Receiver Info */}
           {request.receiver && (
             <div className="bg-slate-900/60 backdrop-blur-xl border border-slate-800 p-5 rounded-3xl shadow-xl space-y-4">
-              <h3 className="text-xs font-extrabold text-white uppercase tracking-wider">Người nhận hộ được phân công</h3>
+              <h3 className="text-xs font-extrabold text-white uppercase tracking-wider">{t.detail_receiver_info}</h3>
 
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-full bg-orange-500/10 border border-orange-500/25 flex items-center justify-center text-orange-500 text-xs font-bold">

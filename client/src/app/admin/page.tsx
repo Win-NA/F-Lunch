@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth.store';
+import { useTranslation } from '@/lib/translations';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
 import {
@@ -133,6 +134,8 @@ function AdminDashboardContent() {
   const viewParam = searchParams.get('view');
 
   const { user: currentUser } = useAuthStore();
+  const { t, lang } = useTranslation();
+  const tr = (vi: string, en: string) => (lang === 'en' ? en : vi);
 
   const [stats, setStats] = useState<Stats | null>(null);
   const [users, setUsers] = useState<UserItem[]>([]);
@@ -378,25 +381,25 @@ function AdminDashboardContent() {
   };
 
   const getRoleLabel = (role: string) => {
-    if (role === 'ADMIN') return 'QUẢN TRỊ';
-    if (role === 'RECEIVER') return 'NHẬN HỘ';
-    return 'KHÁCH HÀNG';
+    if (role === 'ADMIN') return t.role_admin;
+    if (role === 'RECEIVER') return t.role_receiver;
+    return t.role_student;
   };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'PENDING':
-        return <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 whitespace-nowrap">Đang chờ</span>;
+        return <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 whitespace-nowrap">{t.status_pending}</span>;
       case 'ACCEPTED':
-        return <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-blue-500/10 text-blue-500 border border-blue-500/20 whitespace-nowrap">Đã xác nhận</span>;
+        return <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-blue-500/10 text-blue-500 border border-blue-500/20 whitespace-nowrap">{t.status_accepted}</span>;
       case 'RECEIVED':
-        return <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-purple-500/10 text-purple-500 border border-purple-500/20 whitespace-nowrap">Đã lấy đơn</span>;
+        return <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-purple-500/10 text-purple-500 border border-purple-500/20 whitespace-nowrap">{t.status_received}</span>;
       case 'READY_FOR_PICKUP':
-        return <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-green-500/10 text-green-500 border border-green-500/20 whitespace-nowrap">Chờ SV lấy</span>;
+        return <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-green-500/10 text-green-500 border border-green-500/20 whitespace-nowrap">{t.status_ready}</span>;
       case 'COMPLETED':
-        return <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 whitespace-nowrap">Hoàn thành</span>;
+        return <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 whitespace-nowrap">{t.status_completed}</span>;
       default:
-        return <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-red-500/10 text-red-400 border border-red-500/20 whitespace-nowrap">Đã hủy</span>;
+        return <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-red-500/10 text-red-400 border border-red-500/20 whitespace-nowrap">{t.status_cancelled}</span>;
     }
   };
 
@@ -678,6 +681,12 @@ function AdminDashboardContent() {
   }, [users, userRoleFilter]);
 
   const getTimeframeLabel = (tf: TimeframeFilter) => {
+    if (lang === 'en') {
+      if (tf === 'TODAY') return 'Today';
+      if (tf === 'MONTH') return 'This Month';
+      if (tf === 'YEAR') return 'This Year';
+      return 'All Time';
+    }
     if (tf === 'TODAY') return 'Hôm nay';
     if (tf === 'MONTH') return 'Tháng này';
     if (tf === 'YEAR') return 'Năm nay';
@@ -705,13 +714,13 @@ function AdminDashboardContent() {
                   <div>
                     <h3 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
                       <DollarSign className="text-emerald-400 shrink-0" size={20} />
-                      Bảng Kê Chi Tiết Thu Nhập ({getTimeframeLabel(revenueModalTimeframe)})
+                      {tr('Bảng Kê Chi Tiết Thu Nhập', 'Detailed Revenue Statement')} ({getTimeframeLabel(revenueModalTimeframe)})
                     </h3>
-                    <p className="text-xs text-slate-400 mt-0.5">Danh sách các đơn hàng đã hoàn thành (Phí dịch vụ 5.000 VNĐ / đơn)</p>
+                    <p className="text-xs text-slate-400 mt-0.5">{tr('Danh sách các đơn hàng đã hoàn thành (Phí dịch vụ 5.000 VNĐ / đơn)', 'List of completed orders (Fixed service fee of 5,000 VND / order)')}</p>
                   </div>
 
                   <div className="text-left sm:text-right shrink-0">
-                    <span className="text-[10px] uppercase font-bold text-slate-500 block">Tổng Doanh Thu</span>
+                    <span className="text-[10px] uppercase font-bold text-slate-500 block">{tr('Tổng Doanh Thu', 'Total Revenue')}</span>
                     <span className="text-lg sm:text-xl font-extrabold text-emerald-400">
                       {(revenueModalRequests.length * 5000).toLocaleString()} VNĐ
                     </span>
@@ -725,28 +734,28 @@ function AdminDashboardContent() {
                     className={`px-3 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${revenueModalTimeframe === 'TODAY' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'
                       }`}
                   >
-                    Hôm nay ({requests.filter(r => r.status === 'COMPLETED' && isDateInTimeframe(r.updatedAt || r.createdAt, 'TODAY')).length})
+                    {tr('Hôm nay', 'Today')} ({requests.filter(r => r.status === 'COMPLETED' && isDateInTimeframe(r.updatedAt || r.createdAt, 'TODAY')).length})
                   </button>
                   <button
                     onClick={() => setRevenueModalTimeframe('MONTH')}
                     className={`px-3 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${revenueModalTimeframe === 'MONTH' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'
                       }`}
                   >
-                    Tháng này ({requests.filter(r => r.status === 'COMPLETED' && isDateInTimeframe(r.updatedAt || r.createdAt, 'MONTH')).length})
+                    {tr('Tháng này', 'This Month')} ({requests.filter(r => r.status === 'COMPLETED' && isDateInTimeframe(r.updatedAt || r.createdAt, 'MONTH')).length})
                   </button>
                   <button
                     onClick={() => setRevenueModalTimeframe('YEAR')}
                     className={`px-3 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${revenueModalTimeframe === 'YEAR' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'
                       }`}
                   >
-                    Năm nay ({requests.filter(r => r.status === 'COMPLETED' && isDateInTimeframe(r.updatedAt || r.createdAt, 'YEAR')).length})
+                    {tr('Năm nay', 'This Year')} ({requests.filter(r => r.status === 'COMPLETED' && isDateInTimeframe(r.updatedAt || r.createdAt, 'YEAR')).length})
                   </button>
                   <button
                     onClick={() => setRevenueModalTimeframe('ALL')}
                     className={`px-3 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${revenueModalTimeframe === 'ALL' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'
                       }`}
                   >
-                    Tất cả ({requests.filter(r => r.status === 'COMPLETED').length})
+                    {tr('Tất cả', 'All Time')} ({requests.filter(r => r.status === 'COMPLETED').length})
                   </button>
                 </div>
               </div>
@@ -1777,11 +1786,11 @@ function AdminDashboardContent() {
                 <Crown size={20} className="fill-amber-400/30" />
               </div>
               <h1 className="text-2xl font-extrabold tracking-tight text-white font-sans">
-                Báo Cáo Điều Hành CEO Executive
+                {tr('Báo Cáo Điều Hành CEO Executive', 'CEO Executive Dashboard')}
               </h1>
             </div>
             <p className="text-slate-400 text-xs pl-10">
-              Tổng quan chỉ số hoạt động, doanh thu và quản lý đơn hàng tại FPTU.
+              {tr('Tổng quan chỉ số hoạt động, doanh thu và quản lý đơn hàng tại FPTU.', 'Overview of operational metrics, revenue, and order management at FPTU.')}
             </p>
           </div>
 
@@ -2151,11 +2160,11 @@ function AdminDashboardContent() {
                 <AlertTriangle size={20} />
               </div>
               <h1 className="text-2xl font-extrabold tracking-tight text-white font-sans">
-                Duyệt Khiếu Nại Nạp Tiền & Báo Cáo Sự Cố
+                {tr('Duyệt Khiếu Nại Nạp Tiền & Báo Cáo Sự Cố', 'Review Top-up Claims & Issue Reports')}
               </h1>
             </div>
             <p className="text-slate-400 text-xs pl-10">
-              Xem và đối chiếu chứng từ chuyển khoản sai nội dung của khách hàng để tự động cộng tiền vào ví chính hoặc xử lý sự cố hệ thống
+              {tr('Xem và đối chiếu chứng từ chuyển khoản sai nội dung của khách hàng để tự động cộng tiền vào ví chính hoặc xử lý sự cố hệ thống', 'Review and verify customer transfer receipts to credit funds to real wallet or resolve system issues')}
             </p>
           </div>
         </div>
@@ -2164,9 +2173,11 @@ function AdminDashboardContent() {
           <div className="space-y-1.5">
             <h1 className="text-2xl font-extrabold tracking-tight text-white flex items-center gap-2">
               <Shield className="text-orange-500" size={24} />
-              Bảng Điều Khiển Quản Trị
+              {tr('Bảng Điều Khiển Quản Trị', 'Admin Dashboard')}
             </h1>
-            <p className="text-slate-400 text-xs">Tổng quan chỉ số hoạt động, doanh thu và quản lý đơn hàng tại FPTU.</p>
+            <p className="text-slate-400 text-xs">
+              {tr('Tổng quan chỉ số hoạt động, doanh thu và quản lý đơn hàng tại FPTU.', 'Overview of operational metrics, revenue, and order management at FPTU.')}
+            </p>
           </div>
 
           {activeCard !== 'ALL' && (
@@ -2177,7 +2188,7 @@ function AdminDashboardContent() {
               }}
               className="self-start sm:self-auto flex items-center gap-1.5 bg-slate-955 border border-slate-800 hover:border-orange-500 text-orange-400 font-bold text-xs px-3.5 py-2 rounded-xl transition-all cursor-pointer shadow-md"
             >
-              <Layers size={14} /> Hiển thị tất cả mục
+              <Layers size={14} /> {tr('Hiển thị tất cả mục', 'Show all sections')}
             </button>
           )}
         </div>
@@ -2201,16 +2212,16 @@ function AdminDashboardContent() {
               </div>
               {activeCard === 'REQUESTS' ? (
                 <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-full bg-orange-600 text-white shadow-sm">
-                  Đang xem
+                  {tr('Đang xem', 'Viewing')}
                 </span>
               ) : (
                 <span className="text-[9px] text-slate-500 font-semibold group-hover:text-orange-400 flex items-center gap-0.5">
-                  Xem chi tiết <ChevronRight size={10} />
+                  {tr('Xem chi tiết', 'View details')} <ChevronRight size={10} />
                 </span>
               )}
             </div>
             <div className="mt-3">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tổng Đơn Hàng</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{tr('Tổng Đơn Hàng', 'Total Orders')}</p>
               <p className="text-xl font-extrabold text-white mt-0.5">{stats.totalRequests}</p>
             </div>
           </div>
@@ -2229,16 +2240,16 @@ function AdminDashboardContent() {
               </div>
               {activeCard === 'REVENUE' ? (
                 <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-600 text-white shadow-sm">
-                  Đang xem
+                  {tr('Đang xem', 'Viewing')}
                 </span>
               ) : (
                 <span className="text-[9px] text-slate-500 font-semibold group-hover:text-emerald-400 flex items-center gap-0.5">
-                  Báo cáo <ChevronRight size={10} />
+                  {tr('Báo cáo', 'Reports')} <ChevronRight size={10} />
                 </span>
               )}
             </div>
             <div className="mt-3">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tổng Thu Nhập</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{tr('Tổng Thu Nhập', 'Total Revenue')}</p>
               <p className="text-lg font-extrabold text-emerald-400 mt-0.5">{periodStats.allRevenue.toLocaleString()} VNĐ</p>
             </div>
           </div>
@@ -2260,16 +2271,16 @@ function AdminDashboardContent() {
               </div>
               {activeCard === 'USERS' && userRoleFilter === 'RECEIVER' ? (
                 <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-full bg-blue-600 text-white shadow-sm">
-                  Đang xem
+                  {tr('Đang xem', 'Viewing')}
                 </span>
               ) : (
                 <span className="text-[9px] text-slate-500 font-semibold group-hover:text-blue-400 flex items-center gap-0.5">
-                  Bảng lương <ChevronRight size={10} />
+                  {tr('Bảng lương', 'Payroll')} <ChevronRight size={10} />
                 </span>
               )}
             </div>
             <div className="mt-3">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Người Nhận Hộ</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{tr('Người Nhận Hộ', 'Receivers')}</p>
               <p className="text-xl font-extrabold text-white mt-0.5">{stats.activeReceivers}</p>
             </div>
           </div>
@@ -2291,16 +2302,16 @@ function AdminDashboardContent() {
               </div>
               {activeCard === 'USERS' && userRoleFilter === 'ALL' ? (
                 <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-full bg-purple-600 text-white shadow-sm">
-                  Đang xem
+                  {tr('Đang xem', 'Viewing')}
                 </span>
               ) : (
                 <span className="text-[9px] text-slate-500 font-semibold group-hover:text-purple-400 flex items-center gap-0.5">
-                  Danh sách thành viên <ChevronRight size={10} />
+                  {tr('Danh sách thành viên', 'Member list')} <ChevronRight size={10} />
                 </span>
               )}
             </div>
             <div className="mt-3">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tổng Thành Viên</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{tr('Tổng Thành Viên', 'Total Members')}</p>
               <p className="text-xl font-extrabold text-white mt-0.5">{stats.totalUsers}</p>
             </div>
           </div>
@@ -2319,18 +2330,18 @@ function AdminDashboardContent() {
               </div>
               {activeCard === 'TRANSACTIONS' ? (
                 <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-full bg-orange-600 text-white shadow-sm">
-                  Đang xem
+                  {tr('Đang xem', 'Viewing')}
                 </span>
               ) : (
                 <span className="text-[9px] text-slate-500 font-semibold group-hover:text-orange-400 flex items-center gap-0.5">
-                  Quản lý số dư <ChevronRight size={10} />
+                  {tr('Quản lý số dư', 'Manage balance')} <ChevronRight size={10} />
                 </span>
               )}
             </div>
             <div className="mt-3">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Quản Lý Tiền Thành Viên</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{tr('Quản Lý Tiền Thành Viên', 'Member Funds Management')}</p>
               <p className="text-xl font-extrabold text-white mt-0.5">
-                {adminTransactions.length} giao dịch nạp
+                {adminTransactions.length} {tr('giao dịch nạp', 'deposit transactions')}
               </p>
             </div>
           </div>
@@ -2349,16 +2360,16 @@ function AdminDashboardContent() {
               </div>
               {activeCard === 'FEEDBACKS' ? (
                 <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-full bg-yellow-600 text-white shadow-sm">
-                  Đang xem
+                  {tr('Đang xem', 'Viewing')}
                 </span>
               ) : (
                 <span className="text-[9px] text-slate-500 font-semibold group-hover:text-yellow-400 flex items-center gap-0.5">
-                  Phản hồi khách hàng <ChevronRight size={10} />
+                  {tr('Phản hồi khách hàng', 'Customer feedback')} <ChevronRight size={10} />
                 </span>
               )}
             </div>
             <div className="mt-3">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Đánh Giá TB</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{tr('Đánh Giá TB', 'Avg Rating')}</p>
               <p className="text-xl font-extrabold text-white mt-0.5">{stats.averageRating.toFixed(1)} / 5.0</p>
             </div>
           </div>
@@ -2375,9 +2386,9 @@ function AdminDashboardContent() {
             <div>
               <h2 className="text-md font-bold text-white flex items-center gap-2">
                 <TrendingUp className="text-emerald-400" size={18} />
-                Theo Dõi Doanh Thu & Bảng Lương Dịch Vụ
+                {tr('Theo Dõi Doanh Thu & Bảng Lương Dịch Vụ', 'Revenue & Service Payroll Tracking')}
               </h2>
-              <p className="text-[11px] text-slate-400 mt-0.5">Giá phí cố định 5.000 VNĐ / đơn hoàn thành thành công. Bấm vào từng ô để xem bảng kê chi tiết.</p>
+              <p className="text-[11px] text-slate-400 mt-0.5">{tr('Giá phí cố định 5.000 VNĐ / đơn hoàn thành thành công. Bấm vào từng ô để xem bảng kê chi tiết.', 'Fixed fee of 5,000 VND / completed order. Click each box to view detailed breakdown.')}</p>
             </div>
 
             {/* Timeframe selector */}
@@ -2387,28 +2398,28 @@ function AdminDashboardContent() {
                 className={`px-3 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap shrink-0 ${timeframe === 'TODAY' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'
                   }`}
               >
-                Hôm nay
+                {tr('Hôm nay', 'Today')}
               </button>
               <button
                 onClick={() => setTimeframe('MONTH')}
                 className={`px-3 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap shrink-0 ${timeframe === 'MONTH' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'
                   }`}
               >
-                Tháng này
+                {tr('Tháng này', 'This Month')}
               </button>
               <button
                 onClick={() => setTimeframe('YEAR')}
                 className={`px-3 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap shrink-0 ${timeframe === 'YEAR' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'
                   }`}
               >
-                Năm nay
+                {tr('Năm nay', 'This Year')}
               </button>
               <button
                 onClick={() => setTimeframe('ALL')}
                 className={`px-3 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap shrink-0 ${timeframe === 'ALL' ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'
                   }`}
               >
-                Tất cả
+                {tr('Tất cả', 'All Time')}
               </button>
             </div>
           </div>
@@ -2421,12 +2432,12 @@ function AdminDashboardContent() {
               className={`p-4 rounded-2xl border transition-all cursor-pointer hover:scale-[1.02] active:scale-95 ${timeframe === 'TODAY' ? 'bg-emerald-500/10 border-emerald-500/40 ring-1 ring-emerald-500/30' : 'bg-slate-955 border-slate-800'}`}
             >
               <div className="flex justify-between items-start">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Doanh Thu Hôm Nay</span>
-                <span className="text-[9px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded font-bold">Xem chi tiết</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{tr('Doanh Thu Hôm Nay', "Today's Revenue")}</span>
+                <span className="text-[9px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded font-bold">{tr('Xem chi tiết', 'View details')}</span>
               </div>
               <p className="text-xl font-extrabold text-emerald-400 mt-2">{periodStats.todayRevenue.toLocaleString()} VNĐ</p>
               <p className="text-[10px] text-slate-400 mt-1 flex items-center justify-between">
-                <span>{periodStats.todayCount} đơn hoàn thành</span>
+                <span>{periodStats.todayCount} {tr('đơn hoàn thành', 'orders completed')}</span>
                 <Eye size={12} className="text-emerald-400" />
               </p>
             </div>
@@ -2437,12 +2448,12 @@ function AdminDashboardContent() {
               className={`p-4 rounded-2xl border transition-all cursor-pointer hover:scale-[1.02] active:scale-95 ${timeframe === 'MONTH' ? 'bg-emerald-500/10 border-emerald-500/40 ring-1 ring-emerald-500/30' : 'bg-slate-955 border-slate-800'}`}
             >
               <div className="flex justify-between items-start">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Doanh Thu Tháng Này</span>
-                <span className="text-[9px] bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded font-bold">Xem chi tiết</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{tr('Doanh Thu Tháng Này', "This Month's Revenue")}</span>
+                <span className="text-[9px] bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded font-bold">{tr('Xem chi tiết', 'View details')}</span>
               </div>
               <p className="text-xl font-extrabold text-blue-400 mt-2">{periodStats.monthRevenue.toLocaleString()} VNĐ</p>
               <p className="text-[10px] text-slate-400 mt-1 flex items-center justify-between">
-                <span>{periodStats.monthCount} đơn hoàn thành</span>
+                <span>{periodStats.monthCount} {tr('đơn hoàn thành', 'orders completed')}</span>
                 <Eye size={12} className="text-blue-400" />
               </p>
             </div>
@@ -2453,12 +2464,12 @@ function AdminDashboardContent() {
               className={`p-4 rounded-2xl border transition-all cursor-pointer hover:scale-[1.02] active:scale-95 ${timeframe === 'YEAR' ? 'bg-emerald-500/10 border-emerald-500/40 ring-1 ring-emerald-500/30' : 'bg-slate-955 border-slate-800'}`}
             >
               <div className="flex justify-between items-start">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Doanh Thu Năm Nay</span>
-                <span className="text-[9px] bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded font-bold">Xem chi tiết</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{tr('Doanh Thu Năm Nay', "This Year's Revenue")}</span>
+                <span className="text-[9px] bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded font-bold">{tr('Xem chi tiết', 'View details')}</span>
               </div>
               <p className="text-xl font-extrabold text-purple-400 mt-2">{periodStats.yearRevenue.toLocaleString()} VNĐ</p>
               <p className="text-[10px] text-slate-400 mt-1 flex items-center justify-between">
-                <span>{periodStats.yearCount} đơn hoàn thành</span>
+                <span>{periodStats.yearCount} {tr('đơn hoàn thành', 'orders completed')}</span>
                 <Eye size={12} className="text-purple-400" />
               </p>
             </div>
@@ -2469,12 +2480,12 @@ function AdminDashboardContent() {
               className={`p-4 rounded-2xl border transition-all cursor-pointer hover:scale-[1.02] active:scale-95 ${timeframe === 'ALL' ? 'bg-emerald-500/10 border-emerald-500/40 ring-1 ring-emerald-500/30' : 'bg-slate-955 border-slate-800'}`}
             >
               <div className="flex justify-between items-start">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Tổng Thu Nhập Tích Lũy</span>
-                <span className="text-[9px] bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded font-bold">Xem chi tiết</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{tr('Tổng Thu Nhập Tích Lũy', 'Cumulative Total Revenue')}</span>
+                <span className="text-[9px] bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded font-bold">{tr('Xem chi tiết', 'View details')}</span>
               </div>
               <p className="text-xl font-extrabold text-orange-400 mt-2">{periodStats.allRevenue.toLocaleString()} VNĐ</p>
               <p className="text-[10px] text-slate-400 mt-1 flex items-center justify-between">
-                <span>{periodStats.allCount} tổng đơn hoàn thành</span>
+                <span>{periodStats.allCount} {tr('tổng đơn hoàn thành', 'total completed orders')}</span>
                 <Eye size={12} className="text-orange-400" />
               </p>
             </div>
@@ -2485,7 +2496,7 @@ function AdminDashboardContent() {
               onClick={() => openRevenueModal(timeframe)}
               className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition-all shadow-md shadow-emerald-600/20 flex items-center gap-2 cursor-pointer"
             >
-              <FileText size={14} /> Xem Bảng Kê Chi Tiết Thu Nhập ({getTimeframeLabel(timeframe)})
+              <FileText size={14} /> {tr('Xem Bảng Kê Chi Tiết Thu Nhập', 'View Detailed Income Statement')} ({getTimeframeLabel(timeframe)})
             </button>
           </div>
         </div>
@@ -2498,9 +2509,9 @@ function AdminDashboardContent() {
             <div>
               <h2 className="text-md font-bold text-white flex items-center gap-2">
                 <FileText className="text-orange-500" size={18} />
-                Danh sách Đơn hàng Toàn hệ thống ({filteredRequests.length})
+                {tr('Danh sách Đơn hàng Toàn hệ thống', 'System Orders List')} ({filteredRequests.length})
               </h2>
-              <p className="text-[11px] text-slate-400 mt-0.5">Xem chi tiết từng đơn hàng, trạng thái, người gửi, người nhận hộ và ảnh chụp</p>
+              <p className="text-[11px] text-slate-400 mt-0.5">{tr('Xem chi tiết từng đơn hàng, trạng thái, người gửi, người nhận hộ và ảnh chụp', 'View details of each order, status, sender, receiver and photo')}</p>
             </div>
 
             {/* Search & Status Filters */}
@@ -2511,7 +2522,7 @@ function AdminDashboardContent() {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Tìm mã đơn, tên, email..."
+                  placeholder={tr('Tìm mã đơn, tên, email...', 'Search order code, name, email...')}
                   className="bg-slate-955 border border-slate-800 rounded-xl pl-8 pr-3 py-1.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-orange-500 w-48 sm:w-60"
                 />
               </div>
@@ -2521,13 +2532,13 @@ function AdminDashboardContent() {
                 onChange={(e) => setStatusFilter(e.target.value)}
                 className="bg-slate-955 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-orange-500 cursor-pointer"
               >
-                <option value="ALL">Tất cả trạng thái</option>
-                <option value="PENDING">Đang chờ</option>
-                <option value="ACCEPTED">Đã xác nhận</option>
-                <option value="RECEIVED">Đã lấy đơn</option>
-                <option value="READY_FOR_PICKUP">Chờ SV lấy</option>
-                <option value="COMPLETED">Hoàn thành</option>
-                <option value="CANCELLED">Đã hủy</option>
+                <option value="ALL">{tr('Tất cả trạng thái', 'All statuses')}</option>
+                <option value="PENDING">{t.status_pending}</option>
+                <option value="ACCEPTED">{t.status_accepted}</option>
+                <option value="RECEIVED">{t.status_received}</option>
+                <option value="READY_FOR_PICKUP">{t.status_ready}</option>
+                <option value="COMPLETED">{t.status_completed}</option>
+                <option value="CANCELLED">{t.status_cancelled}</option>
               </select>
             </div>
           </div>
@@ -2537,20 +2548,20 @@ function AdminDashboardContent() {
             <table className="w-full text-left text-xs text-slate-350">
               <thead className="text-[10px] text-slate-400 uppercase border-b border-slate-800 bg-slate-900/80">
                 <tr>
-                  <th className="px-4 py-3.5 font-bold">Mã đơn / Ứng dụng</th>
-                  <th className="px-4 py-3.5 font-bold">NGƯỜI ĐẶT</th>
-                  <th className="px-4 py-3.5 font-bold">Người nhận hộ</th>
-                  <th className="px-4 py-3.5 font-bold">Địa điểm</th>
-                  <th className="px-4 py-3.5 font-bold">Giờ giao dự kiến</th>
-                  <th className="px-4 py-3.5 font-bold">Trạng thái</th>
-                  <th className="px-4 py-3.5 font-bold text-right">Chi tiết</th>
+                  <th className="px-4 py-3.5 font-bold">{tr('Mã đơn / Ứng dụng', 'Order Code / App')}</th>
+                  <th className="px-4 py-3.5 font-bold">{tr('NGƯỜI ĐẶT', 'CUSTOMER')}</th>
+                  <th className="px-4 py-3.5 font-bold">{tr('Người nhận hộ', 'Receiver')}</th>
+                  <th className="px-4 py-3.5 font-bold">{tr('Địa điểm', 'Location')}</th>
+                  <th className="px-4 py-3.5 font-bold">{tr('Giờ giao dự kiến', 'Est. Delivery Time')}</th>
+                  <th className="px-4 py-3.5 font-bold">{tr('Trạng thái', 'Status')}</th>
+                  <th className="px-4 py-3.5 font-bold text-right">{tr('Chi tiết', 'Details')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-850">
                 {filteredRequests.length === 0 ? (
                   <tr>
                     <td colSpan={7} className="text-center py-8 text-slate-500 text-xs">
-                      Không tìm thấy đơn hàng nào phù hợp.
+                      {tr('Không tìm thấy đơn hàng nào phù hợp.', 'No matching orders found.')}
                     </td>
                   </tr>
                 ) : (
@@ -2559,7 +2570,7 @@ function AdminDashboardContent() {
                       <td className="px-4 py-3.5">
                         <p className="font-bold text-white">{req.foodPlatform}</p>
                         <p className="text-[10px] font-mono text-slate-400">
-                          {req.orderCode ? `Mã: ${req.orderCode}` : 'Có ảnh đính kèm'}
+                          {req.orderCode ? `${tr('Mã:', 'Code:')} ${req.orderCode}` : tr('Có ảnh đính kèm', 'Attached photo')}
                         </p>
                       </td>
                       <td className="px-4 py-3.5">
@@ -2573,15 +2584,15 @@ function AdminDashboardContent() {
                             <p className="text-[10px] text-slate-500">{req.receiver.email}</p>
                           </>
                         ) : (
-                          <span className="text-[10px] text-slate-500 italic">Chưa phân công</span>
+                          <span className="text-[10px] text-slate-500 italic">{tr('Chưa phân công', 'Unassigned')}</span>
                         )}
                       </td>
                       <td className="px-4 py-3.5 text-[10px] text-slate-400">
                         <p className="font-medium text-slate-300">{req.pickupLocation}</p>
-                        <p className="text-slate-500">→ {req.dropoffLocation || 'Sảnh Trống Đồng'}</p>
+                        <p className="text-slate-500">→ {req.dropoffLocation || tr('Sảnh Trống Đồng', 'Trong Dong Lobby')}</p>
                       </td>
                       <td className="px-4 py-3.5 text-[10px] text-slate-400">
-                        {new Date(req.pickupTime).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
+                        {new Date(req.pickupTime).toLocaleString(lang === 'en' ? 'en-US' : 'vi-VN', { dateStyle: 'short', timeStyle: 'short' })}
                       </td>
                       <td className="px-4 py-3.5">
                         {getStatusBadge(req.status)}
@@ -2591,7 +2602,7 @@ function AdminDashboardContent() {
                           onClick={() => setSelectedRequestDetail(req)}
                           className="px-3 py-1.5 rounded-xl bg-orange-500/10 text-orange-400 hover:bg-orange-500/20 border border-orange-500/20 text-[11px] font-bold transition-all cursor-pointer inline-flex items-center gap-1 shadow-sm"
                         >
-                          <Eye size={12} /> Xem chi tiết
+                          <Eye size={12} /> {tr('Xem chi tiết', 'View details')}
                         </button>
                       </td>
                     </tr>
@@ -2604,7 +2615,7 @@ function AdminDashboardContent() {
           {/* Requests Mobile Native Cards */}
           <div className="md:hidden space-y-3">
             {filteredRequests.length === 0 ? (
-              <p className="text-center py-6 text-slate-500 text-xs">Không tìm thấy đơn hàng nào phù hợp.</p>
+              <p className="text-center py-6 text-slate-500 text-xs">{tr('Không tìm thấy đơn hàng nào phù hợp.', 'No matching orders found.')}</p>
             ) : (
               filteredRequests.map((req) => (
                 <div key={req.id} className="p-4 bg-slate-955 border border-slate-800 rounded-2xl space-y-3 shadow-sm">
@@ -2618,26 +2629,26 @@ function AdminDashboardContent() {
 
                   <div className="grid grid-cols-2 gap-2 text-[11px]">
                     <div>
-                      <span className="text-[9px] text-slate-500 uppercase font-bold block">Khách hàng gửi</span>
+                      <span className="text-[9px] text-slate-500 uppercase font-bold block">{tr('Khách hàng gửi', 'Customer')}</span>
                       <p className="font-bold text-white truncate">{req.student?.fullName}</p>
                       <p className="text-[9px] text-slate-400 truncate">{req.student?.email}</p>
                     </div>
                     <div>
-                      <span className="text-[9px] text-slate-500 uppercase font-bold block">Người nhận hộ</span>
-                      <p className="font-bold text-slate-200 truncate">{req.receiver ? req.receiver.fullName : 'Chưa phân công'}</p>
+                      <span className="text-[9px] text-slate-500 uppercase font-bold block">{tr('Người nhận hộ', 'Receiver')}</span>
+                      <p className="font-bold text-slate-200 truncate">{req.receiver ? req.receiver.fullName : tr('Chưa phân công', 'Unassigned')}</p>
                       <p className="text-[9px] text-slate-400 truncate">{req.receiver?.email || ''}</p>
                     </div>
                   </div>
 
                   <div className="flex items-center justify-between pt-1 border-t border-slate-850">
                     <div className="text-[10px] text-slate-400">
-                      <span>{req.pickupLocation} → {req.dropoffLocation || 'Sảnh Trống Đồng'}</span>
+                      <span>{req.pickupLocation} → {req.dropoffLocation || tr('Sảnh Trống Đồng', 'Trong Dong Lobby')}</span>
                     </div>
                     <button
                       onClick={() => setSelectedRequestDetail(req)}
                       className="px-3 py-1 rounded-lg bg-orange-600 text-white font-bold text-[10px] shadow-sm flex items-center gap-1 cursor-pointer"
                     >
-                      <Eye size={12} /> Xem đơn
+                      <Eye size={12} /> {tr('Xem đơn', 'View')}
                     </button>
                   </div>
                 </div>
@@ -2654,9 +2665,9 @@ function AdminDashboardContent() {
             <div>
               <h2 className="text-md font-bold text-white flex items-center gap-2">
                 <Users size={18} className="text-orange-500" />
-                Danh sách Thành viên Hệ thống ({filteredUsers.length})
+                {tr('Danh sách Thành viên Hệ thống', 'System Members List')} ({filteredUsers.length})
               </h2>
-              <p className="text-[11px] text-slate-400 mt-0.5">Quản lý vai trò, trạng thái và lịch sử hoạt động của thành viên.</p>
+              <p className="text-[11px] text-slate-400 mt-0.5">{tr('Quản lý vai trò, trạng thái và lịch sử hoạt động của thành viên.', 'Manage roles, status, and activity history of members.')}</p>
             </div>
 
             {/* Sub-filter by Role */}
@@ -2666,28 +2677,28 @@ function AdminDashboardContent() {
                 className={`px-3 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap shrink-0 ${userRoleFilter === 'ALL' ? 'bg-orange-600 text-white shadow' : 'text-slate-400 hover:text-white'
                   }`}
               >
-                Tất cả ({users.length})
+                {tr('Tất cả', 'All')} ({users.length})
               </button>
               <button
                 onClick={() => setUserRoleFilter('RECEIVER')}
                 className={`px-3 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap shrink-0 ${userRoleFilter === 'RECEIVER' ? 'bg-blue-600 text-white shadow' : 'text-slate-400 hover:text-white'
                   }`}
               >
-                Nhận hộ ({users.filter(u => u.role === 'RECEIVER').length})
+                {tr('Nhận hộ', 'Receivers')} ({users.filter(u => u.role === 'RECEIVER').length})
               </button>
               <button
                 onClick={() => setUserRoleFilter('STUDENT')}
                 className={`px-3 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap shrink-0 ${userRoleFilter === 'STUDENT' ? 'bg-orange-600 text-white shadow' : 'text-slate-400 hover:text-white'
                   }`}
               >
-                Khách hàng ({users.filter(u => u.role === 'STUDENT').length})
+                {tr('Khách hàng', 'Customers')} ({users.filter(u => u.role === 'STUDENT').length})
               </button>
               <button
                 onClick={() => setUserRoleFilter('ADMIN')}
                 className={`px-3 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap shrink-0 ${userRoleFilter === 'ADMIN' ? 'bg-red-600 text-white shadow' : 'text-slate-400 hover:text-white'
                   }`}
               >
-                Quản trị ({users.filter(u => u.role === 'ADMIN').length})
+                {tr('Quản trị', 'Admins')} ({users.filter(u => u.role === 'ADMIN').length})
               </button>
             </div>
           </div>
@@ -2697,21 +2708,21 @@ function AdminDashboardContent() {
             <table className="w-full text-left text-xs text-slate-350">
               <thead className="text-[10px] text-slate-400 uppercase border-b border-slate-800 bg-slate-900/80">
                 <tr>
-                  <th className="px-4 py-3.5 font-bold">Tên / Email / Mã số</th>
-                  <th className="px-4 py-3.5 font-bold">Vai trò</th>
-                  <th className="px-4 py-3.5 font-bold text-center">Số đơn đặt / Nhận</th>
-                  <th className="px-4 py-3.5 font-bold text-center">Hoàn thành / Đang làm</th>
-                  <th className="px-4 py-3.5 font-bold text-center">Chi trả / Thu nhập</th>
-                  <th className="px-4 py-3.5 font-bold text-center">Đánh giá</th>
-                  <th className="px-4 py-3.5 font-bold">Trạng thái</th>
-                  <th className="px-4 py-3.5 font-bold text-right">Thao tác</th>
+                  <th className="px-4 py-3.5 font-bold">{tr('Tên / Email / Mã số', 'Name / Email / ID')}</th>
+                  <th className="px-4 py-3.5 font-bold">{tr('Vai trò', 'Role')}</th>
+                  <th className="px-4 py-3.5 font-bold text-center">{tr('Số đơn đặt / Nhận', 'Orders Placed / Picked')}</th>
+                  <th className="px-4 py-3.5 font-bold text-center">{tr('Hoàn thành / Đang làm', 'Completed / Active')}</th>
+                  <th className="px-4 py-3.5 font-bold text-center">{tr('Chi trả / Thu nhập', 'Spent / Earned')}</th>
+                  <th className="px-4 py-3.5 font-bold text-center">{tr('Đánh giá', 'Rating')}</th>
+                  <th className="px-4 py-3.5 font-bold">{tr('Trạng thái', 'Status')}</th>
+                  <th className="px-4 py-3.5 font-bold text-right">{tr('Thao tác', 'Actions')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-850">
                 {filteredUsers.length === 0 ? (
                   <tr>
                     <td colSpan={8} className="text-center py-6 text-slate-500 text-xs">
-                      Không tìm thấy thành viên nào trong mục này.
+                      {tr('Không tìm thấy thành viên nào trong mục này.', 'No members found in this section.')}
                     </td>
                   </tr>
                 ) : (
@@ -2733,7 +2744,7 @@ function AdminDashboardContent() {
                             <p className="font-bold text-white">{u.fullName}</p>
                             {isSelf && (
                               <span className="px-2 py-0.5 text-[9px] font-extrabold rounded-full bg-orange-600 text-white shadow-sm shadow-orange-600/30 uppercase tracking-wider">
-                                Bạn
+                                {tr('Bạn', 'You')}
                               </span>
                             )}
                           </div>
@@ -2743,18 +2754,18 @@ function AdminDashboardContent() {
                         <td className="px-4 py-3.5">
                           {isSelf ? (
                             <span className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-red-500/20 text-red-400 border border-red-500/30">
-                              QUẢN TRỊ (Bạn)
+                              {tr('QUẢN TRỊ (Bạn)', 'ADMIN (You)')}
                             </span>
                           ) : (
                             <select
                               value={u.role}
                               onChange={(e) => handleRoleChange(u.id, e.target.value)}
                               disabled={btnLoading === u.id}
-                              className="bg-slate-950 border border-slate-800 rounded-lg px-2 py-1 text-[10px] font-bold text-slate-200 focus:outline-none focus:border-orange-500 transition-colors cursor-pointer"
+                              className="bg-slate-955 border border-slate-800 rounded-lg px-2 py-1 text-[10px] font-bold text-slate-200 focus:outline-none focus:border-orange-500 transition-colors cursor-pointer"
                             >
-                              <option value="STUDENT">KHÁCH HÀNG</option>
-                              <option value="RECEIVER">NHẬN HỘ</option>
-                              <option value="ADMIN">QUẢN TRỊ</option>
+                              <option value="STUDENT">{t.role_student}</option>
+                              <option value="RECEIVER">{t.role_receiver}</option>
+                              <option value="ADMIN">{t.role_admin}</option>
                             </select>
                           )}
                         </td>
@@ -2766,24 +2777,24 @@ function AdminDashboardContent() {
                               <button
                                 onClick={() => setUserOrdersModal({ user: u, role: 'STUDENT' })}
                                 className="px-2 py-0.5 text-[10px] font-extrabold rounded-md bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 border border-orange-500/30 transition-all cursor-pointer hover:scale-105 active:scale-95"
-                                title="Bấm để xem chi tiết danh sách đơn hàng"
+                                title={tr('Bấm để xem chi tiết danh sách đơn hàng', 'Click to view order details')}
                               >
-                                {studentStat.totalOrdered} đơn đã đặt
+                                {studentStat.totalOrdered} {tr('đơn đã đặt', 'orders placed')}
                               </button>
                             ) : (
-                              <span className="text-[10px] text-slate-600">0 đơn</span>
+                              <span className="text-[10px] text-slate-600">0 {tr('đơn', 'orders')}</span>
                             )
                           ) : u.role === 'RECEIVER' ? (
                             receiverKPI && receiverKPI.totalAssigned > 0 ? (
                               <button
                                 onClick={() => setUserOrdersModal({ user: u, role: 'RECEIVER' })}
                                 className="px-2 py-0.5 text-[10px] font-extrabold rounded-md bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/30 transition-all cursor-pointer hover:scale-105 active:scale-95"
-                                title="Bấm để xem chi tiết danh sách đơn hàng"
+                                title={tr('Bấm để xem chi tiết danh sách đơn hàng', 'Click to view order details')}
                               >
-                                {receiverKPI.totalAssigned} đơn đã nhận
+                                {receiverKPI.totalAssigned} {tr('đơn đã nhận', 'orders picked')}
                               </button>
                             ) : (
-                              <span className="text-[10px] text-slate-600">0 đơn</span>
+                              <span className="text-[10px] text-slate-600">0 {tr('đơn', 'orders')}</span>
                             )
                           ) : (
                             <span className="text-[10px] text-slate-600">-</span>
@@ -2796,10 +2807,10 @@ function AdminDashboardContent() {
                             studentStat && studentStat.totalOrdered > 0 ? (
                               <div className="space-y-0.5">
                                 <span className="text-[10px] font-bold text-emerald-400">
-                                  {studentStat.completedCount} đã xong
+                                  {studentStat.completedCount} {tr('đã xong', 'done')}
                                 </span>
                                 {studentStat.activeCount > 0 && (
-                                  <p className="text-[9px] text-orange-400">({studentStat.activeCount} đang chờ)</p>
+                                  <p className="text-[9px] text-orange-400">({studentStat.activeCount} {tr('đang chờ', 'pending')})</p>
                                 )}
                               </div>
                             ) : (
@@ -2808,10 +2819,10 @@ function AdminDashboardContent() {
                           ) : receiverKPI && receiverKPI.totalAssigned > 0 ? (
                             <div className="space-y-0.5">
                               <span className="text-[10px] font-bold text-emerald-400">
-                                {receiverKPI.completedCount} đã xong
+                                {receiverKPI.completedCount} {tr('đã xong', 'done')}
                               </span>
                               {receiverKPI.activeCount > 0 && (
-                                <p className="text-[9px] text-blue-400">({receiverKPI.activeCount} đang giao)</p>
+                                <p className="text-[9px] text-blue-400">({receiverKPI.activeCount} {tr('đang giao', 'active')})</p>
                               )}
                             </div>
                           ) : (
@@ -2854,12 +2865,12 @@ function AdminDashboardContent() {
                             {u.status === 'ACTIVE' ? (
                               <>
                                 <CheckCircle size={12} className="text-emerald-500 shrink-0" />
-                                <span className="text-[11px] text-emerald-400 font-semibold whitespace-nowrap">Hoạt động</span>
+                                <span className="text-[11px] text-emerald-400 font-semibold whitespace-nowrap">{tr('Hoạt động', 'Active')}</span>
                               </>
                             ) : (
                               <>
                                 <XCircle size={12} className="text-red-500 shrink-0" />
-                                <span className="text-[11px] text-red-400 font-semibold whitespace-nowrap">Bị khóa</span>
+                                <span className="text-[11px] text-red-400 font-semibold whitespace-nowrap">{tr('Bị khóa', 'Locked')}</span>
                               </>
                             )}
                           </span>
@@ -2869,13 +2880,13 @@ function AdminDashboardContent() {
                             <button
                               onClick={() => setUserTxModal(u)}
                               className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 border border-blue-500/20 transition-all cursor-pointer whitespace-nowrap"
-                              title="Xem chi tiết lịch sử nạp tiền & giao dịch của thành viên"
+                              title={tr('Xem chi tiết lịch sử nạp tiền & giao dịch của thành viên', 'View deposit history & transactions')}
                             >
-                              Lịch Sử
+                              {tr('Lịch Sử', 'History')}
                             </button>
                             {isSelf ? (
                               <span className="text-[10px] text-slate-500 font-semibold italic whitespace-nowrap">
-                                Đang dùng
+                                {tr('Đang dùng', 'Current')}
                               </span>
                             ) : (
                               <button
@@ -2886,7 +2897,7 @@ function AdminDashboardContent() {
                                     : 'bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/20'
                                   }`}
                               >
-                                {btnLoading === u.id ? '...' : u.status === 'ACTIVE' ? 'Khóa' : 'Mở khóa'}
+                                {btnLoading === u.id ? '...' : u.status === 'ACTIVE' ? tr('Khóa', 'Lock') : tr('Mở khóa', 'Unlock')}
                               </button>
                             )}
                           </div>
@@ -2921,7 +2932,7 @@ function AdminDashboardContent() {
                             {u.fullName}
                             {isSelf && (
                               <span className="px-1.5 py-0.2 text-[8px] bg-orange-600 text-white font-extrabold rounded-full shrink-0 whitespace-nowrap">
-                                Bạn
+                                {tr('Bạn', 'You')}
                               </span>
                             )}
                           </p>
@@ -2935,7 +2946,7 @@ function AdminDashboardContent() {
                       <div className="shrink-0 ml-1">
                         {isSelf ? (
                           <span className="text-[9px] font-bold px-2 py-1 rounded bg-red-500/15 text-red-500 border border-red-500/30 whitespace-nowrap inline-block">
-                            QUẢN TRỊ
+                            {tr('QUẢN TRỊ', 'ADMIN')}
                           </span>
                         ) : (
                           <select
@@ -2944,9 +2955,9 @@ function AdminDashboardContent() {
                             disabled={btnLoading === u.id}
                             className="bg-slate-955 border border-slate-800 rounded-lg px-2 py-1 text-[10px] font-bold text-slate-200 cursor-pointer whitespace-nowrap"
                           >
-                            <option value="STUDENT">KHÁCH HÀNG</option>
-                            <option value="RECEIVER">NHẬN HỘ</option>
-                            <option value="ADMIN">QUẢN TRỊ</option>
+                            <option value="STUDENT">{t.role_student}</option>
+                            <option value="RECEIVER">{t.role_receiver}</option>
+                            <option value="ADMIN">{t.role_admin}</option>
                           </select>
                         )}
                       </div>
@@ -2960,15 +2971,15 @@ function AdminDashboardContent() {
                           }
                         }}
                         className="p-2 bg-slate-900 rounded-xl border border-slate-850 cursor-pointer hover:border-orange-500/50 active:scale-95 transition-all"
-                        title="Bấm để xem chi tiết danh sách đơn hàng"
+                        title={tr('Bấm để xem chi tiết danh sách đơn hàng', 'Click to view order details')}
                       >
-                        <span className="text-slate-500 font-semibold block text-[9px] uppercase">Số đơn (Bấm xem)</span>
+                        <span className="text-slate-500 font-semibold block text-[9px] uppercase">{tr('Số đơn (Bấm xem)', 'Orders (Click)')}</span>
                         <span className="font-extrabold text-orange-400 underline decoration-dashed">
-                          {u.role === 'STUDENT' ? `${studentStat?.totalOrdered || 0} đã đặt` : `${receiverKPI?.totalAssigned || 0} đã nhận`}
+                          {u.role === 'STUDENT' ? `${studentStat?.totalOrdered || 0} ${tr('đã đặt', 'placed')}` : `${receiverKPI?.totalAssigned || 0} ${tr('đã nhận', 'picked')}`}
                         </span>
                       </div>
                       <div className="p-2 bg-slate-900 rounded-xl border border-slate-850">
-                        <span className="text-slate-500 font-semibold block text-[9px] uppercase">Ví chính / KM</span>
+                        <span className="text-slate-500 font-semibold block text-[9px] uppercase">{tr('Ví chính / KM', 'Main / Promo Wallet')}</span>
                         <span className="font-extrabold text-emerald-400 font-mono">
                           {((u.realBalance || 0) + (u.bonusBalance || 0)).toLocaleString()} VNĐ
                         </span>
@@ -2980,12 +2991,12 @@ function AdminDashboardContent() {
                         onClick={() => setUserTxModal(u)}
                         className="px-3 py-1.5 rounded-lg text-[10px] font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20 transition-all whitespace-nowrap"
                       >
-                        Lịch sử
+                        {tr('Lịch sử', 'History')}
                       </button>
                       <div>
                         {isSelf ? (
                           <span className="text-[10px] text-slate-500 font-semibold italic whitespace-nowrap">
-                            Đang dùng
+                            {tr('Đang dùng', 'Current')}
                           </span>
                         ) : (
                           <button
@@ -2996,7 +3007,7 @@ function AdminDashboardContent() {
                                 : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
                               }`}
                           >
-                            {btnLoading === u.id ? '...' : u.status === 'ACTIVE' ? 'Khóa' : 'Mở khóa'}
+                            {btnLoading === u.id ? '...' : u.status === 'ACTIVE' ? tr('Khóa', 'Lock') : tr('Mở khóa', 'Unlock')}
                           </button>
                         )}
                       </div>

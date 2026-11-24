@@ -79,7 +79,7 @@ api.interceptors.response.use(
             window.location.href = targetPath;
           }
         } else {
-          window.location.href = '/login';
+          window.location.href = '/';
         }
       }
     }
