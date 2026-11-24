@@ -169,7 +169,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         {/* Mobile Header Bar */}
         <header className="md:hidden flex items-center justify-between px-4 py-3 bg-slate-955/80 backdrop-blur-lg border-b border-slate-800 sticky top-0 z-30">
           <Link
-            href={user.role === 'RECEIVER' ? '/receiver' : user.role === 'ADMIN' ? '/admin' : '/student'}
+            href="/"
+            title={t.nav_landing}
             className="flex items-center gap-2.5 hover:opacity-90 active:scale-[0.98] transition-all cursor-pointer"
           >
             <Image
@@ -182,9 +183,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             />
             <div>
               <span className="font-extrabold text-sm tracking-wide text-white block leading-tight">F-LUNCH</span>
-              {user.role !== 'STUDENT' && (
+              {user.role !== 'STUDENT' ? (
                 <span className="text-[9px] uppercase font-bold text-orange-500 tracking-wider block leading-none mt-0.5">
                   {user.role === 'ADMIN' ? t.role_admin : t.role_receiver}
+                </span>
+              ) : (
+                <span className="text-[8px] text-slate-400 font-medium block leading-none mt-0.5">
+                  {t.nav_landing}
                 </span>
               )}
             </div>

@@ -13,7 +13,9 @@ import {
   QrCode, 
   Shield,
   ClipboardList,
-  Crown
+  Crown,
+  Globe,
+  ShoppingBag
 } from 'lucide-react';
 
 export default function BottomNav() {
@@ -50,12 +52,14 @@ export default function BottomNav() {
 
   if (role === 'STUDENT') {
     menuItems.push(
-      { name: t.nav_home, path: '/student', icon: Home },
+      { name: t.nav_landing, path: '/', icon: Globe },
+      { name: t.nav_dashboard, path: '/student', icon: ShoppingBag },
       { name: t.nav_notifications, path: '/notifications', icon: Bell },
       { name: t.nav_profile, path: '/profile', icon: User }
     );
   } else if (role === 'RECEIVER') {
     menuItems.push(
+      { name: t.nav_landing, path: '/', icon: Globe },
       { name: t.nav_receiverDesk, path: '/receiver', icon: ClipboardList },
       { name: t.nav_receiverScan, path: '/receiver/scan', icon: QrCode },
       { name: t.nav_notifications, path: '/notifications', icon: Bell },
@@ -63,6 +67,7 @@ export default function BottomNav() {
     );
   } else if (role === 'ADMIN') {
     menuItems.push(
+      { name: t.nav_landing, path: '/', icon: Globe },
       { name: t.nav_admin, path: '/admin', icon: Shield },
       { name: t.nav_adminCeo, path: '/admin?view=ceo', icon: Crown },
       { name: t.nav_notifications, path: '/notifications', icon: Bell },

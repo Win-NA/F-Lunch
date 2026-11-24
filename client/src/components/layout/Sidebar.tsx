@@ -19,7 +19,9 @@ import {
   ClipboardList,
   Crown,
   Wallet,
-  AlertTriangle
+  AlertTriangle,
+  Globe,
+  ShoppingBag
 } from 'lucide-react';
 
 export default function Sidebar({ onOpenWallet }: { onOpenWallet?: () => void }) {
@@ -75,13 +77,15 @@ export default function Sidebar({ onOpenWallet }: { onOpenWallet?: () => void })
 
   if (role === 'STUDENT') {
     menuItems.push(
-      { name: t.nav_dashboard, path: '/student', icon: Home },
+      { name: t.nav_landing, path: '/', icon: Globe },
+      { name: t.nav_dashboard, path: '/student', icon: ShoppingBag },
       { name: t.nav_notifications, path: '/notifications', icon: Bell },
       { name: t.nav_profile, path: '/profile', icon: User },
       { name: t.nav_reports, path: '/student/reports', icon: AlertTriangle }
     );
   } else if (role === 'RECEIVER') {
     menuItems.push(
+      { name: t.nav_landing, path: '/', icon: Globe },
       { name: t.nav_receiverDesk, path: '/receiver', icon: ClipboardList },
       { name: t.nav_receiverScan, path: '/receiver/scan', icon: QrCode },
       { name: t.nav_notifications, path: '/notifications', icon: Bell },
@@ -89,6 +93,7 @@ export default function Sidebar({ onOpenWallet }: { onOpenWallet?: () => void })
     );
   } else if (role === 'ADMIN') {
     menuItems.push(
+      { name: t.nav_landing, path: '/', icon: Globe },
       { name: t.nav_admin, path: '/admin', icon: Shield },
       { name: t.nav_adminReports, path: '/admin?view=reports', icon: AlertTriangle },
       { name: t.nav_adminCeo, path: '/admin?view=ceo', icon: Crown },
@@ -104,7 +109,8 @@ export default function Sidebar({ onOpenWallet }: { onOpenWallet?: () => void })
     <aside className="w-64 bg-slate-955 text-white h-full p-5 flex flex-col justify-between border-r border-slate-800 shadow-xl overflow-hidden shrink-0">
       <div className="flex-1 overflow-y-auto pr-1">
         <Link
-          href={role === 'RECEIVER' ? '/receiver' : role === 'ADMIN' ? '/admin' : '/student'}
+          href="/"
+          title={t.nav_landing}
           className="flex items-center gap-3 px-3 py-3 mb-4 hover:opacity-90 active:scale-[0.98] transition-all cursor-pointer rounded-2xl bg-white/[0.03] border border-white/5 hover:border-orange-500/30 group"
         >
           <Image
