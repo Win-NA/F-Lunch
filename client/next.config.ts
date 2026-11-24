@@ -39,6 +39,15 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  async redirects() {
+    return [
+      {
+        source: '/student/request',
+        destination: '/student',
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

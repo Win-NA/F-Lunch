@@ -849,7 +849,7 @@ export default function LandingPage() {
     if (!user) {
       openAuthModal('login');
     } else if (user.role === 'STUDENT') {
-      router.push('/student/request');
+      router.push('/student');
     } else if (user.role === 'RECEIVER') {
       router.push('/receiver');
     } else if (user.role === 'ADMIN') {
